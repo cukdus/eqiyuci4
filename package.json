@@ -1,0 +1,31 @@
+{
+  "name": "eqiyuci4",
+  "version": "1.0.0",
+  "description": "## Tentang Proyek",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cukdus/eqiyuci4.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cukdus/eqiyuci4/issues"
+  },
+  "homepage": "https://github.com/cukdus/eqiyuci4#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "admin-lte": "^4.0.0-rc4",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "material-design-icons-iconfont": "^6.7.0",
+    "remixicon": "^4.7.0"
+  }
+}
