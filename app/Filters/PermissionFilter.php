@@ -8,7 +8,7 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Myth\Auth\Exceptions\PermissionException;
 
-class PermissionFilter extends BaseFilter implements FilterInterface
+class PermissionFilter implements FilterInterface
 {
     /**
      * @param array|null $arguments
@@ -17,11 +17,11 @@ class PermissionFilter extends BaseFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        // If no user is logged in then send them to the login form.
-        if (! $this->authenticate->check()) {
-            session()->set('redirect_url', current_url());
+        $auth = service('authentication');
+        $authorize = service('authorization');
 
-            return redirect($this->reservedRoutes['login']);
+        if (! $auth->check()) {
+            return redirect()->to(base_url('login'));
         }
 
         if (empty($arguments)) {
@@ -29,20 +29,11 @@ class PermissionFilter extends BaseFilter implements FilterInterface
         }
 
         $result = true;
-
-        // Check each requested permission
         foreach ($arguments as $permission) {
-            $result = ($result && $this->authorize->hasPermission($permission, $this->authenticate->id()));
+            $result = $result && $authorize->hasPermission($permission, $auth->id());
         }
 
         if (! $result) {
-            if ($this->authenticate->silent()) {
-                $redirectURL = session('redirect_url') ?? route_to($this->landingRoute);
-                unset($_SESSION['redirect_url']);
-
-                return redirect()->to($redirectURL)->with('error', lang('Auth.notEnoughPrivilege'));
-            }
-
             throw new PermissionException(lang('Auth.notEnoughPrivilege'));
         }
     }

@@ -11,7 +11,7 @@ class Dashboard extends BaseController
     {
         return view('admin/dashboard', [
             'title' => 'Dashboard Admin',
-            'user' => user()
+            'user' => service('authentication')->user()
         ]);
     }
 }
