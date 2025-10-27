@@ -88,10 +88,9 @@
       crossorigin="anonymous"
     ></script>
     <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"
-      crossorigin="anonymous"
-    ></script>
+    <script src="<?= base_url('assets/vendor/jquery/jquery-3.7.1.min.js') ?>"></script>
+    <script src="<?= base_url('assets/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+    
     <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
     <script src="<?= base_url('assets/js/adminlte.js') ?>"></script>
     <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
@@ -221,7 +220,7 @@
       crossorigin="anonymous"
     ></script>
 
-    <script src="<?= base_url('assets/vendor/jquery/jquery-3.7.1.min.js') ?>"></script>
+    
     <!-- jQuery-Bootstrap tooltip bridge for Summernote -->
     <script>
       if (window.jQuery && window.bootstrap && bootstrap.Tooltip) {
@@ -346,36 +345,67 @@
         sparkline3.render();
       }
     </script>
-    <!-- Summernote initializer (run only when #konten exists) -->
+    <!-- Summernote initializer (run only when #summernote exists) -->
     <script>
-      window.addEventListener('load', function(){
-        try {
-          if (window.jQuery && jQuery.fn && jQuery.fn.summernote) {
-            var el = document.getElementById('konten');
-            if (el) {
-              jQuery(el).summernote({
-                height: 400,
-                disableResizeEditor: true,
-                dialogsInBody: true,
-                popover: {
-                  image: [],
-                  link: [],
-                  air: []
-                },
-                styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'],
-                toolbar: [
-                  ['style', ['style']],
-                  ['font', ['bold', 'italic', 'underline', 'clear']],
-                  ['para', ['ul', 'ol', 'paragraph']],
-                  ['insert', ['link', 'picture', 'table', 'video']],
-                  ['view', ['codeview', 'fullscreen']]
-                ]
-              });
-              // Keep popover elements intact for proper toolbar actions
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.jQuery && jQuery.fn.summernote) {
+          const $summernote = jQuery('#summernote');
+          if ($summernote.length) {
+            const uploadUrl = '<?= base_url('admin/artikel/upload-image') ?>';
+            const csrfName = '<?= csrf_token() ?>';
+            const csrfHash = '<?= csrf_hash() ?>';
+
+            function uploadSummernoteImage(file) {
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append(csrfName, csrfHash);
+
+              return fetch(uploadUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+              })
+                .then(function(res){ return res.json(); })
+                .then(function(data){
+                  if (data && data.url) {
+                    $summernote.summernote('insertImage', data.url);
+                  } else {
+                    console.warn('Upload gagal:', data);
+                    alert('Upload gambar gagal.');
+                  }
+                })
+                .catch(function(err){
+                  console.error('Upload error:', err);
+                  alert('Terjadi kesalahan saat upload gambar.');
+                });
             }
+
+            $summernote.summernote({
+              height: 400,
+              disableResizeEditor: true,
+              dialogsInBody: true,
+              styleTags: ['p', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+              toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link', 'picture', 'table', 'video']],
+                ['view', ['codeview', 'fullscreen']]
+              ],
+              callbacks: {
+                onInit: function() {
+                  console.log('Summernote siap!');
+                },
+                onImageUpload: function(files) {
+                  if (files && files.length) {
+                    Array.prototype.forEach.call(files, function(file){
+                      uploadSummernoteImage(file);
+                    });
+                  }
+                }
+              }
+            });
           }
-        } catch (e) {
-          console.warn('Summernote init error:', e);
         }
       });
     </script>

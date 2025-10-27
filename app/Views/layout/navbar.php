@@ -19,12 +19,15 @@
     <!--begin::User Menu Dropdown-->
     <li class="nav-item dropdown user-menu">
         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-        <span class="d-none d-md-inline"><?= esc(($u = service('authentication')->user()) ? ($u->nama_lengkap ?? 'User') : 'User') ?></span>
+            <?php $u = service('authentication')->user();
+            $photo = $u ? ($u->photo ?? null) : null; ?>
+            <img src="<?= esc(base_url($photo ?: 'assets/img/user2-160x160.jpg')) ?>" class="user-image rounded-circle" alt="User Image">
         </a>
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
 
         <!--begin::Menu Footer-->
         <li class="user-footer">
+            <a href="<?= site_url('admin/setting/users/' . $u->id . '/edit') ?>" class="btn btn-success btn-flat"><?= esc($u ? ($u->nama_lengkap ?? 'User') : 'User') ?></a>
             <a href="<?= url_to('logout') ?>" class="btn btn-warning btn-flat float-end"><i class="bi bi-box-arrow-right"></i> Sign out</a>
         </li>
         <!--end::Menu Footer-->

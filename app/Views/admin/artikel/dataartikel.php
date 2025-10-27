@@ -25,7 +25,6 @@
                   <th>Judul</th>
                   <th>Penulis</th>
                   <th>Kategori</th>
-                  <th>Status</th>
                   <th style="width:220px">Aksi</th>
                 </tr>
               </thead>
@@ -33,17 +32,27 @@
               <?php if (!empty($articles)): ?>
                 <?php foreach ($articles as $a): ?>
                   <tr>
-                    <td><?= esc($a['tanggal_terbit'] ?? '-') ?></td>  
+                    <td>
+                      <?php
+                      $tgl = $a['tanggal_terbit'] ?? null;
+                      $iconClass = 'text-secondary';
+                      $dateText = $a['tanggal_terbit'] ?? '-';
+                      if ($tgl) {
+                        try {
+                          $dt = new \DateTime((string) $tgl);
+                          $now = new \DateTime('now');
+                          $iconClass = ($dt <= $now) ? 'text-success' : 'text-warning';
+                        } catch (\Throwable $e) {
+                          $iconClass = 'text-secondary';
+                        }
+                      }
+                      ?>
+                      <i class="nav-icon bi bi-hand-thumbs-up-fill <?= $iconClass ?>"></i>
+                      <span class="ms-1"><?= esc($dateText) ?></span>
+                    </td>  
                     <td><?= esc($a['judul']) ?></td>
                     <td><?= esc($a['penulis'] ?? '-') ?></td>
                     <td><?= esc($a['kategori_nama'] ?? '-') ?></td>
-                    <td>
-                      <?php if (($a['status'] ?? 'draft') === 'publish'): ?>
-                        <span class="badge bg-success">Publish</span>
-                      <?php else: ?>
-                        <span class="badge bg-secondary">Draft</span>
-                      <?php endif; ?>
-                    </td>
                     <td>
                       <form action="<?= base_url('admin/artikel/' . $a['id'] . '/duplicate') ?>" method="post" class="d-inline">
                         <?= csrf_field() ?>
@@ -52,7 +61,7 @@
                         </button>
                       </form>
 
-                      <a href="<?= base_url('admin/artikel/tambah') ?>" class="btn btn-sm btn-warning" title="Edit">
+                      <a href="<?= base_url('admin/artikel/' . $a['id'] . '/edit') ?>" class="btn btn-sm btn-warning" title="Edit">
                         <i class="bi bi-pencil-square"></i> Edit
                       </a>
 
@@ -74,7 +83,8 @@
             </table>
           </div>
           <div class="card-footer clearfix">
-            <?= isset($pager) ? $pager->links() : '' ?>
+            
+            <?= isset($pager) ? $pager->links('default', 'admin_pagination') : '' ?>
           </div>
         </div>
       </div>

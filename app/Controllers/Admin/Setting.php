@@ -119,7 +119,18 @@ class Setting extends BaseController
 
     public function waha()
     {
-        // Halaman WA-API sederhana
+        // Batasi hanya admin yang boleh mengakses
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()
+                ->to(site_url('admin/setting'))
+                ->with('error', 'KNTL! mau ngapain, inget dosa!');
+        }
+
         return view('layout/admin_layout', [
             'title' => 'WA-API',
             'content' => view('admin/setting/waha'),

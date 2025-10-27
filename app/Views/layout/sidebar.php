@@ -30,13 +30,17 @@ $isSetting = ($seg2 === 'setting');
 // Submenu Setting
 $isSettingRoot = ($isSetting && ($seg3 === null));
 $isWaha = ($isSetting && ($seg3 === 'waha'));
+// Role-based visibility
+$me = service('authentication')->user();
+$authz = service('authorization');
+$isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
 ?>
 
 <aside class="app-sidebar bg-dark" data-bs-theme="dark">
   <!--begin::Sidebar Brand-->
   <div class="sidebar-brand">
     <!--begin::Brand Link-->
-    <a href="./index.html" class="brand-link">
+    <a href="<?= base_url('admin') ?>" class="brand-link">
       <!--begin::Brand Text-->
       <span class="brand-text fw-light">Panel Eqiyu</span>
       <!--end::Brand Text-->
@@ -176,12 +180,14 @@ $isWaha = ($isSetting && ($seg3 === 'waha'));
                 <p><small>Users</small></p>
               </a>
             </li>
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
               <a href="<?= base_url('admin/setting/waha') ?>" class="nav-link <?= $isWaha ? 'active' : '' ?>">
                 <i class="nav-icon bi bi-whatsapp"></i>
                 <p><small>WA-API</small></p>
               </a>
             </li>
+            <?php endif; ?>
           </ul>
         </li>
       </ul>

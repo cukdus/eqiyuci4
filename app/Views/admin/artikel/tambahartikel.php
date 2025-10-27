@@ -27,42 +27,47 @@
       <div class="col-12">
         <div class="card card-outline card-primary">
           <div class="card-body">
-            <form action="<?= base_url('admin/artikel/tambah') ?>" method="post">
+            <form action="<?= base_url('admin/artikel/tambah') ?>" method="post" enctype="multipart/form-data">
               <?= csrf_field() ?>
 
-              <div class="mb-3">
-                <label for="judul" class="form-label">Judul</label>
-                <input type="text" class="form-control" id="judul" name="judul" value="<?= esc(old('judul')) ?>" required>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="judul" class="form-label">Judul</label>
+                    <input type="text" class="form-control" id="judul" name="judul" value="<?= esc(old('judul')) ?>" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="kategori_id" class="form-label">Kategori</label>
+                    <select class="form-select" id="kategori_id" name="kategori_id">
+                        <option value="">-- Pilih Kategori --</option>
+                        <?php if (!empty($categories)): ?>
+                        <?php foreach ($categories as $kat): ?>
+                            <option value="<?= (int) $kat['id'] ?>" <?= old('kategori_id') == $kat['id'] ? 'selected' : '' ?>>
+                            <?= esc($kat['nama_kategori']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="penulis" class="form-label">Penulis</label>
+                    <input class="form-control" type="text" id="penulis" name="penulis" value="<?= esc(old('penulis', $penulisDefault ?? '')) ?>" aria-label="Disabled input example" disabled>
+                </div>
+                <div class="col-md-6">
+                    <label for="tanggal_terbit" class="form-label">Tanggal Terbit <small class="text-muted">(jam default 11:00)</small></label>
+                <input type="date" class="form-control" id="tanggal_terbit" name="tanggal_terbit" value="<?= esc(old('tanggal_terbit')) ?>">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="gambar_utama" class="form-label">Gambar Utama</label>
+                    <input type="file" class="form-control" id="gambar_utama" name="gambar_utama" accept="image/*">
+                    <small class="text-muted">Format: JPG/PNG, ukuran maks 2MB.</small>
               </div>
 
               <div class="mb-3">
-                <label for="kategori_id" class="form-label">Kategori</label>
-                <select class="form-select" id="kategori_id" name="kategori_id">
-                  <option value="">-- Pilih Kategori --</option>
-                  <?php if (!empty($categories)): ?>
-                    <?php foreach ($categories as $kat): ?>
-                      <option value="<?= (int) $kat['id'] ?>" <?= old('kategori_id') == $kat['id'] ? 'selected' : '' ?>>
-                        <?= esc($kat['nama_kategori']) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  <?php endif; ?>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label for="penulis" class="form-label">Penulis</label>
-                <input type="text" class="form-control" id="penulis" name="penulis" value="<?= esc(old('penulis', $penulisDefault ?? '')) ?>" readonly>
-              </div>
-
-              <div class="mb-3">
-                <label for="tanggal_terbit" class="form-label">Tanggal Terbit</label>
-                <input type="datetime-local" class="form-control" id="tanggal_terbit" name="tanggal_terbit" value="<?= esc(old('tanggal_terbit')) ?>">
-              </div>
-
-
-              <div class="mb-3">
-                <label for="konten" class="form-label">Konten</label>
-                <textarea class="form-control" id="konten" name="konten" rows="10"><?= esc(old('konten')) ?></textarea>
+                <label for="summernote" class="form-label">Konten</label>
+                <textarea class="form-control" id="summernote" name="konten" rows="10"><?= old('konten') ?></textarea>
               </div>
 
               <div class="mb-3">

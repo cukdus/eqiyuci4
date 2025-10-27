@@ -19,6 +19,11 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->get('artikel', 'Admin\\Artikel::index');
     $routes->get('artikel/tambah', 'Admin\\Artikel::create');
     $routes->post('artikel/tambah', 'Admin\\Artikel::store');
+    // Artikel: Edit & Update
+    $routes->get('artikel/(:num)/edit', 'Admin\\Artikel::edit/$1');
+    $routes->post('artikel/(:num)/update', 'Admin\\Artikel::update/$1');
+    // Artikel: Summernote Image Upload
+    $routes->post('artikel/upload-image', 'Admin\\Artikel::uploadImage');
     // Artikel: Kategori
     $routes->get('artikel/kategori', 'Admin\\KategoriArtikel::index');
     $routes->post('artikel/kategori/store', 'Admin\\KategoriArtikel::store');
