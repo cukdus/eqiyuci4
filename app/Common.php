@@ -13,3 +13,20 @@
  *
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
+
+// Compatibility alias for libraries expecting CodeIgniter\Entity (pre-4.0 style)
+// Maps to the modern CodeIgniter\Entity\Entity class if available.
+if (!class_exists('CodeIgniter\Entity') && class_exists(\CodeIgniter\Entity\Entity::class)) {
+    class_alias(\CodeIgniter\Entity\Entity::class, 'CodeIgniter\Entity');
+}
+
+// Ensure alias exists even if target class isn't loaded yet.
+spl_autoload_register(function ($class) {
+    if ($class === 'CodeIgniter\\Entity' && !class_exists('CodeIgniter\\Entity', false)) {
+        // Trigger autoload for the target class
+        class_exists(\CodeIgniter\Entity\Entity::class);
+        if (class_exists(\CodeIgniter\Entity\Entity::class)) {
+            class_alias(\CodeIgniter\Entity\Entity::class, 'CodeIgniter\\Entity');
+        }
+    }
+}, true, true);

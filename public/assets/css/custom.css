@@ -1,0 +1,26 @@
+/* Eqiyu Kita custom overrides */
+
+/* Hide Summernote status bar (resize handle) if confusing */
+.note-statusbar {
+  display: none !important;
+}
+
+/* Ensure Summernote dropdowns are positioned absolutely, not as full-width blocks */
+.note-editor .dropdown-menu {
+  position: absolute !important;
+  z-index: 2000; /* make sure style dropdown not hidden behind layout */
+}
+
+/* Ensure heading styles are visually distinct inside Summernote editor */
+.note-editor .note-editable h1 { font-size: 2rem; line-height: 1.2; margin: 0.6rem 0; }
+.note-editor .note-editable h2 { font-size: 1.75rem; line-height: 1.25; margin: 0.6rem 0; }
+.note-editor .note-editable h3 { font-size: 1.5rem; line-height: 1.3; margin: 0.5rem 0; }
+.note-editor .note-editable h4 { font-size: 1.25rem; line-height: 1.35; margin: 0.5rem 0; }
+.note-editor .note-editable h5 { font-size: 1.1rem; line-height: 1.4; margin: 0.4rem 0; }
+.note-editor .note-editable h6 { font-size: 1rem; line-height: 1.45; margin: 0.4rem 0; font-weight: 600; }
+.note-editor .note-editable blockquote { border-left: 4px solid #ddd; padding-left: 0.75rem; color: #555; }
+
+/* Minor spacing tweak to avoid extra gap under editor */
+.note-editor {
+  margin-bottom: 0;
+}

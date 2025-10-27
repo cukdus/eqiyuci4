@@ -15,8 +15,6 @@
     <link rel="stylesheet" href="<?= base_url('assets/bootstrap-icons/font/bootstrap-icons.css') ?>">
     <!-- Remix Icons -->
     <link rel="stylesheet" href="<?= base_url('assets/remixicon/fonts/remixicon.css') ?>">
-    <!-- Material Design Icons -->
-    <link rel="stylesheet" href="<?= base_url('assets/material-icons/material-icons.css') ?>">
     <!-- AdminLTE CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/css/adminlte.css') ?>">
     <!-- Custom CSS -->
@@ -49,6 +47,7 @@
       href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/summernote/summernote-bs5.min.css') ?>" />
 </head>
     
 <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
@@ -69,7 +68,7 @@
       <!--end::Sidebar-->
       <!--begin::App Main-->
       <main class="app-main">
-        <?= $this->renderSection('content') ?>
+        <?= isset($content) ? $content : $this->renderSection('content') ?>
       </main>
       <!--end::App Main-->
       <!--begin::Footer-->
@@ -125,15 +124,23 @@
     ></script>
     <!-- sortablejs -->
     <script>
-      new Sortable(document.querySelector('.connectedSortable'), {
-        group: 'shared',
-        handle: '.card-header',
-      });
-
-      const cardHeaders = document.querySelectorAll('.connectedSortable .card-header');
-      cardHeaders.forEach((cardHeader) => {
-        cardHeader.style.cursor = 'move';
-      });
+      (function(){
+        const connected = document.querySelector('.connectedSortable');
+        if (connected) {
+          try {
+            new Sortable(connected, {
+              group: 'shared',
+              handle: '.card-header',
+            });
+            const cardHeaders = connected.querySelectorAll('.card-header');
+            cardHeaders.forEach((cardHeader) => {
+              cardHeader.style.cursor = 'move';
+            });
+          } catch (e) {
+            console.warn('Sortable init failed:', e);
+          }
+        }
+      })();
     </script>
     <!-- apexcharts -->
     <script
@@ -194,11 +201,13 @@
         },
       };
 
-      const sales_chart = new ApexCharts(
-        document.querySelector('#revenue-chart'),
-        sales_chart_options,
-      );
-      sales_chart.render();
+      if (window.ApexCharts && document.querySelector('#revenue-chart')) {
+        const sales_chart = new ApexCharts(
+          document.querySelector('#revenue-chart'),
+          sales_chart_options,
+        );
+        sales_chart.render();
+      }
     </script>
     <!-- jsvectormap -->
     <script
@@ -211,13 +220,40 @@
       integrity="sha256-XPpPaZlU8S/HWf7FZLAncLg2SAkP8ScUTII89x9D3lY="
       crossorigin="anonymous"
     ></script>
+
+    <script src="<?= base_url('assets/vendor/jquery/jquery-3.7.1.min.js') ?>"></script>
+    <!-- jQuery-Bootstrap tooltip bridge for Summernote -->
+    <script>
+      if (window.jQuery && window.bootstrap && bootstrap.Tooltip) {
+        (function($){
+          if (!$.fn.tooltip) {
+            $.fn.tooltip = function(options){
+              return this.each(function(){
+                new bootstrap.Tooltip(this, options || {});
+              });
+            };
+          }
+          // Bridge Bootstrap Dropdown to jQuery to improve Summernote dropdown behavior
+          if (bootstrap.Dropdown && !$.fn.dropdown) {
+            $.fn.dropdown = function(options){
+              return this.each(function(){
+                new bootstrap.Dropdown(this, options || {});
+              });
+            };
+          }
+        })(jQuery);
+      }
+    </script>
+    <script src="<?= base_url('assets/vendor/summernote/summernote-bs5.min.js') ?>"></script>
     <!-- jsvectormap -->
     <script>
       // World map by jsVectorMap
-      new jsVectorMap({
-        selector: '#world-map',
-        map: 'world',
-      });
+      if (window.jsVectorMap && document.querySelector('#world-map')) {
+        new jsVectorMap({
+          selector: '#world-map',
+          map: 'world',
+        });
+      }
 
       // Sparkline charts
       const option_sparkline1 = {
@@ -245,8 +281,10 @@
         colors: ['#DCE6EC'],
       };
 
-      const sparkline1 = new ApexCharts(document.querySelector('#sparkline-1'), option_sparkline1);
-      sparkline1.render();
+      if (window.ApexCharts && document.querySelector('#sparkline-1')) {
+        const sparkline1 = new ApexCharts(document.querySelector('#sparkline-1'), option_sparkline1);
+        sparkline1.render();
+      }
 
       const option_sparkline2 = {
         series: [
@@ -273,8 +311,10 @@
         colors: ['#DCE6EC'],
       };
 
-      const sparkline2 = new ApexCharts(document.querySelector('#sparkline-2'), option_sparkline2);
-      sparkline2.render();
+      if (window.ApexCharts && document.querySelector('#sparkline-2')) {
+        const sparkline2 = new ApexCharts(document.querySelector('#sparkline-2'), option_sparkline2);
+        sparkline2.render();
+      }
 
       const option_sparkline3 = {
         series: [
@@ -301,8 +341,43 @@
         colors: ['#DCE6EC'],
       };
 
-      const sparkline3 = new ApexCharts(document.querySelector('#sparkline-3'), option_sparkline3);
-      sparkline3.render();
+      if (window.ApexCharts && document.querySelector('#sparkline-3')) {
+        const sparkline3 = new ApexCharts(document.querySelector('#sparkline-3'), option_sparkline3);
+        sparkline3.render();
+      }
+    </script>
+    <!-- Summernote initializer (run only when #konten exists) -->
+    <script>
+      window.addEventListener('load', function(){
+        try {
+          if (window.jQuery && jQuery.fn && jQuery.fn.summernote) {
+            var el = document.getElementById('konten');
+            if (el) {
+              jQuery(el).summernote({
+                height: 400,
+                disableResizeEditor: true,
+                dialogsInBody: true,
+                popover: {
+                  image: [],
+                  link: [],
+                  air: []
+                },
+                styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'],
+                toolbar: [
+                  ['style', ['style']],
+                  ['font', ['bold', 'italic', 'underline', 'clear']],
+                  ['para', ['ul', 'ol', 'paragraph']],
+                  ['insert', ['link', 'picture', 'table', 'video']],
+                  ['view', ['codeview', 'fullscreen']]
+                ]
+              });
+              // Keep popover elements intact for proper toolbar actions
+            }
+          }
+        } catch (e) {
+          console.warn('Summernote init error:', e);
+        }
+      });
     </script>
     <!--end::Script-->
   </body>

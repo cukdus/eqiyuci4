@@ -2,7 +2,6 @@
 
 namespace Config;
 
-
 class Auth extends \Myth\Auth\Config\Auth
 {
     /**
@@ -45,13 +44,13 @@ class Auth extends \Myth\Auth\Config\Auth
      * @var array
      */
     public $reservedRoutes = [
-        'login'                   => 'login',
-        'logout'                  => 'logout',
-        'register'                => 'register',
-        'activate-account'        => 'activate-account',
+        'login' => 'login',
+        'logout' => 'logout',
+        'register' => 'register',
+        'activate-account' => 'activate-account',
         'resend-activate-account' => 'resend-activate-account',
-        'forgot'                  => 'forgot',
-        'reset-password'          => 'reset-password',
+        'forgot' => 'forgot',
+        'reset-password' => 'reset-password',
     ];
 
     /**
@@ -73,11 +72,11 @@ class Auth extends \Myth\Auth\Config\Auth
      * @var array
      */
     public $views = [
-        'login'           => 'App\Views\Auth\login',
-        'register'        => 'App\Views\Auth\register',
-        'forgot'          => 'App\Views\Auth\forgot',
-        'reset'           => 'App\Views\Auth\reset',
-        'emailForgot'     => 'App\Views\Auth\emails\forgot',
+        'login' => 'App\Views\Auth\login',
+        'register' => 'App\Views\Auth\register',
+        'forgot' => 'App\Views\Auth\forgot',
+        'reset' => 'App\Views\Auth\reset',
+        'emailForgot' => 'App\Views\Auth\emails\forgot',
         'emailActivation' => 'App\Views\Auth\emails\activation',
     ];
 
@@ -118,7 +117,7 @@ class Auth extends \Myth\Auth\Config\Auth
      * fields to be considered as "personal" by the NothingPersonalValidator.
      *
      * For example:
-     *	 $personalFields = ['firstname', 'lastname'];
+     * 	 $personalFields = ['firstname', 'lastname'];
      *
      * @var string[]
      */
@@ -156,7 +155,7 @@ class Auth extends \Myth\Auth\Config\Auth
      *
      *
      * To disable similarity checking set the value to 0.
-     *	  public $maxSimilarity = 0;
+     * 	  public $maxSimilarity = 0;
      *
      * @var int
      */
@@ -173,7 +172,7 @@ class Auth extends \Myth\Auth\Config\Auth
      *
      * @var bool
      */
-    public $allowRegistration = true;
+    public $allowRegistration = false;
 
     /**
      * --------------------------------------------------------------------
@@ -273,17 +272,17 @@ class Auth extends \Myth\Auth\Config\Auth
     /**
      * @var int
      */
-    public $hashMemoryCost = 2048; // PASSWORD_ARGON2_DEFAULT_MEMORY_COST;
+    public $hashMemoryCost = 2048;  // PASSWORD_ARGON2_DEFAULT_MEMORY_COST;
 
     /**
      * @var int
      */
-    public $hashTimeCost = 4; // PASSWORD_ARGON2_DEFAULT_TIME_COST;
+    public $hashTimeCost = 4;  // PASSWORD_ARGON2_DEFAULT_TIME_COST;
 
     /**
      * @var int
      */
-    public $hashThreads = 4; // PASSWORD_ARGON2_DEFAULT_THREADS;
+    public $hashThreads = 4;  // PASSWORD_ARGON2_DEFAULT_THREADS;
 
     /**
      * --------------------------------------------------------------------
@@ -347,7 +346,7 @@ class Auth extends \Myth\Auth\Config\Auth
     public $userActivators = [
         'Myth\Auth\Authentication\Activators\EmailActivator' => [
             'fromEmail' => null,
-            'fromName'  => null,
+            'fromName' => null,
         ],
     ];
 
@@ -363,7 +362,7 @@ class Auth extends \Myth\Auth\Config\Auth
     public $userResetters = [
         'Myth\Auth\Authentication\Resetters\EmailResetter' => [
             'fromEmail' => null,
-            'fromName'  => null,
+            'fromName' => null,
         ],
     ];
 

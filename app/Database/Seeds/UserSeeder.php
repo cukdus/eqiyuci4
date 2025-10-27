@@ -3,64 +3,64 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
-use Myth\Auth\Entities\User;
-use Myth\Auth\Models\UserModel;
+use App\Models\UserModel;
+use App\Entities\User as UserEntity;
+use Myth\Auth\Models\GroupModel;
+use Config\Database;
 
 class UserSeeder extends Seeder
 {
     public function run()
     {
-        $userModel = new UserModel();
-        
-        // Data untuk user superadmin
-        $superadmin = new User([
-            'email' => 'superadmin@eqiyukita.com',
-            'username' => 'superadmin',
-            'nama_lengkap' => 'Super Administrator',
-            'role' => 'superadmin',
-        ]);
-        
-        // Set password
-        $superadmin->setPassword('superadmin123');
-        
-        // Aktifkan user
-        $superadmin->activate();
-        
-        // Simpan user
-        $userModel->save($superadmin);
-        
-        // Data untuk user admin
-        $admin = new User([
-            'email' => 'admin@eqiyukita.com',
-            'username' => 'admin',
-            'nama_lengkap' => 'Administrator',
-            'role' => 'admin',
-        ]);
-        
-        // Set password
-        $admin->setPassword('admin123');
-        
-        // Aktifkan user
-        $admin->activate();
-        
-        // Simpan user
-        $userModel->save($admin);
-        
-        // Data untuk user staff
-        $staff = new User([
-            'email' => 'staff@eqiyukita.com',
-            'username' => 'staff',
-            'nama_lengkap' => 'Staff',
-            'role' => 'staff',
-        ]);
-        
-        // Set password
-        $staff->setPassword('staff123');
-        
-        // Aktifkan user
-        $staff->activate();
-        
-        // Simpan user
-        $userModel->save($staff);
+        $db = Database::connect();
+        $groupModel = model(GroupModel::class);
+
+        // Hapus grup superadmin dan semua relasi jika ada
+        $super = $groupModel->where('name', 'superadmin')->first();
+        if ($super) {
+            $db->table('auth_groups_users')->where('group_id', $super->id)->delete();
+            $db->table('auth_groups_permissions')->where('group_id', $super->id)->delete();
+            $groupModel->delete($super->id);
+        }
+
+        // Pastikan hanya grup admin dan staff tersedia
+        $roles = [
+            ['name' => 'admin', 'description' => 'Administrator'],
+            ['name' => 'staff', 'description' => 'Staff'],
+        ];
+        foreach ($roles as $role) {
+            if (! $groupModel->where('name', $role['name'])->first()) {
+                // Hindari error placeholder validation
+                $groupModel->skipValidation(true)->insert($role);
+            }
+        }
+
+        $userModel = model(UserModel::class);
+
+        // Buat user admin jika belum ada
+        $adminEmail = 'admin@eqiyukita.com';
+        if (! $userModel->where('email', $adminEmail)->first()) {
+            $admin = new UserEntity([
+                'email'    => $adminEmail,
+                'username' => 'admin',
+                'active'   => 1,
+            ]);
+            $admin->setPassword('admin123');
+            $admin->activate();
+            $userModel->withGroup('admin')->save($admin);
+        }
+
+        // Buat user staff jika belum ada
+        $staffEmail = 'staff@eqiyukita.com';
+        if (! $userModel->where('email', $staffEmail)->first()) {
+            $staff = new UserEntity([
+                'email'    => $staffEmail,
+                'username' => 'staff',
+                'active'   => 1,
+            ]);
+            $staff->setPassword('staff123');
+            $staff->activate();
+            $userModel->withGroup('staff')->save($staff);
+        }
     }
 }

@@ -19,13 +19,13 @@
     <!--begin::User Menu Dropdown-->
     <li class="nav-item dropdown user-menu">
         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-        <span class="d-none d-md-inline">Alexander Pierce</span>
+        <span class="d-none d-md-inline"><?= esc(($u = service('authentication')->user()) ? ($u->nama_lengkap ?? 'User') : 'User') ?></span>
         </a>
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
 
         <!--begin::Menu Footer-->
         <li class="user-footer">
-            <a href="<?= url_to('logout') ?>" class="btn btn-warning btn-flat float-end">Sign out</a>
+            <a href="<?= url_to('logout') ?>" class="btn btn-warning btn-flat float-end"><i class="bi bi-box-arrow-right"></i> Sign out</a>
         </li>
         <!--end::Menu Footer-->
         </ul>

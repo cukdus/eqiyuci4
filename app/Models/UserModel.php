@@ -12,23 +12,40 @@ use Myth\Auth\Entities\User;
  */
 class UserModel extends Model
 {
-    protected $table          = 'users';
-    protected $primaryKey     = 'id';
-    protected $returnType     = 'App\Entities\User';
+    protected $table = 'users';
+    protected $primaryKey = 'id';
+    protected $returnType = 'App\Entities\User';
     protected $useSoftDeletes = true;
-    protected $allowedFields  = [
-        'email', 'username', 'password_hash', 'reset_hash', 'reset_at', 'reset_expires', 'activate_hash',
-        'status', 'status_message', 'active', 'force_pass_reset', 'permissions', 'deleted_at',
+
+    protected $allowedFields = [
+        'email',
+        'username',
+        'password_hash',
+        'reset_hash',
+        'reset_at',
+        'reset_expires',
+        'activate_hash',
+        'status',
+        'status_message',
+        'active',
+        'force_pass_reset',
+        'permissions',
+        'deleted_at',
+        'photo',
+        'nama_lengkap',
     ];
-    protected $useTimestamps   = true;
+
+    protected $useTimestamps = true;
+
     protected $validationRules = [
-        'email'         => 'required|valid_email|is_unique[users.email,id,{id}]',
-        'username'      => 'required|alpha_numeric_punct|min_length[3]|max_length[30]|is_unique[users.username,id,{id}]',
+        'email' => 'required|valid_email|is_unique[users.email,id,{id}]',
+        'username' => 'required|alpha_numeric_punct|min_length[3]|max_length[30]|is_unique[users.username,id,{id}]',
         'password_hash' => 'required',
     ];
+
     protected $validationMessages = [];
-    protected $skipValidation     = false;
-    protected $afterInsert        = ['addToGroup'];
+    protected $skipValidation = false;
+    protected $afterInsert = ['addToGroup'];
 
     /**
      * The id of a group to assign.
@@ -44,10 +61,10 @@ class UserModel extends Model
     public function logResetAttempt(string $email, ?string $token = null, ?string $ipAddress = null, ?string $userAgent = null)
     {
         $this->db->table('auth_reset_attempts')->insert([
-            'email'      => $email,
+            'email' => $email,
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
-            'token'      => $token,
+            'token' => $token,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
     }
@@ -60,7 +77,7 @@ class UserModel extends Model
         $this->db->table('auth_activation_attempts')->insert([
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
-            'token'      => $token,
+            'token' => $token,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
     }
@@ -116,7 +133,7 @@ class UserModel extends Model
     public function fake(Generator &$faker): User
     {
         return new User([
-            'email'    => $faker->email,
+            'email' => $faker->email,
             'username' => $faker->userName,
             'password' => bin2hex(random_bytes(16)),
         ]);

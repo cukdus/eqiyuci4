@@ -131,7 +131,7 @@ class AuthController extends Controller
             return redirect()->back()->withInput()->with('error', lang('Auth.registerDisabled'));
         }
 
-        return $this->_render($this->config->views['register'], ['config' => $this->config]);
+        return $this->_render($this->config->views['registereqiyu'], ['config' => $this->config]);
     }
 
     /**

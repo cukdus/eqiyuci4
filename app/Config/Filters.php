@@ -37,6 +37,7 @@ class Filters extends BaseFilters
         'login'         => \App\Filters\LoginFilter::class,
         'role'          => \App\Filters\RoleFilter::class,
         'permission'    => \App\Filters\PermissionFilter::class,
+        'idle' => \App\Filters\IdleLogoutFilter::class,
     ];
 
     /**
