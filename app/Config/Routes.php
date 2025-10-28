@@ -36,18 +36,14 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->post('artikel/(:num)/delete', 'Admin\\Artikel::delete/$1');
 
     // Sidebar: Kelas
-    $routes->get('kelas', static function () {
-        return view('layout/admin_layout', [
-            'title' => 'Kelas Online',
-            'content' => view('admin/kelas/kelasonline')
-        ]);
-    });
-    $routes->get('kelas/offline', static function () {
-        return view('layout/admin_layout', [
-            'title' => 'Kelas Offline',
-            'content' => view('admin/kelas/kelasoffline')
-        ]);
-    });
+    $routes->get('kelas', 'Admin\\Kelas::online');
+    $routes->get('kelas/tambah', 'Admin\\Kelas::create');
+    $routes->post('kelas/tambah', 'Admin\\Kelas::store');
+    $routes->get('kelas/(:num)/edit', 'Admin\\Kelas::edit/$1');
+    $routes->post('kelas/(:num)/image/delete', 'Admin\\Kelas::deleteImage/$1');
+    $routes->get('kelas/(:num)/image/delete/(:num)', 'Admin\\Kelas::deleteImageByIndex/$1/$2');
+    $routes->post('kelas/(:num)/update', 'Admin\\Kelas::update/$1');
+    $routes->post('kelas/(:num)/delete', 'Admin\\Kelas::delete/$1');
     $routes->get('kelas/bonus', static function () {
         return view('layout/admin_layout', [
             'title' => 'Bonus Kelas',

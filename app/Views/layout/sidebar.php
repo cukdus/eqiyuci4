@@ -103,13 +103,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
             <li class="nav-item">
               <a href="<?= base_url('admin/kelas') ?>" class="nav-link <?= $isKelasOnline ? 'active' : '' ?>">
                 <i class="nav-icon fa fa-users-between-lines"></i>
-                <p><small>Kelas Online</small></p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<?= base_url('admin/kelas/offline') ?>" class="nav-link <?= $isKelasOffline ? 'active' : '' ?>">
-                <i class="nav-icon fa fa-users-line"></i>
-                <p><small>Kelas Offline</small></p>
+                <p><small>Data Kelas</small></p>
               </a>
             </li>
             <li class="nav-item">

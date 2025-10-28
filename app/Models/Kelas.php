@@ -12,7 +12,23 @@ class Kelas extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = [
+        'kode_kelas',
+        'nama_kelas',
+        'slug',
+        'deskripsi_singkat',
+        'deskripsi',
+        'harga',
+        'durasi',
+        'kategori',
+        'gambar_utama',
+        'gambar_tambahan',
+        'status_kelas',
+        'badge',
+        'created_at',
+        'updated_at',
+        'kota_tersedia',
+    ];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

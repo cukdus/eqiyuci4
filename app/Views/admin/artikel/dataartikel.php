@@ -2,9 +2,6 @@
   <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0">Data Artikel</h5>
-        <a href="<?= base_url('admin/artikel/tambah') ?>" class="btn btn-primary btn-sm">
-          <i class="bi bi-plus-lg"></i> Tambah Artikel
-        </a>
     </div>
 
     <?php if (session()->has('message')): ?>
@@ -17,8 +14,27 @@
     <div class="row">
       <div class="col-12">
         <div class="card card-outline card-success">
-          <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-nowrap">
+          <div class="card-header">
+              <div class="d-flex justify-content-between align-items-center">
+                  <h3 class="card-title">Daftar Artikel</h3>
+                  <div class="d-flex">
+                      <a href="<?= base_url('admin/artikel/tambah') ?>" class="btn btn-sm btn-primary me-2 d-inline-flex align-items-center justify-content-center">
+                          <i class="fas fa-plus me-1"></i>
+                          <span class="text-center">Tambah Artikel</span>
+                      </a>
+                      <form action="" method="GET" class="input-group input-group-sm" style="width: 250px;">
+                          <input type="text" name="search" class="form-control float-right" placeholder="Cari artikel..." value="">
+                          <div class="input-group-append">
+                              <button type="submit" class="btn btn-default">
+                                  <i class="fas fa-search"></i>
+                              </button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+          <div class="card-body table-responsive p-1">
+            <table class="table table-bordered table-hover text-nowrap">
               <thead>
                 <tr>
                   <th style="width:220px">Tanggal Terbit</th>
@@ -36,12 +52,13 @@
                       <?php
                       $tgl = $a['tanggal_terbit'] ?? null;
                       $iconClass = 'text-secondary';
-                      $dateText = $a['tanggal_terbit'] ?? '-';
+                      $dateText = '-';
                       if ($tgl) {
                         try {
                           $dt = new \DateTime((string) $tgl);
                           $now = new \DateTime('now');
                           $iconClass = ($dt <= $now) ? 'text-success' : 'text-warning';
+                          $dateText = $dt->format('d-m-Y');
                         } catch (\Throwable $e) {
                           $iconClass = 'text-secondary';
                         }
