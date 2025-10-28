@@ -5,10 +5,16 @@
     </div>
 
     <?php if (session()->has('message')): ?>
-      <div class="alert alert-success"><?= session('message') ?></div>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= session('message') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     <?php endif; ?>
     <?php if (session()->has('error')): ?>
-      <div class="alert alert-danger"><?= session('error') ?></div>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= session('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     <?php endif; ?>
 
     <div class="row">
@@ -37,14 +43,14 @@
             <table class="table table-bordered table-hover text-nowrap">
               <thead>
                 <tr>
-                  <th style="width:150px">Kode</th>
+                  <th style="width:50px">Kode</th>
                   <th>Nama Kelas</th>
                   <th style="width:140px">Kategori</th>
                   <th style="width:120px">Gambar</th>
                   <th style="width:150px">Harga</th>
                   <th style="width:120px">Durasi</th>
                   <th style="width:120px">Status</th>
-                  <th style="width:220px">Aksi</th>
+                  <th style="width:100px">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -66,36 +72,38 @@
                     </td>
                     <td>
                       <?php
-        $harga = $k['harga'] ?? null;
-        echo $harga !== null ? 'Rp ' . number_format((float) $harga, 0, ',', '.') : '-';
-        ?>
+                      $harga = $k['harga'] ?? null;
+                      echo $harga !== null ? 'Rp ' . number_format((float) $harga, 0, ',', '.') : '-';
+                      ?>
                     </td>
                     <td><?= esc($k['durasi'] ?? '-') ?></td>
                     <td>
                       <?php
-        $status = (string) ($k['status_kelas'] ?? '');
-        $icon = 'text-secondary';
-        if ($status === 'aktif') {
-            $icon = 'text-success';
-        } elseif ($status === 'segera') {
-            $icon = 'text-warning';
-        } elseif ($status === 'nonaktif') {
-            $icon = 'text-danger';
-        }
-        ?>
+                      $status = (string) ($k['status_kelas'] ?? '');
+                      $icon = 'text-secondary';
+                      if ($status === 'aktif') {
+                        $icon = 'text-success';
+                      } elseif ($status === 'segera') {
+                        $icon = 'text-warning';
+                      } elseif ($status === 'nonaktif') {
+                        $icon = 'text-danger';
+                      }
+                      ?>
                       <i class="nav-icon bi bi-check-circle-fill <?= $icon ?>"></i>
                       <span class="ms-1 text-capitalize"><?= esc($status ?: '-') ?></span>
                     </td>
                     <td>
-                      <a href="<?= base_url('admin/kelas/' . ($k['id'] ?? 0) . '/edit') ?>" class="btn btn-sm btn-warning me-1" title="Edit">
-                        <i class="bi bi-pencil-square"></i> Edit
-                      </a>
-                      <form action="<?= base_url('admin/kelas/' . ($k['id'] ?? 0) . '/delete') ?>" method="post" class="d-inline" onsubmit="return confirm('Yakin hapus kelas ini?')">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                          <i class="bi bi-trash"></i> Delete
-                        </button>
-                      </form>
+                      <div class="btn-group" role="group">
+                        <a href="<?= base_url('admin/kelas/' . ($k['id'] ?? 0) . '/edit') ?>" class="btn btn-sm btn-warning rounded-0 rounded-start" title="Edit">
+                          <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <form action="<?= base_url('admin/kelas/' . ($k['id'] ?? 0) . '/delete') ?>" method="post" class="d-inline" onsubmit="return confirm('Yakin hapus kelas ini?')">
+                          <?= csrf_field() ?>
+                          <button type="submit" class="btn btn-sm btn-danger rounded-0 rounded-end" title="Delete">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 <?php endforeach; ?>

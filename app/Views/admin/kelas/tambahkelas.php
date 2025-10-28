@@ -108,7 +108,7 @@
                     <label class="form-check-label" for="kota_jogja">Jogja</label>
                   </div>
                   <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="kota_world" name="kota_tersedia[]" value="seluruh dunia" <?= in_array('seluruh dunia', array_map('strtolower', $oldKota)) ? 'checked' : '' ?>>
+                    <input class="form-check-input" type="checkbox" id="kota_world" name="kota_tersedia[]" value="se-dunia" <?= in_array('se-dunia', array_map('strtolower', $oldKota)) ? 'checked' : '' ?>>
                     <label class="form-check-label" for="kota_world">Se-Dunia</label>
                   </div>
                 </div>

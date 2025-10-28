@@ -44,17 +44,23 @@
                       <?php endif; ?>
                     </select>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-2">
                     <label for="lokasi" class="form-label">Lokasi Kursus</label>
                     <select id="lokasi" name="lokasi" class="form-select">
                       <option value="">-- Pilih Lokasi --</option>
                     </select>
                   </div>
+                  <div class="col-md-4">
+                    <label for="jadwal_id" class="form-label">Jadwal Kelas</label>
+                    <select id="jadwal_id" name="jadwal_id" class="form-select" disabled required>
+                      <option value="">-- Pilih Jadwal --</option>
+                    </select>
+                    <div id="jadwalHelp" class="form-text">Pilih kelas terlebih dahulu untuk memuat jadwal.</div>
+                  </div>
                 </div>
               </div>
               <div class="mb-3">
                 
-              </div>
               <div class="mb-3">
                 <div class="row g-2">
                   <div class="col-md-6">
@@ -141,6 +147,8 @@
               (function() {
                 const kelasSelect = document.getElementById('kode_kelas');
                 const lokasiSelect = document.getElementById('lokasi');
+                const jadwalSelect = document.getElementById('jadwal_id');
+                const jadwalHelp = document.getElementById('jadwalHelp');
 
                 function capitalize(text) {
                   if (!text) return '';
@@ -168,9 +176,76 @@
                 }
 
                 if (kelasSelect) {
-                  kelasSelect.addEventListener('change', populateLokasi);
+                  kelasSelect.addEventListener('change', function() {
+                    populateLokasi();
+                    // reset jadwal ketika kelas berganti
+                    jadwalSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+                    jadwalSelect.disabled = true;
+                    if (jadwalHelp) jadwalHelp.textContent = 'Pilih lokasi terlebih dahulu untuk memuat jadwal.';
+                  });
                   // Inisialisasi saat halaman pertama kali dibuka
                   populateLokasi();
+                }
+                if (lokasiSelect) {
+                  lokasiSelect.addEventListener('change', function() {
+                    loadJadwal();
+                  });
+                }
+
+                function formatDate(dateStr) {
+                  if (!dateStr) return '';
+                  const d = new Date(dateStr);
+                  if (isNaN(d.getTime())) return dateStr;
+                  return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+                }
+
+                function loadJadwal() {
+                  const kode = (kelasSelect && kelasSelect.value) ? kelasSelect.value.trim() : '';
+                  const lokasi = (lokasiSelect && lokasiSelect.value) ? lokasiSelect.value.trim() : '';
+                  // Reset jadwal select
+                  jadwalSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+                  jadwalSelect.disabled = true;
+                  if (!kode) {
+                    if (jadwalHelp) jadwalHelp.textContent = 'Pilih kelas terlebih dahulu untuk memuat jadwal.';
+                    return;
+                  }
+                  if (!lokasi) {
+                    if (jadwalHelp) jadwalHelp.textContent = 'Pilih lokasi terlebih dahulu untuk memuat jadwal.';
+                    return;
+                  }
+
+                  // Ambil jadwal berdasarkan kelas lalu filter lokasi
+                  fetch('<?= base_url('admin/jadwal/by-kode') ?>?kode_kelas=' + encodeURIComponent(kode))
+                    .then(res => res.json())
+                    .then(json => {
+                      if (!json || json.success !== true) {
+                        if (jadwalHelp) jadwalHelp.textContent = (json && json.message) ? json.message : 'Gagal memuat jadwal.';
+                        return;
+                      }
+                      const items = (Array.isArray(json.data) ? json.data : []).filter(j => {
+                        const jl = (j.lokasi || '').trim().toLowerCase();
+                        const sl = lokasi.trim().toLowerCase();
+                        return jl === sl;
+                      });
+                      if (items.length === 0) {
+                        if (jadwalHelp) jadwalHelp.textContent = 'Belum ada jadwal untuk kelas dan lokasi ini.';
+                        return;
+                      }
+                      items.forEach(j => {
+                        const opt = document.createElement('option');
+                        const mulai = formatDate(j.tanggal_mulai);
+                        const selesai = formatDate(j.tanggal_selesai);
+                        const loc = capitalize(j.lokasi || '');
+                        opt.value = j.id;
+                        opt.textContent = `${mulai}${selesai ? ' s/d ' + selesai : ''}`;
+                        jadwalSelect.appendChild(opt);
+                      });
+                      jadwalSelect.disabled = false;
+                      if (jadwalHelp) jadwalHelp.textContent = 'Silakan pilih jadwal yang tersedia.';
+                    })
+                    .catch(() => {
+                      if (jadwalHelp) jadwalHelp.textContent = 'Gagal memuat jadwal. Coba lagi.';
+                    });
                 }
               })();
             </script>

@@ -95,22 +95,22 @@ class Kelas extends BaseController
         $kotaList = $this->request->getPost('kota_tersedia');
         if (is_array($kotaList)) {
             $lower = array_map('strtolower', $kotaList);
-            if ($kategoriVal === 'kursusonline' && !in_array('seluruh dunia', $lower, true)) {
-                $lower[] = 'seluruh dunia';
+            if ($kategoriVal === 'kursusonline' && !in_array('se-dunia', $lower, true)) {
+                $lower[] = 'se-dunia';
             }
             // unique & implode
             $kotaStr = implode(',', array_values(array_unique($lower)));
         } else {
             $kotaStr = (string) $kotaList;
             if ($kategoriVal === 'kursusonline') {
-                $kotaStr = trim($kotaStr) !== '' ? strtolower($kotaStr) : 'seluruh dunia';
-                // ensure 'seluruh dunia' included if not already
+                $kotaStr = trim($kotaStr) !== '' ? strtolower($kotaStr) : 'se-dunia';
+                // ensure 'se-dunia' included if not already
                 $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
                     return $v !== '';
                 });
                 $arr = array_map('strtolower', $arr);
-                if (!in_array('seluruh dunia', $arr, true)) {
-                    $arr[] = 'seluruh dunia';
+                if (!in_array('se-dunia', $arr, true)) {
+                    $arr[] = 'se-dunia';
                 }
                 $kotaStr = implode(',', array_values(array_unique($arr)));
             }
@@ -234,8 +234,8 @@ class Kelas extends BaseController
         $kotaList = $this->request->getPost('kota_tersedia');
         if (is_array($kotaList)) {
             $lower = array_map('strtolower', $kotaList);
-            if ($kategoriVal === 'kursusonline' && !in_array('seluruh dunia', $lower, true)) {
-                $lower[] = 'seluruh dunia';
+            if ($kategoriVal === 'kursusonline' && !in_array('se-dunia', $lower, true)) {
+                $lower[] = 'se-dunia';
             }
             $kotaStr = implode(',', array_values(array_unique($lower)));
         } else {
@@ -246,8 +246,8 @@ class Kelas extends BaseController
                     return $v !== '';
                 });
                 $arr = array_map('strtolower', $arr);
-                if (!in_array('seluruh dunia', $arr, true)) {
-                    $arr[] = 'seluruh dunia';
+                if (!in_array('se-dunia', $arr, true)) {
+                    $arr[] = 'se-dunia';
                 }
                 $kotaStr = implode(',', array_values(array_unique($arr)));
             }

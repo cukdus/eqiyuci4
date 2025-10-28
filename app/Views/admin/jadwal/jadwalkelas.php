@@ -1,29 +1,32 @@
 <section class="content">
   <div class="container-fluid py-3">
     <?php if (session()->has('message')): ?>
-      <div class="alert alert-success"><?= session('message') ?></div>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= session('message') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     <?php endif; ?>
     <?php if (session()->has('error')): ?>
-      <div class="alert alert-danger"><?= session('error') ?></div>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= session('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     <?php endif; ?>
     <?php if (session()->has('errors')): ?>
-      <div class="alert alert-danger">
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <ul class="mb-0">
           <?php foreach (session('errors') as $err): ?>
             <li><?= esc($err) ?></li>
           <?php endforeach; ?>
         </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     <?php endif; ?>
     <?php if (session()->has('alert')):
         $alert = session('alert'); ?>
-      <div class="alert alert-<?= esc($alert['type'] ?? 'info') ?> alert-dismissible fade show" id="alertMessage">
+      <div class="alert alert-<?= esc($alert['type'] ?? 'info') ?> alert-dismissible fade show" role="alert">
+        <?= esc($alert['message'] ?? '') ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        <h6 class="mb-1">
-          <i class="bi <?= ($alert['type'] ?? '') === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle' ?>"></i>
-          <?= ($alert['type'] ?? '') === 'success' ? 'Sukses!' : 'Info' ?>
-        </h6>
-        <div><?= esc($alert['message'] ?? '') ?></div>
       </div>
     <?php endif; ?>
 
@@ -73,8 +76,8 @@
               <td><?= esc($row['durasi']) ?></td>
               <td>
                 <div class="btn-group">
-                  <button class="btn btn-sm btn-primary btn-edit" data-id="<?= esc($row['id']) ?>">
-                    <i class="bi bi-pencil"></i>
+                  <button class="btn btn-sm btn-warning btn-edit" data-id="<?= esc($row['id']) ?>">
+                    <i class="bi bi-pencil-square"></i>
                   </button>
                   <button class="btn btn-danger btn-sm" onclick="deleteJadwal(<?= esc($row['id']) ?>, '<?= esc($row['nama_kelas']) ?>')">
                     <i class="bi bi-trash"></i>

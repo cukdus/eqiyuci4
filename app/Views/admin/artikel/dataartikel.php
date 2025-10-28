@@ -37,11 +37,11 @@
             <table class="table table-bordered table-hover text-nowrap">
               <thead>
                 <tr>
-                  <th style="width:220px">Tanggal Terbit</th>
+                  <th style="width:150px">Tanggal Terbit</th>
                   <th>Judul</th>
-                  <th>Penulis</th>
-                  <th>Kategori</th>
-                  <th style="width:220px">Aksi</th>
+                  <th style="width:150px">Penulis</th>
+                  <th style="width:150px">Kategori</th>
+                  <th style="width:100px">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -71,23 +71,25 @@
                     <td><?= esc($a['penulis'] ?? '-') ?></td>
                     <td><?= esc($a['kategori_nama'] ?? '-') ?></td>
                     <td>
-                      <form action="<?= base_url('admin/artikel/' . $a['id'] . '/duplicate') ?>" method="post" class="d-inline">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm btn-info" title="Duplikat">
-                          <i class="bi bi-files"></i> Duplikat
-                        </button>
-                      </form>
+                      <div class="btn-group" role="group">
+                        <form action="<?= base_url('admin/artikel/' . $a['id'] . '/duplicate') ?>" method="post" class="d-inline">
+                          <?= csrf_field() ?>
+                          <button type="submit" class="btn btn-sm btn-info rounded-0 rounded-start" title="Duplikat">
+                            <i class="bi bi-files"></i>
+                          </button>
+                        </form>
 
-                      <a href="<?= base_url('admin/artikel/' . $a['id'] . '/edit') ?>" class="btn btn-sm btn-warning" title="Edit">
-                        <i class="bi bi-pencil-square"></i> Edit
-                      </a>
+                        <a href="<?= base_url('admin/artikel/' . $a['id'] . '/edit') ?>" class="btn btn-sm btn-warning rounded-0" title="Edit">
+                          <i class="bi bi-pencil-square"></i>
+                        </a>
 
-                      <form action="<?= base_url('admin/artikel/' . $a['id'] . '/delete') ?>" method="post" class="d-inline" onsubmit="return confirm('Yakin hapus artikel ini?')">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                          <i class="bi bi-trash"></i> Delete
-                        </button>
-                      </form>
+                        <form action="<?= base_url('admin/artikel/' . $a['id'] . '/delete') ?>" method="post" class="d-inline" onsubmit="return confirm('Yakin hapus artikel ini?')">
+                          <?= csrf_field() ?>
+                          <button type="submit" class="btn btn-sm btn-danger rounded-0 rounded-end" title="Delete">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 <?php endforeach; ?>

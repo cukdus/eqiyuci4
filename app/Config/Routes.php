@@ -57,20 +57,25 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->post('kelas/voucher/(:num)/delete', 'Admin\\Voucher::delete/$1');
 
     // Sidebar: Jadwal
-    $routes->get('jadwal', 'Admin\\Jadwal::index');
-    $routes->post('jadwal/store', 'Admin\\Jadwal::store');
-    $routes->post('jadwal/update', 'Admin\\Jadwal::update');
-    $routes->get('jadwal/delete/(:num)', 'Admin\\Jadwal::delete/$1');
+        $routes->get('jadwal', 'Admin\\Jadwal::index');
+        // API: list schedules by kode_kelas
+        $routes->get('jadwal/by-kode', 'Admin\\Jadwal::forKelas');
+        $routes->post('jadwal/store', 'Admin\\Jadwal::store');
+        $routes->post('jadwal/update', 'Admin\\Jadwal::update');
+        $routes->get('jadwal/delete/(:num)', 'Admin\\Jadwal::delete/$1');
 
-    $routes->get('jadwal/siswa', static function () {
-        return view('layout/admin_layout', [
-            'title' => 'Jadwal Siswa',
-            'content' => view('admin/jadwal/jadwalsiswa')
-        ]);
-    });
+    // Jadwal Siswa page + JSON endpoint
+    $routes->get('jadwal/siswa', 'Admin\\Jadwal::siswa');
+    $routes->get('jadwal/siswa.json', 'Admin\\Jadwal::siswaJson');
+    $routes->get('jadwal/siswa/available.json', 'Admin\\Jadwal::availableSchedulesJson');
+
+    // Reschedule registrasi
+    $routes->post('registrasi/reschedule', 'Admin\\Registrasi::reschedule');
 
     // Sidebar: Registrasi
     $routes->get('registrasi', 'Admin\\Registrasi::index');
+    // JSON endpoint for Data Registrasi (search/sort/pagination)
+    $routes->get('registrasi.json', 'Admin\\Registrasi::listJson');
     $routes->get('registrasi/tambah', 'Admin\\Registrasi::tambah');
     $routes->post('registrasi/tambah', 'Admin\\Registrasi::store');
     $routes->get('registrasi/(:num)/edit', 'Admin\\Registrasi::edit/$1');

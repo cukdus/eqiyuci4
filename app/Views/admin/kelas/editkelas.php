@@ -157,8 +157,8 @@
                     <label class="form-check-label" for="kota_jogja">Jogja</label>
                   </div>
                   <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="kota_world" name="kota_tersedia[]" value="seluruh dunia" <?= in_array('seluruh dunia', $oldKota) || (($kelas['kategori'] ?? '') === 'kursusonline') ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="kota_world">Seluruh Dunia</label>
+                    <input class="form-check-input" type="checkbox" id="kota_world" name="kota_tersedia[]" value="se-dunia" <?= in_array('se-dunia', $oldKota) || (($kelas['kategori'] ?? '') === 'kursusonline') ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="kota_world">Se-Dunia</label>
                   </div>
                   <small class="text-muted d-block mt-1">Untuk kelas online, opsi ini akan otomatis ditambahkan.</small>
                 </div>
@@ -220,7 +220,7 @@
       });
     }
 
-    // Auto-check "Seluruh Dunia" when kategori is set to kelas online
+    // Auto-check "Se-Dunia" when kategori is set to kelas online
     var kategoriSelect = document.getElementById('kategori');
     var kotaWorld = document.getElementById('kota_world');
     if (kategoriSelect && kotaWorld) {

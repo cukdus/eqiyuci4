@@ -8,6 +8,90 @@ use App\Models\Kelas as KelasModel;
 
 class Registrasi extends BaseController
 {
+    public function listJson()
+    {
+        $model = model(RegistrasiModel::class);
+
+        $request = $this->request;
+        $page = max(1, (int) ($request->getGet('page') ?? 1));
+        $perPage = (int) ($request->getGet('per_page') ?? 10);
+        if ($perPage < 1) { $perPage = 10; }
+        if ($perPage > 100) { $perPage = 100; }
+        $search = trim((string) ($request->getGet('search') ?? ''));
+        $sort = strtolower(trim((string) ($request->getGet('sort') ?? 'tanggal_daftar')));
+        $order = strtolower(trim((string) ($request->getGet('order') ?? 'desc')));
+        $order = in_array($order, ['asc','desc'], true) ? $order : 'desc';
+
+        $allowedSorts = [
+            'id' => 'registrasi.id',
+            'nama' => 'registrasi.nama',
+            'email' => 'registrasi.email',
+            'no_telp' => 'registrasi.no_telp',
+            'lokasi' => 'registrasi.lokasi',
+            'nama_kelas' => 'kelas.nama_kelas',
+            'status_pembayaran' => 'registrasi.status_pembayaran',
+            'tanggal_daftar' => 'registrasi.tanggal_daftar',
+        ];
+        $sortColumn = $allowedSorts[$sort] ?? 'registrasi.tanggal_daftar';
+
+        // Gunakan Query Builder langsung untuk stabilitas
+        $db = \Config\Database::connect();
+        $qb = $db->table('registrasi')
+                 ->select('registrasi.id, registrasi.nama, registrasi.email, registrasi.no_telp, registrasi.lokasi, registrasi.status_pembayaran, registrasi.akses_aktif, registrasi.tanggal_daftar, kelas.nama_kelas')
+                 ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
+                 ->where('registrasi.deleted_at', null);
+
+        if ($search !== '') {
+            $qb->groupStart()
+               ->like('registrasi.nama', $search)
+               ->orLike('registrasi.email', $search)
+               ->orLike('registrasi.no_telp', $search)
+               ->orLike('kelas.nama_kelas', $search)
+               ->groupEnd();
+        }
+
+        // Hitung total tanpa mereset builder utama
+        $countQB = clone $qb;
+        $total = (int) $countQB->countAllResults();
+
+        $offset = ($page - 1) * $perPage;
+        $rows = $qb->orderBy($sortColumn, $order)
+                   ->limit($perPage, $offset)
+                   ->get()
+                   ->getResultArray();
+
+        // Batasi kolom yang dikirim ke client
+        $data = array_map(static function(array $r): array {
+            return [
+                'id' => (int) ($r['id'] ?? 0),
+                'nama' => (string) ($r['nama'] ?? ''),
+                'email' => (string) ($r['email'] ?? ''),
+                'no_telp' => (string) ($r['no_telp'] ?? ''),
+                'lokasi' => (string) ($r['lokasi'] ?? ''),
+                'nama_kelas' => (string) ($r['nama_kelas'] ?? ''),
+                'status_pembayaran' => (string) ($r['status_pembayaran'] ?? ''),
+                'akses_aktif' => !!($r['akses_aktif'] ?? false),
+                'tanggal_daftar' => (string) ($r['tanggal_daftar'] ?? ''),
+            ];
+        }, $rows);
+
+        $totalPages = $perPage > 0 ? (int) ceil($total / $perPage) : 0;
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $totalPages,
+                'has_next' => $page < $totalPages,
+                'has_prev' => $page > 1,
+                'sort' => $sort,
+                'order' => $order,
+            ],
+        ]);
+    }
     public function index()
     {
         $model = model(RegistrasiModel::class);
@@ -70,7 +154,8 @@ class Registrasi extends BaseController
             'email' => 'permit_empty|valid_email|max_length[100]',
             'no_telp' => 'permit_empty|max_length[20]',
             'kode_kelas' => 'required|max_length[20]',
-            'lokasi' => 'permit_empty|max_length[100]',
+            'lokasi' => 'required|max_length[100]',
+            'jadwal_id' => 'required|is_natural_no_zero',
             'status_pembayaran' => 'required|in_list[DP 50%,lunas]',
             'akses_aktif' => 'permit_empty|in_list[0,1]',
             'kode_voucher' => 'permit_empty|max_length[50]',
@@ -94,6 +179,7 @@ class Registrasi extends BaseController
             'no_telp' => $this->request->getPost('no_telp'),
             'kode_kelas' => $this->request->getPost('kode_kelas'),
             'lokasi' => $this->request->getPost('lokasi'),
+            'jadwal_id' => (int) $this->request->getPost('jadwal_id'),
             'kode_voucher' => $this->request->getPost('kode_voucher'),
             'alamat' => $this->request->getPost('alamat'),
             'kecamatan' => $this->request->getPost('kecamatan'),
@@ -133,6 +219,26 @@ class Registrasi extends BaseController
         // Isi biaya_total dari harga kelas yang dipilih
         $kelas = $kelasModel->where('kode_kelas', $data['kode_kelas'])->first();
         $data['biaya_total'] = isset($kelas['harga']) ? (float) $kelas['harga'] : 0.0;
+
+        // Validasi bahwa jadwal_id sesuai dengan kelas yang dipilih
+        $db = \Config\Database::connect();
+        $jadwalRow = $db->table('jadwal_kelas')
+            ->select('id, kelas_id, lokasi')
+            ->where('id', (int) $data['jadwal_id'])
+            ->get()
+            ->getRowArray();
+        if (!$jadwalRow) {
+            return redirect()->back()->withInput()->with('errors', ['Jadwal tidak ditemukan']);
+        }
+        if ($kelas && isset($kelas['id']) && (int) $jadwalRow['kelas_id'] !== (int) $kelas['id']) {
+            return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan kelas yang dipilih']);
+        }
+        // Pastikan lokasi jadwal sama dengan lokasi yang dipilih di form
+        $lokasiForm = strtolower(trim((string) $data['lokasi']));
+        $lokasiJadwal = strtolower(trim((string) ($jadwalRow['lokasi'] ?? '')));
+        if ($lokasiForm === '' || $lokasiForm !== $lokasiJadwal) {
+            return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan lokasi yang dipilih']);
+        }
 
         if (!$model->save($data)) {
             return redirect()->back()->withInput()->with('errors', $model->errors() ?? ['Gagal menyimpan data registrasi']);
@@ -244,6 +350,85 @@ class Registrasi extends BaseController
         } else {
             return $this->response->setJSON(['success' => false, 'message' => 'Gagal mengubah status akses']);
         }
+    }
+
+    /**
+     * Reschedule: pindahkan registrasi ke jadwal baru jika kapasitas masih tersedia
+     * Input: registrasi_id, new_jadwal_id
+     */
+    public function reschedule()
+    {
+        $registrasiId = (int) $this->request->getPost('registrasi_id');
+        $newJadwalId = (int) $this->request->getPost('new_jadwal_id');
+
+        if ($registrasiId <= 0 || $newJadwalId <= 0) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Input tidak valid']);
+        }
+
+        $model = model(RegistrasiModel::class);
+        $row = $model->find($registrasiId);
+        if (!$row) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Registrasi tidak ditemukan']);
+        }
+
+        $db = \Config\Database::connect();
+
+        // Ambil info kelas dari registrasi (by kode_kelas)
+        $kelas = $db->table('kelas')->select('id, nama_kelas')
+            ->where('kode_kelas', (string) $row['kode_kelas'])
+            ->get()->getRowArray();
+        if (!$kelas) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kelas registrasi tidak valid']);
+        }
+
+        // Ambil jadwal baru dan cek kapasitas
+        $jadwalBaru = $db->table('jadwal_kelas')
+            ->select('id, kelas_id, lokasi, kapasitas, tanggal_mulai, tanggal_selesai')
+            ->where('id', $newJadwalId)
+            ->get()->getRowArray();
+        if (!$jadwalBaru) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Jadwal baru tidak ditemukan']);
+        }
+
+        // Pastikan jadwal baru sesuai kelas registrasi
+        if ((int) $jadwalBaru['kelas_id'] !== (int) $kelas['id']) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Jadwal baru tidak sesuai dengan kelas registrasi']);
+        }
+
+        // Hitung peserta pada jadwal baru
+        $jumlahPeserta = (int) $db->table('registrasi')
+            ->selectCount('id', 'cnt')
+            ->where('jadwal_id', $newJadwalId)
+            ->get()->getRow('cnt');
+
+        $kapasitas = (int) ($jadwalBaru['kapasitas'] ?? 0);
+        if ($kapasitas <= 0 || $jumlahPeserta >= $kapasitas) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kapasitas jadwal baru sudah penuh']);
+        }
+
+        // Lakukan update: pindahkan registrasi ke jadwal baru, sinkronkan lokasi
+        $updateData = [
+            'jadwal_id' => $newJadwalId,
+            'lokasi' => (string) $jadwalBaru['lokasi'],
+            'tanggal_update' => date('Y-m-d H:i:s'),
+        ];
+
+        if (!$model->update($registrasiId, $updateData)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Gagal melakukan reschedule']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Reschedule berhasil',
+            'data' => [
+                'registrasi_id' => $registrasiId,
+                'new_jadwal_id' => $newJadwalId,
+                'lokasi' => (string) $jadwalBaru['lokasi'],
+                'tanggal_mulai' => (string) $jadwalBaru['tanggal_mulai'] ?? '',
+                'tanggal_selesai' => (string) $jadwalBaru['tanggal_selesai'] ?? '',
+                'nama_kelas' => (string) $kelas['nama_kelas'],
+            ],
+        ]);
     }
 
     public function checkVoucher()

@@ -64,6 +64,187 @@ class Jadwal extends BaseController
         ]);
     }
 
+    /**
+     * Halaman: Jadwal Siswa (SSR kerangka + JS hybrid JSON loading)
+     */
+    public function siswa()
+    {
+        // Options kelas untuk filter
+        $kelasOptions = model(KelasModel::class)
+            ->select('id, nama_kelas')
+            ->orderBy('nama_kelas', 'ASC')
+            ->findAll();
+
+        return view('layout/admin_layout', [
+            'title' => 'Jadwal Siswa',
+            'content' => view('admin/jadwal/jadwalsiswa', [
+                'kelasOptions' => $kelasOptions,
+            ]),
+        ]);
+    }
+
+    /**
+     * Return schedules for a given kelas code as JSON
+     */
+    public function forKelas()
+    {
+        $kode = trim((string) $this->request->getGet('kode_kelas'));
+        if ($kode === '') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'kode_kelas diperlukan',
+                'data' => [],
+            ]);
+        }
+
+        $db = \Config\Database::connect();
+        $kelas = $db->table('kelas')->select('id')->where('kode_kelas', $kode)->get()->getRowArray();
+        if (!$kelas) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Kelas tidak ditemukan',
+                'data' => [],
+            ]);
+        }
+
+        $builder = $db->table('jadwal_kelas')
+            ->select('id, tanggal_mulai, tanggal_selesai, lokasi, instruktur, kapasitas')
+            ->where('kelas_id', (int) $kelas['id'])
+            ->orderBy('tanggal_mulai', 'ASC');
+
+        // Optional: only upcoming schedules
+        $builder->where('tanggal_selesai >= CURDATE()', null, false);
+
+        $rows = $builder->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $rows,
+        ]);
+    }
+
+    /**
+     * JSON: daftar peserta (registrasi) dengan jadwal & kelas, mendukung filter + paginasi
+     */
+    public function siswaJson()
+    {
+        $db = \Config\Database::connect();
+
+        $month = (int) $this->request->getGet('month');
+        $year = (int) $this->request->getGet('year');
+        $kelasId = (int) $this->request->getGet('kelas_id');
+        $jadwalId = (int) $this->request->getGet('jadwal_id');
+
+        $page = max(1, (int) $this->request->getGet('page'));
+        $perPage = max(1, min(100, (int) $this->request->getGet('per_page') ?: 10));
+        $start = ($page - 1) * $perPage;
+
+        $search = trim((string) $this->request->getGet('search'));
+        $sort = strtolower((string) $this->request->getGet('sort'));
+        $order = strtolower((string) $this->request->getGet('order')) === 'asc' ? 'ASC' : 'DESC';
+
+        $builder = $db->table('registrasi r')
+            ->select('r.id, r.nama, r.no_telp, r.status_pembayaran, r.jadwal_id, r.biaya_total, r.biaya_dibayar, k.nama_kelas, jk.tanggal_mulai, jk.tanggal_selesai, jk.lokasi, jk.instruktur')
+            ->join('jadwal_kelas jk', 'r.jadwal_id = jk.id', 'left')
+            ->join('kelas k', 'jk.kelas_id = k.id', 'left');
+
+        // Filter tanggal berdasarkan bulan/tahun (gunakan range untuk efisiensi index)
+        if ($month > 0 && $year > 0) {
+            $startDate = date('Y-m-01', strtotime(sprintf('%04d-%02d-01', $year, $month)));
+            $endDate = date('Y-m-t', strtotime($startDate));
+            $builder->where('jk.tanggal_mulai >=', $startDate)
+                    ->where('jk.tanggal_mulai <=', $endDate);
+        } elseif ($year > 0 && $month === 0) {
+            $startDate = sprintf('%04d-01-01', $year);
+            $endDate = sprintf('%04d-12-31', $year);
+            $builder->where('jk.tanggal_mulai >=', $startDate)
+                    ->where('jk.tanggal_mulai <=', $endDate);
+        }
+
+        if ($kelasId > 0) {
+            $builder->where('jk.kelas_id', $kelasId);
+        }
+        if ($jadwalId > 0) {
+            $builder->where('r.jadwal_id', $jadwalId);
+        }
+
+        if ($search !== '') {
+            $builder->groupStart()
+                ->like('r.nama', $search)
+                ->orLike('r.no_telp', $search)
+                ->orLike('k.nama_kelas', $search)
+                ->orLike('jk.lokasi', $search)
+                ->orLike('jk.instruktur', $search)
+            ->groupEnd();
+        }
+
+        // Sorting whitelist
+        $sortMap = [
+            'nama' => 'r.nama',
+            'tanggal_mulai' => 'jk.tanggal_mulai',
+            'nama_kelas' => 'k.nama_kelas',
+            'lokasi' => 'jk.lokasi',
+            'status_pembayaran' => 'r.status_pembayaran',
+        ];
+        if (!array_key_exists($sort, $sortMap)) {
+            // Default sort
+            $builder->orderBy('jk.tanggal_mulai', 'DESC')->orderBy('r.nama', 'ASC');
+        } else {
+            $builder->orderBy($sortMap[$sort], $order)->orderBy('r.nama', 'ASC');
+        }
+
+        // Count total
+        $countBuilder = clone $builder;
+        $total = (int) $countBuilder->countAllResults(false);
+        $totalPages = (int) ceil($total / $perPage);
+
+        // Data paginated
+        $rows = $builder->limit($perPage, $start)->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $rows,
+            'meta' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $totalPages,
+                'total' => $total,
+            ],
+        ]);
+    }
+
+    /**
+     * JSON: daftar jadwal tersedia (upcoming) dengan kapasitas tersisa
+     * Fields: id, tanggal_mulai, tanggal_selesai, lokasi, nama_kelas, kapasitas, jumlah_peserta
+     */
+    public function availableSchedulesJson()
+    {
+        $db = \Config\Database::connect();
+
+        // Ambil daftar jadwal upcoming
+        $builder = $db->table('jadwal_kelas jk')
+            ->select('jk.id, jk.tanggal_mulai, jk.tanggal_selesai, jk.lokasi, jk.kapasitas, k.nama_kelas, COUNT(r.id) AS jumlah_peserta')
+            ->join('kelas k', 'jk.kelas_id = k.id', 'left')
+            ->join('registrasi r', 'r.jadwal_id = jk.id', 'left')
+            ->where('jk.tanggal_mulai > CURDATE()', null, false)
+            ->groupBy('jk.id')
+            ->orderBy('jk.tanggal_mulai', 'ASC');
+
+        $rows = $builder->get()->getResultArray();
+
+        // Hanya sertakan jadwal dengan slot tersedia
+        $available = array_values(array_filter($rows, function ($row) {
+            $kap = (int) ($row['kapasitas'] ?? 0);
+            $cnt = (int) ($row['jumlah_peserta'] ?? 0);
+            return $kap === 0 ? false : ($cnt < $kap);
+        }));
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $available,
+        ]);
+    }
+
     public function store()
     {
         $rules = [

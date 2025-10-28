@@ -65,25 +65,28 @@
                   <tr>
                     <th style="width: 60px">#</th>
                     <th>Nama Kategori</th>
-                    <th style="width: 220px">Aksi</th>
+                    <th style="width: 100px">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php if (!empty($categories)): ?>
-                    <?php $no = 1; foreach ($categories as $kat): ?>
+                    <?php $no = 1;
+                    foreach ($categories as $kat): ?>
                       <tr>
                         <td><?= $no++ ?></td>
                         <td><?= esc($kat['nama_kategori']) ?></td>
                         <td>
-                          <a href="<?= base_url('admin/artikel/kategori/' . (int) $kat['id'] . '/edit') ?>" class="btn btn-sm btn-warning">
-                            <i class="bi bi-pencil-square"></i> Edit
-                          </a>
-                          <form action="<?= base_url('admin/artikel/kategori/' . (int) $kat['id'] . '/delete') ?>" method="post" class="d-inline" onsubmit="return confirm('Hapus kategori ini?');">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                              <i class="bi bi-trash"></i> Delete
-                            </button>
-                          </form>
+                          <div class="btn-group" role="group">
+                            <a href="<?= base_url('admin/artikel/kategori/' . (int) $kat['id'] . '/edit') ?>" class="btn btn-sm btn-warning rounded-0 rounded-start">
+                              <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <form action="<?= base_url('admin/artikel/kategori/' . (int) $kat['id'] . '/delete') ?>" method="post" class="d-inline" onsubmit="return confirm('Hapus kategori ini?');">
+                              <?= csrf_field() ?>
+                              <button type="submit" class="btn btn-sm btn-danger rounded-0 rounded-end">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </form>
+                          </div>
                         </td>
                       </tr>
                     <?php endforeach; ?>
