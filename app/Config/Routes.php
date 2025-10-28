@@ -37,6 +37,8 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
 
     // Sidebar: Kelas
     $routes->get('kelas', 'Admin\\Kelas::online');
+    // Akses khusus modul online
+    $routes->get('modulonline', 'Admin\\Kelas::online');
     $routes->get('kelas/tambah', 'Admin\\Kelas::create');
     $routes->post('kelas/tambah', 'Admin\\Kelas::store');
     $routes->get('kelas/(:num)/edit', 'Admin\\Kelas::edit/$1');
@@ -50,20 +52,16 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
             'content' => view('admin/kelas/bonuskelas')
         ]);
     });
-    $routes->get('kelas/voucher', static function () {
-        return view('layout/admin_layout', [
-            'title' => 'Voucher Kelas',
-            'content' => view('admin/kelas/voucherkelas')
-        ]);
-    });
+    $routes->get('kelas/voucher', 'Admin\\Voucher::index');
+    $routes->post('kelas/voucher/store', 'Admin\\Voucher::store');
+    $routes->post('kelas/voucher/(:num)/delete', 'Admin\\Voucher::delete/$1');
 
     // Sidebar: Jadwal
-    $routes->get('jadwal', static function () {
-        return view('layout/admin_layout', [
-            'title' => 'Jadwal Kelas',
-            'content' => view('admin/jadwal/jadwalkelas')
-        ]);
-    });
+    $routes->get('jadwal', 'Admin\\Jadwal::index');
+    $routes->post('jadwal/store', 'Admin\\Jadwal::store');
+    $routes->post('jadwal/update', 'Admin\\Jadwal::update');
+    $routes->get('jadwal/delete/(:num)', 'Admin\\Jadwal::delete/$1');
+
     $routes->get('jadwal/siswa', static function () {
         return view('layout/admin_layout', [
             'title' => 'Jadwal Siswa',
@@ -72,12 +70,14 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     });
 
     // Sidebar: Registrasi
-    $routes->get('registrasi', static function () {
-        return view('layout/admin_layout', [
-            'title' => 'Data Registrasi',
-            'content' => view('admin/registrasi/dataregistrasi')
-        ]);
-    });
+    $routes->get('registrasi', 'Admin\\Registrasi::index');
+    $routes->get('registrasi/tambah', 'Admin\\Registrasi::tambah');
+    $routes->post('registrasi/tambah', 'Admin\\Registrasi::store');
+    $routes->get('registrasi/(:num)/edit', 'Admin\\Registrasi::edit/$1');
+    $routes->post('registrasi/(:num)/update', 'Admin\\Registrasi::update/$1');
+    $routes->post('registrasi/(:num)/delete', 'Admin\\Registrasi::delete/$1');
+    $routes->post('registrasi/(:num)/toggle-akses', 'Admin\\Registrasi::toggleAkses/$1');
+    $routes->post('registrasi/check-voucher', 'Admin\\Registrasi::checkVoucher');
 
     // Sidebar: Sertifikat
     $routes->get('sertifikat', static function () {

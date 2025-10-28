@@ -13,31 +13,40 @@ class Kelas extends BaseController
 
         $search = trim((string) $this->request->getGet('search'));
         if ($search !== '') {
-            $model->groupStart()
+            $model
+                ->groupStart()
                 ->like('nama_kelas', $search)
                 ->orLike('kode_kelas', $search)
                 ->groupEnd();
         }
 
         // Gabungan: kelas Online, Offline, dan Jasa
-        $classes = $model->groupStart()
-                ->where('kategori', 'kursusonline')
-                ->orWhere('kategori', 'Kursus')
-                ->orWhere('kategori', 'Jasa')
+        $classes = $model
+            ->groupStart()
+            ->where('kategori', 'kursusonline')
+            ->orWhere('kategori', 'Kursus')
+            ->orWhere('kategori', 'Jasa')
             ->groupEnd()
             ->orderBy('updated_at', 'DESC')
             ->paginate(10);
         $pager = $model->pager;
 
+        $uri = service('uri');
+        $seg2 = $uri->getSegment(2);
+        $isModulOnline = ($seg2 === 'modulonline');
+        $title = $isModulOnline ? 'Modul Kelas Online' : 'Data Kelas';
+        $contentView = $isModulOnline ? 'admin/kelas/modulonline' : 'admin/kelas/kelas';
+
         return view('layout/admin_layout', [
-            'title' => 'Data Kelas',
-            'content' => view('admin/kelas/kelas', [
+            'title' => $title,
+            'content' => view($contentView, [
                 'classes' => $classes,
-                'pager'   => $pager,
-                'search'  => $search,
+                'pager' => $pager,
+                'search' => $search,
             ]),
         ]);
     }
+
     public function offline()
     {
         // Halaman offline tidak dipakai, arahkan ke halaman gabungan
@@ -56,19 +65,19 @@ class Kelas extends BaseController
     public function store()
     {
         $rules = [
-            'nama_kelas'        => 'required|min_length[3]|max_length[100]',
-            'kode_kelas'        => 'required|min_length[2]|max_length[20]|is_unique[kelas.kode_kelas]',
+            'nama_kelas' => 'required|min_length[3]|max_length[100]',
+            'kode_kelas' => 'required|min_length[2]|max_length[20]|is_unique[kelas.kode_kelas]',
             'deskripsi_singkat' => 'permit_empty|string',
-            'deskripsi'         => 'permit_empty|string',
-            'harga'             => 'required|decimal',
-            'durasi'            => 'permit_empty|max_length[50]',
-            'kategori'          => 'required|in_list[Kursus,Jasa,kursusonline]',
-            'status_kelas'      => 'required|in_list[aktif,nonaktif,segera]',
-            'badge'             => 'permit_empty|in_list[nobadge,hot,sale]',
+            'deskripsi' => 'permit_empty|string',
+            'harga' => 'required|decimal',
+            'durasi' => 'permit_empty|max_length[50]',
+            'kategori' => 'required|in_list[Kursus,Jasa,kursusonline]',
+            'status_kelas' => 'required|in_list[aktif,nonaktif,segera]',
+            'badge' => 'permit_empty|in_list[nobadge,hot,sale]',
             // kota_tersedia dikirim sebagai array checkbox; validasi cukup permit_empty,
             // kemudian diolah menjadi string setelah validasi
-            'kota_tersedia'     => 'permit_empty',
-            'gambar_utama'      => 'permit_empty|uploaded[gambar_utama]|is_image[gambar_utama]|max_size[gambar_utama,2048]',
+            'kota_tersedia' => 'permit_empty',
+            'gambar_utama' => 'permit_empty|uploaded[gambar_utama]|is_image[gambar_utama]|max_size[gambar_utama,2048]',
             // gambar_tambahan multiple optional images
         ];
 
@@ -96,7 +105,9 @@ class Kelas extends BaseController
             if ($kategoriVal === 'kursusonline') {
                 $kotaStr = trim($kotaStr) !== '' ? strtolower($kotaStr) : 'seluruh dunia';
                 // ensure 'seluruh dunia' included if not already
-                $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) { return $v !== ''; });
+                $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
+                    return $v !== '';
+                });
                 $arr = array_map('strtolower', $arr);
                 if (!in_array('seluruh dunia', $arr, true)) {
                     $arr[] = 'seluruh dunia';
@@ -137,21 +148,21 @@ class Kelas extends BaseController
 
         $now = date('Y-m-d H:i:s');
         $data = [
-            'nama_kelas'        => $namaKelas,
-            'kode_kelas'        => (string) $this->request->getPost('kode_kelas'),
-            'slug'              => $slug,
+            'nama_kelas' => $namaKelas,
+            'kode_kelas' => (string) $this->request->getPost('kode_kelas'),
+            'slug' => $slug,
             'deskripsi_singkat' => (string) $this->request->getPost('deskripsi_singkat'),
-            'deskripsi'         => (string) $this->request->getPost('deskripsi'),
-            'harga'             => (string) $this->request->getPost('harga'),
-            'durasi'            => (string) $this->request->getPost('durasi'),
-            'kategori'          => (string) $this->request->getPost('kategori'),
-            'status_kelas'      => (string) $this->request->getPost('status_kelas'),
-            'badge'             => (string) $this->request->getPost('badge'),
-            'kota_tersedia'     => $kotaStr,
-            'gambar_utama'      => $gambarUtamaPath,
-            'gambar_tambahan'   => !empty($gambarTambahanPaths) ? json_encode($gambarTambahanPaths) : null,
-            'created_at'        => $now,
-            'updated_at'        => $now,
+            'deskripsi' => (string) $this->request->getPost('deskripsi'),
+            'harga' => (string) $this->request->getPost('harga'),
+            'durasi' => (string) $this->request->getPost('durasi'),
+            'kategori' => (string) $this->request->getPost('kategori'),
+            'status_kelas' => (string) $this->request->getPost('status_kelas'),
+            'badge' => (string) $this->request->getPost('badge'),
+            'kota_tersedia' => $kotaStr,
+            'gambar_utama' => $gambarUtamaPath,
+            'gambar_tambahan' => !empty($gambarTambahanPaths) ? json_encode($gambarTambahanPaths) : null,
+            'created_at' => $now,
+            'updated_at' => $now,
         ];
 
         try {
@@ -169,7 +180,8 @@ class Kelas extends BaseController
         $model = model(KelasModel::class);
         $kelas = $model->find($id);
         if (!$kelas) {
-            return redirect()->to(base_url('admin/kelas'))
+            return redirect()
+                ->to(base_url('admin/kelas'))
                 ->with('error', 'Kelas tidak ditemukan');
         }
 
@@ -191,22 +203,23 @@ class Kelas extends BaseController
         $model = model(KelasModel::class);
         $existing = $model->find($id);
         if (!$existing) {
-            return redirect()->to(base_url('admin/kelas'))
+            return redirect()
+                ->to(base_url('admin/kelas'))
                 ->with('error', 'Kelas tidak ditemukan');
         }
 
         $rules = [
-            'nama_kelas'        => 'required|min_length[3]|max_length[100]',
+            'nama_kelas' => 'required|min_length[3]|max_length[100]',
             // allow same kode_kelas for current record
-            'kode_kelas'        => 'permit_empty|min_length[2]|max_length[20]|is_unique[kelas.kode_kelas,id,' . $id . ']',
+            'kode_kelas' => 'permit_empty|min_length[2]|max_length[20]|is_unique[kelas.kode_kelas,id,' . $id . ']',
             'deskripsi_singkat' => 'permit_empty|string',
-            'deskripsi'         => 'permit_empty|string',
-            'harga'             => 'required|decimal',
-            'durasi'            => 'permit_empty|max_length[50]',
-            'kategori'          => 'required|in_list[Kursus,Jasa,kursusonline]',
-            'status_kelas'      => 'required|in_list[aktif,nonaktif,segera]',
-            'badge'             => 'permit_empty|in_list[nobadge,hot,sale]',
-            'kota_tersedia'     => 'permit_empty',
+            'deskripsi' => 'permit_empty|string',
+            'harga' => 'required|decimal',
+            'durasi' => 'permit_empty|max_length[50]',
+            'kategori' => 'required|in_list[Kursus,Jasa,kursusonline]',
+            'status_kelas' => 'required|in_list[aktif,nonaktif,segera]',
+            'badge' => 'permit_empty|in_list[nobadge,hot,sale]',
+            'kota_tersedia' => 'permit_empty',
         ];
 
         if (!$this->validate($rules)) {
@@ -229,7 +242,9 @@ class Kelas extends BaseController
             $kotaStr = (string) $kotaList;
             if ($kategoriVal === 'kursusonline') {
                 $kotaStr = trim($kotaStr) !== '' ? strtolower($kotaStr) : '';
-                $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) { return $v !== ''; });
+                $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
+                    return $v !== '';
+                });
                 $arr = array_map('strtolower', $arr);
                 if (!in_array('seluruh dunia', $arr, true)) {
                     $arr[] = 'seluruh dunia';
@@ -281,20 +296,20 @@ class Kelas extends BaseController
         $postedKode = (string) $this->request->getPost('kode_kelas');
         $finalKode = $postedKode !== '' ? $postedKode : (string) ($existing['kode_kelas'] ?? '');
         $data = [
-            'nama_kelas'        => $namaKelas,
-            'kode_kelas'        => $finalKode,
-            'slug'              => $slug,
+            'nama_kelas' => $namaKelas,
+            'kode_kelas' => $finalKode,
+            'slug' => $slug,
             'deskripsi_singkat' => (string) $this->request->getPost('deskripsi_singkat'),
-            'deskripsi'         => (string) $this->request->getPost('deskripsi'),
-            'harga'             => (string) $this->request->getPost('harga'),
-            'durasi'            => (string) $this->request->getPost('durasi'),
-            'kategori'          => (string) $this->request->getPost('kategori'),
-            'status_kelas'      => (string) $this->request->getPost('status_kelas'),
-            'badge'             => (string) $this->request->getPost('badge'),
-            'kota_tersedia'     => $kotaStr,
-            'gambar_utama'      => $gambarUtamaPath ?: null,
-            'gambar_tambahan'   => !empty($existingExtra) ? json_encode($existingExtra) : null,
-            'updated_at'        => $now,
+            'deskripsi' => (string) $this->request->getPost('deskripsi'),
+            'harga' => (string) $this->request->getPost('harga'),
+            'durasi' => (string) $this->request->getPost('durasi'),
+            'kategori' => (string) $this->request->getPost('kategori'),
+            'status_kelas' => (string) $this->request->getPost('status_kelas'),
+            'badge' => (string) $this->request->getPost('badge'),
+            'kota_tersedia' => $kotaStr,
+            'gambar_utama' => $gambarUtamaPath ?: null,
+            'gambar_tambahan' => !empty($existingExtra) ? json_encode($existingExtra) : null,
+            'updated_at' => $now,
         ];
 
         try {
@@ -312,15 +327,18 @@ class Kelas extends BaseController
         $model = model(KelasModel::class);
         $exists = $model->find($id);
         if (!$exists) {
-            return redirect()->to(base_url('admin/kelas'))
+            return redirect()
+                ->to(base_url('admin/kelas'))
                 ->with('error', 'Kelas tidak ditemukan');
         }
         if (!$model->delete($id)) {
-            return redirect()->to(base_url('admin/kelas'))
+            return redirect()
+                ->to(base_url('admin/kelas'))
                 ->with('error', 'Gagal menghapus kelas.');
         }
 
-        return redirect()->to(base_url('admin/kelas'))
+        return redirect()
+            ->to(base_url('admin/kelas'))
             ->with('message', 'Kelas berhasil dihapus');
     }
 
@@ -329,7 +347,8 @@ class Kelas extends BaseController
         $model = model(KelasModel::class);
         $kelas = $model->find($id);
         if (!$kelas) {
-            return redirect()->to(base_url('admin/kelas/offline'))
+            return redirect()
+                ->to(base_url('admin/kelas/offline'))
                 ->with('error', 'Kelas tidak ditemukan');
         }
 
@@ -359,7 +378,7 @@ class Kelas extends BaseController
         // Update record
         $update = [
             'gambar_tambahan' => !empty($images) ? json_encode($images) : null,
-            'updated_at'      => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
 
         try {
@@ -375,7 +394,8 @@ class Kelas extends BaseController
         }
 
         // Redirect to list page depending on category
-        return redirect()->to(base_url('admin/kelas/' . $id . '/edit'))
+        return redirect()
+            ->to(base_url('admin/kelas/' . $id . '/edit'))
             ->with('message', 'Gambar tambahan berhasil dihapus');
     }
 
@@ -410,7 +430,7 @@ class Kelas extends BaseController
         // Update record
         $update = [
             'gambar_tambahan' => !empty($images) ? json_encode($images) : null,
-            'updated_at'      => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
 
         try {

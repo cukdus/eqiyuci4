@@ -13,6 +13,7 @@ $isKategoriArtikel = ($isArtikel && $seg3 === 'kategori');
 
 // Kelas
 $isKelas = ($seg2 === 'kelas');
+$isModulOnline = ($seg2 === 'modulonline');
 $isKelasOnline = ($isKelas && $seg3 === null);
 $isKelasOffline = ($isKelas && $seg3 === 'offline');
 $isBonusKelas = ($isKelas && $seg3 === 'bonus');
@@ -91,8 +92,8 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
           </ul>
         </li>
         <li class="nav-header">Kelas</li>
-        <li class="nav-item <?= $isKelas ? 'menu-open' : '' ?>">
-          <a href="#" class="nav-link <?= $isKelas ? 'active' : '' ?>">
+        <li class="nav-item <?= ($isKelas || $isModulOnline) ? 'menu-open' : '' ?>">
+          <a href="#" class="nav-link <?= ($isKelas || $isModulOnline) ? 'active' : '' ?>">
             <i class="nav-icon bi bi-box-seam-fill"></i>
             <p>
               Manage Kelas
@@ -104,6 +105,12 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
               <a href="<?= base_url('admin/kelas') ?>" class="nav-link <?= $isKelasOnline ? 'active' : '' ?>">
                 <i class="nav-icon fa fa-users-between-lines"></i>
                 <p><small>Data Kelas</small></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<?= base_url('admin/modulonline') ?>" class="nav-link <?= $isModulOnline ? 'active' : '' ?>">
+                <i class="nav-icon fa fa-users-between-lines"></i>
+                <p><small>Modul Online</small></p>
               </a>
             </li>
             <li class="nav-item">
