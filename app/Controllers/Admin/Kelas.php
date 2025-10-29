@@ -35,6 +35,14 @@ class Kelas extends BaseController
         $uri = service('uri');
         $seg2 = $uri->getSegment(2);
         $isModulOnline = ($seg2 === 'modulonline');
+        // Jika akses halaman modulonline, batasi dropdown hanya kelas online
+        if ($isModulOnline) {
+            $classes = $model
+                ->where('kategori', 'kursusonline')
+                ->orderBy('kode_kelas', 'ASC')
+                ->paginate(10);
+            $pager = $model->pager;
+        }
         $title = $isModulOnline ? 'Modul Kelas Online' : 'Data Kelas';
         $contentView = $isModulOnline ? 'admin/kelas/modulonline' : 'admin/kelas/kelas';
 

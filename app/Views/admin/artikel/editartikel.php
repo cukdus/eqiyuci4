@@ -79,6 +79,7 @@
                     <img src="<?= base_url($article['gambar_utama']) ?>" alt="Gambar Utama" style="max-height: 140px;" class="border rounded">
                   </div>
                 <?php endif; ?>
+                <div id="cropPreview" class="mt-2"></div>
               </div>          
 
               <div class="mb-3">
@@ -102,4 +103,148 @@
       </div>
     </div>
   </div>
+  
+  <!-- Modal Cropper -->
+  <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Crop Gambar (1024 x 683)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="border rounded p-2">
+            <img id="cropImage" src="" alt="Crop Source" style="max-width:100%;display:block;">
+          </div>
+          <div class="small text-muted mt-2">Gunakan scroll untuk zoom, drag untuk geser (mode pindah). Dobel-klik untuk ganti mode Crop/Move. Rasio terkunci 1024/683.</div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnCropApply" type="button" class="btn btn-primary">Crop & Terapkan</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cropper.js dari CDN (bisa diganti ke aset lokal) -->
+  <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.1/dist/cropper.min.css">
+  <script src="https://unpkg.com/cropperjs@1.6.1/dist/cropper.min.js"></script>
+
+  <script>
+    (function(){
+      const input = document.getElementById('gambar_utama');
+      const cropModalEl = document.getElementById('cropModal');
+      const cropImg = document.getElementById('cropImage');
+      const btnApply = document.getElementById('btnCropApply');
+      const btnClose = cropModalEl ? cropModalEl.querySelector('[data-bs-dismiss="modal"]') : null;
+      const preview = document.getElementById('cropPreview');
+
+      let cropper = null;
+      let selectedFile = null;
+      let bsModal = null;
+      let dragIsMove = true;
+
+      // Init Bootstrap modal object jika tersedia
+      if (typeof bootstrap !== 'undefined' && cropModalEl) {
+        bsModal = new bootstrap.Modal(cropModalEl, { backdrop: 'static', keyboard: false });
+      }
+
+      // Fallback tampilkan "modal" secara manual jika Bootstrap tidak tersedia
+      function showFallbackModal(){
+        if (!cropModalEl) return;
+        cropModalEl.style.display = 'block';
+        cropModalEl.classList.add('show');
+        cropModalEl.removeAttribute('aria-hidden');
+        cropModalEl.setAttribute('aria-modal', 'true');
+        document.body.classList.add('modal-open');
+        document.body.style.overflow = 'hidden';
+      }
+      function hideFallbackModal(){
+        if (!cropModalEl) return;
+        cropModalEl.style.display = 'none';
+        cropModalEl.classList.remove('show');
+        cropModalEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+      }
+      function cleanupCropper(){
+        if (cropper) { cropper.destroy(); cropper = null; }
+        cropImg.src = '';
+      }
+
+      cropModalEl.addEventListener('hidden.bs.modal', function(){
+        cleanupCropper();
+      });
+      if (btnClose) {
+        btnClose.addEventListener('click', function(){
+          if (!bsModal) {
+            hideFallbackModal();
+            cleanupCropper();
+          }
+        });
+      }
+
+      // Toggle drag mode via double-click
+      cropImg.addEventListener('dblclick', function(){
+        if (!cropper) return;
+        dragIsMove = !dragIsMove;
+        cropper.setDragMode(dragIsMove ? 'move' : 'crop');
+      });
+
+      // Saat file dipilih: buka modal crop
+      input.addEventListener('change', function(){
+        const f = input.files && input.files[0] ? input.files[0] : null;
+        if (!f) return;
+        selectedFile = f;
+
+        const reader = new FileReader();
+        reader.onload = function(e){
+          cropImg.src = e.target.result;
+          if (bsModal) { bsModal.show(); } else { showFallbackModal(); }
+          setTimeout(function(){
+            if (typeof Cropper === 'undefined') {
+              alert('Cropper.js tidak dimuat. Pastikan file JS tersedia.');
+              return;
+            }
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(cropImg, {
+              aspectRatio: 1024 / 683,
+              viewMode: 1,
+              autoCropArea: 1,
+              responsive: true,
+              background: false,
+              zoomOnWheel: true,
+              wheelZoomRatio: 0.1,
+              dragMode: 'move',
+              movable: true,
+              cropBoxMovable: true,
+              cropBoxResizable: true,
+            });
+          }, 100);
+        };
+        reader.readAsDataURL(f);
+      });
+
+      // Terapkan hasil crop ke input file
+      btnApply.addEventListener('click', function(){
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({ width: 1024, height: 683 });
+        const quality = 0.85;
+        canvas.toBlob(function(jpegBlob){
+          const baseName = (selectedFile?.name || 'gambar').replace(/\.[^.]+$/, '');
+          const newFileName = baseName + '-cropped.jpg';
+          const croppedFile = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
+
+          const dt = new DataTransfer();
+          dt.items.add(croppedFile);
+          input.files = dt.files;
+
+          const url = URL.createObjectURL(croppedFile);
+          preview.innerHTML = '<div class="small text-muted mb-1">Preview hasil crop:</div><img src="'+url+'" alt="Preview" class="border rounded" style="max-height:160px;object-fit:cover;">';
+
+          if (bsModal) { bsModal.hide(); } else { hideFallbackModal(); }
+        }, 'image/jpeg', quality);
+      });
+    })();
+  </script>
 </section>

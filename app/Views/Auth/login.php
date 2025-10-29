@@ -9,7 +9,7 @@
             </div>
             <div class="login-form">
                 <div class="form-header">
-                    <h3>Sign In</h3>
+                    <h3><?= lang('Auth.loginTitle') ?></h3>
                 </div>
 
                 <?= view('Myth\Auth\Views\_message_block') ?>
@@ -34,7 +34,7 @@
                         <span class="password-toggle"><i class="fa fa-eye"></i></span>
                     </div>
 
-                    <button type="submit" class="btn btn-signin">Sign In</button>
+                    <button type="submit" class="btn btn-signin">Masukno mas...</button>
 
                     <div class="form-footer">
                         <?php if ($config->allowRemembering): ?>

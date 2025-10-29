@@ -209,23 +209,31 @@ class Sertifikat extends BaseController
         elseif ($lokasi === 'jogja') { $cc = '02'; }
         elseif (strpos($lokasi, 'online') !== false) { $cc = '03'; }
 
-        // NNNN: nomor urut tahunan, reset tiap tahun
+        // NNNN: nomor urut tahunan, reset tiap tahun (global per tahun)
+        // Ambil MAX NNNN untuk prefix tahun agar tidak bergantung kelas/kota
         $db = isset($db) ? $db : \Config\Database::connect();
         $prefix = 'EQ' . $yearYY;
-        $countThisYear = (int) $db->table('sertifikat')
-            ->like('nomor_sertifikat', $prefix, 'after')
-            ->countAllResults();
-        $seq = $countThisYear + 1;
+        $rowMax = $db->query(
+            "SELECT MAX(CAST(SUBSTRING(nomor_sertifikat, 7, 4) AS UNSIGNED)) AS max_seq\n             FROM sertifikat\n             WHERE nomor_sertifikat LIKE ?",
+            [$prefix . '%']
+        )->getRowArray();
+        $seq = ((int) ($rowMax['max_seq'] ?? 0)) + 1;
         $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
 
-        // Susun nomor
-        $kode = 'EQ' . $yearYY . $kk . $nnnn . $cc;
-        // Pastikan unik, jika sudah terpakai, increment hingga unik
-        while ($sertModel->where('nomor_sertifikat', $kode)->countAllResults() > 0) {
-            $seq++;
-            $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        // Susun nomor dan coba insert dengan retry jika bentrok
+        $attempts = 0;
+        $maxAttempts = 5;
+        do {
             $kode = 'EQ' . $yearYY . $kk . $nnnn . $cc;
-        }
+            // Jika sudah terpakai, lanjutkan ke nomor berikutnya
+            if ($sertModel->where('nomor_sertifikat', $kode)->countAllResults() > 0) {
+                $seq++;
+                $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+                $attempts++;
+                continue;
+            }
+            break;
+        } while ($attempts < $maxAttempts);
 
         $data = [
             'registrasi_id' => $registrasiId,
@@ -236,8 +244,25 @@ class Sertifikat extends BaseController
             'tanggal_terbit' => date('Y-m-d'),
         ];
 
-        if (!$sertModel->insert($data)) {
-            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'Gagal membuat sertifikat']);
+        // Insert dan jika gagal karena duplikat, naikkan seq dan coba lagi beberapa kali
+        $inserted = false; $attempts = 0;
+        while (!$inserted && $attempts < $maxAttempts) {
+            try {
+                if ($sertModel->insert($data) !== false) {
+                    $inserted = true;
+                    break;
+                }
+            } catch (\Throwable $e) {
+                // Kemungkinan duplicate key jika ada unique index; naikkan seq dan coba lagi
+            }
+            $seq++;
+            $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+            $kode = 'EQ' . $yearYY . $kk . $nnnn . $cc;
+            $data['nomor_sertifikat'] = $kode;
+            $attempts++;
+        }
+        if (!$inserted) {
+            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'Gagal membuat sertifikat (duplikasi nomor)']);
         }
 
         $created = $sertModel->find($sertModel->getInsertID());
@@ -382,18 +407,26 @@ class Sertifikat extends BaseController
             $cc = '03';
         }
 
-        // NNNN: sequence tahunan, reset per tahun
+        // NNNN: sequence tahunan global per tahun, gunakan MAX untuk hindari duplikat
         $prefix = 'EQ' . $yearYY;
-        $countThisYear = (int) $db->table('sertifikat')->like('nomor_sertifikat', $prefix, 'after')->countAllResults();
-        $seq = $countThisYear + 1;
+        $rowMax = $db->query(
+            "SELECT MAX(CAST(SUBSTRING(nomor_sertifikat, 7, 4) AS UNSIGNED)) AS max_seq\n             FROM sertifikat\n             WHERE nomor_sertifikat LIKE ?",
+            [$prefix . '%']
+        )->getRowArray();
+        $seq = ((int) ($rowMax['max_seq'] ?? 0)) + 1;
         $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
 
-        $kode = 'EQ' . $yearYY . $kk . $nnnn . $cc;
-        while ($sertModel->where('nomor_sertifikat', $kode)->countAllResults() > 0) {
-            $seq++;
-            $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        $attempts = 0; $maxAttempts = 5;
+        do {
             $kode = 'EQ' . $yearYY . $kk . $nnnn . $cc;
-        }
+            if ($sertModel->where('nomor_sertifikat', $kode)->countAllResults() > 0) {
+                $seq++;
+                $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+                $attempts++;
+                continue;
+            }
+            break;
+        } while ($attempts < $maxAttempts);
 
         $data = [
             'registrasi_id' => $registrasiId,
@@ -404,8 +437,24 @@ class Sertifikat extends BaseController
             'tanggal_terbit' => date('Y-m-d'),
         ];
 
-        if (!$sertModel->insert($data)) {
-            throw new \RuntimeException('Gagal membuat sertifikat untuk registrasi ' . $registrasiId);
+        $inserted = false; $attempts = 0;
+        while (!$inserted && $attempts < $maxAttempts) {
+            try {
+                if ($sertModel->insert($data) !== false) {
+                    $inserted = true;
+                    break;
+                }
+            } catch (\Throwable $e) {
+                // kemungkinan duplicate key; retry dengan nomor berikutnya
+            }
+            $seq++;
+            $nnnn = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+            $kode = 'EQ' . $yearYY . $kk . $nnnn . $cc;
+            $data['nomor_sertifikat'] = $kode;
+            $attempts++;
+        }
+        if (!$inserted) {
+            throw new \RuntimeException('Gagal membuat sertifikat (duplikasi nomor) untuk registrasi ' . $registrasiId);
         }
 
         return ['created' => true, 'data' => $sertModel->find($sertModel->getInsertID())];
