@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\Kelas as KelasModel;
+use App\Models\KotaKelas as KotaKelasModel;
 
 class Jadwal extends BaseController
 {
@@ -44,10 +45,17 @@ class Jadwal extends BaseController
             ->get()
             ->getResultArray();
 
-        // Kelas options for modal select
+        // Kelas options for modal select (include kota_tersedia to constrain lokasi choices)
         $kelasOptions = model(KelasModel::class)
-            ->select('id, nama_kelas')
+            ->select('id, nama_kelas, kota_tersedia')
             ->orderBy('nama_kelas', 'ASC')
+            ->findAll();
+
+        // Kota options centralized
+        $kotaOptions = model(KotaKelasModel::class)
+            ->select('kode, nama')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
             ->findAll();
 
         return view('layout/admin_layout', [
@@ -55,6 +63,7 @@ class Jadwal extends BaseController
             'content' => view('admin/jadwal/jadwalkelas', [
                 'jadwal' => $jadwal,
                 'kelasOptions' => $kelasOptions,
+                'kotaOptions' => $kotaOptions,
                 'perPage' => $perPage,
                 'page' => $page,
                 'start' => $start,
@@ -247,11 +256,21 @@ class Jadwal extends BaseController
 
     public function store()
     {
+        // Validasi lokasi mengikuti daftar kota aktif pusat
+        $kotaCodes = model(KotaKelasModel::class)
+            ->select('kode')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+        $allowed = [];
+        foreach ($kotaCodes as $r) { $c = strtolower((string)($r['kode'] ?? '')); if ($c !== '') $allowed[] = $c; }
+        $inList = implode(',', $allowed);
+
         $rules = [
             'kelas_id' => 'required|is_natural_no_zero',
             'tanggal_mulai' => 'required|valid_date',
             'tanggal_selesai' => 'required|valid_date',
-            'lokasi' => 'required|in_list[malang,jogja]',
+            'lokasi' => 'required' . ($inList !== '' ? '|in_list[' . $inList . ']' : ''),
             'instruktur' => 'required|min_length[3]'
         ];
 
@@ -271,6 +290,24 @@ class Jadwal extends BaseController
             'instruktur' => (string) $this->request->getPost('instruktur'),
             'kapasitas' => (int) $this->request->getPost('kapasitas'),
         ];
+
+        // Pastikan lokasi sesuai dengan kota_tersedia pada kelas
+        $kelas = $db->table('kelas')->select('kota_tersedia, kategori')->where('id', $data['kelas_id'])->get()->getRowArray();
+        if ($kelas) {
+            $kt = strtolower((string)($kelas['kota_tersedia'] ?? ''));
+            $isOnline = strtolower((string)($kelas['kategori'] ?? '')) === 'kursusonline';
+            $arr = array_values(array_filter(array_map('trim', explode(',', $kt))));
+            $arr = array_map('strtolower', $arr);
+            $lok = strtolower($data['lokasi']);
+            // Jika kelas online atau berisi se-dunia, lewati pembatasan
+            $hasAll = $isOnline || in_array('se-dunia', $arr, true);
+            if (!$hasAll && !in_array($lok, $arr, true)) {
+                return redirect()->back()->withInput()->with('alert', [
+                    'type' => 'danger',
+                    'message' => 'Lokasi tidak tersedia untuk kelas terpilih.',
+                ]);
+            }
+        }
 
         try {
             $db->table('jadwal_kelas')->insert($data);
@@ -296,11 +333,21 @@ class Jadwal extends BaseController
             ]);
         }
 
+        // Validasi lokasi mengikuti daftar kota aktif pusat
+        $kotaCodes = model(KotaKelasModel::class)
+            ->select('kode')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+        $allowed = [];
+        foreach ($kotaCodes as $r) { $c = strtolower((string)($r['kode'] ?? '')); if ($c !== '') $allowed[] = $c; }
+        $inList = implode(',', $allowed);
+
         $rules = [
             'kelas_id' => 'required|is_natural_no_zero',
             'tanggal_mulai' => 'required|valid_date',
             'tanggal_selesai' => 'required|valid_date',
-            'lokasi' => 'required|in_list[malang,jogja]',
+            'lokasi' => 'required' . ($inList !== '' ? '|in_list[' . $inList . ']' : ''),
             'instruktur' => 'required|min_length[3]'
         ];
 
@@ -320,6 +367,23 @@ class Jadwal extends BaseController
             'instruktur' => (string) $this->request->getPost('instruktur'),
             'kapasitas' => (int) $this->request->getPost('kapasitas'),
         ];
+
+        // Pastikan lokasi sesuai dengan kota_tersedia pada kelas
+        $kelas = $db->table('kelas')->select('kota_tersedia, kategori')->where('id', $data['kelas_id'])->get()->getRowArray();
+        if ($kelas) {
+            $kt = strtolower((string)($kelas['kota_tersedia'] ?? ''));
+            $isOnline = strtolower((string)($kelas['kategori'] ?? '')) === 'kursusonline';
+            $arr = array_values(array_filter(array_map('trim', explode(',', $kt))));
+            $arr = array_map('strtolower', $arr);
+            $lok = strtolower($data['lokasi']);
+            $hasAll = $isOnline || in_array('se-dunia', $arr, true);
+            if (!$hasAll && !in_array($lok, $arr, true)) {
+                return redirect()->back()->withInput()->with('alert', [
+                    'type' => 'danger',
+                    'message' => 'Lokasi tidak tersedia untuk kelas terpilih.',
+                ]);
+            }
+        }
 
         try {
             $db->table('jadwal_kelas')->where('id', $id)->update($data);

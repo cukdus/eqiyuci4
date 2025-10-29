@@ -29,6 +29,69 @@ class Artikel extends BaseController
         ]);
     }
 
+    /**
+     * JSON endpoint: list articles with pagination and optional search.
+     * GET params: page (int), per_page (int), search (string)
+     */
+    public function listJson()
+    {
+        $model = model(Berita::class);
+
+        $perPage = (int) ($this->request->getGet('per_page') ?? 10);
+        if ($perPage <= 0) { $perPage = 10; }
+        if ($perPage > 50) { $perPage = 50; }
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $start = ($page - 1) * $perPage;
+        $search = trim((string) ($this->request->getGet('search') ?? ''));
+
+        $builder = $model
+            ->select('berita.*, kategori_berita.nama_kategori AS kategori_nama')
+            ->join('kategori_berita', 'kategori_berita.id = berita.kategori_id', 'left');
+
+        if ($search !== '') {
+            $builder
+                ->groupStart()
+                ->like('berita.judul', $search)
+                ->orLike('berita.penulis', $search)
+                ->orLike('kategori_berita.nama_kategori', $search)
+                ->groupEnd();
+        }
+
+        // Count total results (without resetting builder state)
+        $countBuilder = clone $builder;
+        $totalData = (int) $countBuilder->countAllResults(false);
+        $totalPages = (int) ceil($totalData / $perPage);
+
+        // Fetch paginated rows
+        $rows = $builder
+            ->orderBy('berita.tanggal_terbit', 'DESC')
+            ->limit($perPage, $start)
+            ->get()
+            ->getResultArray();
+
+        // Normalize output
+        $data = array_map(static function(array $r){
+            return [
+                'id' => (int) ($r['id'] ?? 0),
+                'judul' => (string) ($r['judul'] ?? ''),
+                'penulis' => (string) ($r['penulis'] ?? ''),
+                'kategori_nama' => (string) ($r['kategori_nama'] ?? ''),
+                'tanggal_terbit' => (string) ($r['tanggal_terbit'] ?? ''),
+            ];
+        }, $rows);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'meta' => [
+                'perPage' => $perPage,
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'totalData' => $totalData,
+            ],
+        ]);
+    }
+
     public function create()
     {
         $kategoriModel = model(KategoriBerita::class);

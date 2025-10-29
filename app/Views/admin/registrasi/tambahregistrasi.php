@@ -155,22 +155,45 @@
                   return text.charAt(0).toUpperCase() + text.slice(1);
                 }
 
+                // Peta kota pusat: kode -> nama
+                const allCities = <?php
+                  $map = [];
+                  if (!empty($kotaOptions)) {
+                    foreach ($kotaOptions as $ko) {
+                      $code = strtolower((string) ($ko['kode'] ?? ''));
+                      $name = (string) ($ko['nama'] ?? $code);
+                      if ($code !== '') { $map[$code] = $name; }
+                    }
+                  }
+                  echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+                ?>;
+
                 function populateLokasi() {
                   const selected = kelasSelect.options[kelasSelect.selectedIndex];
                   const raw = selected ? (selected.getAttribute('data-lokasi') || '') : '';
-                  // Dukungan daftar lokasi dipisahkan koma (",") atau titik koma (";")
-                  const cities = raw
+                  const codes = raw
                     .split(/[,;]+/)
-                    .map(s => s.trim())
+                    .map(s => s.trim().toLowerCase())
                     .filter(Boolean);
 
                   // reset options
                   lokasiSelect.innerHTML = '<option value="">-- Pilih Lokasi --</option>';
 
-                  cities.forEach(city => {
+                  let entries = [];
+                  if (codes.includes('se-dunia')) {
+                    // Jika kelas online: tampilkan semua kota pusat
+                    entries = Object.entries(allCities);
+                  } else {
+                    // Filter sesuai kota tersedia untuk kelas
+                    entries = codes
+                      .filter(code => allCities.hasOwnProperty(code))
+                      .map(code => [code, allCities[code]]);
+                  }
+
+                  entries.forEach(([code, name]) => {
                     const opt = document.createElement('option');
-                    opt.value = city;
-                    opt.textContent = capitalize(city);
+                    opt.value = code;
+                    opt.textContent = name;
                     lokasiSelect.appendChild(opt);
                   });
                 }
@@ -225,7 +248,9 @@
                       const items = (Array.isArray(json.data) ? json.data : []).filter(j => {
                         const jl = (j.lokasi || '').trim().toLowerCase();
                         const sl = lokasi.trim().toLowerCase();
-                        return jl === sl;
+                        // Izinkan kecocokan baik dengan kode kota maupun nama kota pusat
+                        const slName = (allCities && allCities[sl]) ? String(allCities[sl]).trim().toLowerCase() : '';
+                        return jl === sl || (slName && jl === slName);
                       });
                       if (items.length === 0) {
                         if (jadwalHelp) jadwalHelp.textContent = 'Belum ada jadwal untuk kelas dan lokasi ini.';

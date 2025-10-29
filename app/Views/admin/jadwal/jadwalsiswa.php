@@ -4,7 +4,7 @@
       <h5 class="mb-0">Data Kelas</h5>
     </div>
     <?php if (session()->has('alert')):
-        $alert = session('alert'); ?>
+      $alert = session('alert'); ?>
       <div class="alert alert-<?= esc($alert['type']) ?> alert-dismissible fade show">
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         <h5><i class="icon fas <?= $alert['type'] === 'success' ? 'fa-check' : 'fa-ban'; ?>"></i> <?= $alert['type'] === 'success' ? 'Sukses!' : 'Error!'; ?></h5>
@@ -32,7 +32,7 @@
             <label class="form-label">Tahun</label>
             <select name="year" id="filterYear" class="form-select">
               <?php $startYear = 2023;
-$endYear = (int) date('Y') + 1; ?>
+              $endYear = (int) date('Y') + 1; ?>
               <?php for ($y = $startYear; $y <= $endYear; $y++): ?>
                 <option value="<?= $y ?>" <?= $y === (int) date('Y') ? 'selected' : '' ?>><?= $y ?></option>
               <?php endfor; ?>
@@ -77,7 +77,7 @@ $endYear = (int) date('Y') + 1; ?>
               <th data-sort="tanggal_mulai" class="sortable">Tanggal</th>
               <th>Lokasi</th>
               <th>Reschedule</th>
-              <th data-sort="status_pembayaran" class="sortable">Status Pembayaran</th>
+              <th data-sort="status_pembayaran" class="sortable">Status $</th>
               <th style="width:80px;">Aksi</th>
             </tr>
           </thead>

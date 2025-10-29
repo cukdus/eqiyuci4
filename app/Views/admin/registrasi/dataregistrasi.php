@@ -79,7 +79,21 @@
                       </a>
                       </div>
                     </td>
-                    <td><?= esc($r['lokasi'] ?? '-') ?></td>
+                    <?php
+                      // Pemetaan kode kota -> nama kota (SSR)
+                      $kotaMap = [];
+                      if (!empty($kotaOptions)) {
+                        foreach ($kotaOptions as $ko) {
+                          $code = strtolower((string)($ko['kode'] ?? ''));
+                          $name = (string)($ko['nama'] ?? $code);
+                          if ($code !== '') { $kotaMap[$code] = $name; }
+                        }
+                      }
+                      $lokRaw = (string)($r['lokasi'] ?? '');
+                      $lokKey = strtolower(trim($lokRaw));
+                      $lokNama = $kotaMap[$lokKey] ?? $lokRaw;
+                    ?>
+                    <td><?= esc($lokNama !== '' ? $lokNama : '-') ?></td>
                     <td><?= esc($r['nama_kelas'] ?? '-') ?></td>
                     <td>
                       <div class="form-check form-switch">
@@ -134,6 +148,18 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Peta kota pusat: kode -> nama (AJAX)
+    const ALL_CITIES = <?php
+      $map = [];
+      if (!empty($kotaOptions)) {
+        foreach ($kotaOptions as $ko) {
+          $code = strtolower((string)($ko['kode'] ?? ''));
+          $name = (string)($ko['nama'] ?? $code);
+          if ($code !== '') { $map[$code] = $name; }
+        }
+      }
+      echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+    ?>;
     // Toggle akses aktif
     document.querySelectorAll('.akses-toggle').forEach(function(toggle) {
         toggle.addEventListener('change', function() {
@@ -218,7 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<a href="' + waUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-warning"><i class="bi bi-whatsapp me-1"></i></a>' +
               '</div>' +
             '</td>' +
-            '<td>' + (r.lokasi || '-') + '</td>' +
+            '<td>' + (function(){
+                const key = String(r.lokasi || '').trim().toLowerCase();
+                const name = ALL_CITIES[key] || (r.lokasi || '-');
+                return name;
+            })() + '</td>' +
             '<td>' + (r.nama_kelas || '-') + '</td>' +
             '<td>' +
               '<div class="form-check form-switch">' +

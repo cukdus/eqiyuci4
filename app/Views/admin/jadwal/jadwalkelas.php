@@ -131,9 +131,9 @@
           <div class="modal-body">
             <div class="mb-3">
               <label class="form-label">Kelas</label>
-              <select class="form-select" name="kelas_id" required>
+              <select class="form-select" name="kelas_id" id="create_kelas_id" required>
                 <?php foreach (($kelasOptions ?? []) as $kelas): ?>
-                  <option value="<?= esc($kelas['id']) ?>"><?= esc($kelas['nama_kelas']) ?></option>
+                  <option value="<?= esc($kelas['id']) ?>" data-kota="<?= esc($kelas['kota_tersedia'] ?? '') ?>"><?= esc($kelas['nama_kelas']) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
@@ -147,9 +147,8 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Lokasi</label>
-              <select class="form-select" name="lokasi" required>
-                <option value="malang">Malang</option>
-                <option value="jogja">Jogja</option>
+              <select class="form-select" name="lokasi" id="create_lokasi" required>
+                <option value="">-- Pilih Lokasi --</option>
               </select>
             </div>
             <div class="mb-3">
@@ -192,7 +191,7 @@
               <label class="form-label">Kelas</label>
               <select class="form-select" name="kelas_id" id="edit_kelas_id" required>
                 <?php foreach (($kelasOptions ?? []) as $kelas): ?>
-                  <option value="<?= esc($kelas['id']) ?>"><?= esc($kelas['nama_kelas']) ?></option>
+                  <option value="<?= esc($kelas['id']) ?>" data-kota="<?= esc($kelas['kota_tersedia'] ?? '') ?>"><?= esc($kelas['nama_kelas']) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
@@ -207,8 +206,7 @@
             <div class="mb-3">
               <label class="form-label">Lokasi</label>
               <select class="form-select" name="lokasi" id="edit_lokasi" required>
-                <option value="malang">Malang</option>
-                <option value="jogja">Jogja</option>
+                <option value="">-- Pilih Lokasi --</option>
               </select>
             </div>
             <div class="mb-3">
@@ -237,11 +235,56 @@
 </section>
 
 <script>
+  // Peta kota pusat: kode -> nama
+  const ALL_CITIES = <?php
+    $map = [];
+    foreach (($kotaOptions ?? []) as $ko) {
+      $code = strtolower((string) ($ko['kode'] ?? ''));
+      $name = (string) ($ko['nama'] ?? $code);
+      if ($code !== '') { $map[$code] = $name; }
+    }
+    echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+  ?>;
+
+  function populateLokasi(selectKelasEl, selectLokasiEl, presetValue) {
+    if (!selectKelasEl || !selectLokasiEl) return;
+    const opt = selectKelasEl.options[selectKelasEl.selectedIndex];
+    const raw = opt ? (opt.getAttribute('data-kota') || '') : '';
+    const codes = raw.split(/[,;]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+    selectLokasiEl.innerHTML = '<option value="">-- Pilih Lokasi --</option>';
+    let entries = [];
+    if (codes.includes('se-dunia')) {
+      entries = Object.entries(ALL_CITIES);
+    } else {
+      entries = codes.filter(c => Object.prototype.hasOwnProperty.call(ALL_CITIES, c)).map(c => [c, ALL_CITIES[c]]);
+    }
+    entries.forEach(([code, name]) => {
+      const optEl = document.createElement('option');
+      optEl.value = code;
+      optEl.textContent = name;
+      selectLokasiEl.appendChild(optEl);
+    });
+    if (presetValue) {
+      selectLokasiEl.value = presetValue;
+      if (selectLokasiEl.value !== presetValue) {
+        // fallback jika value tidak tersedia
+        selectLokasiEl.selectedIndex = 0;
+      }
+    }
+  }
+
   // Trigger modal tambah jadwal
   document.getElementById('btnTambahJadwal')?.addEventListener('click', function(e) {
     e.preventDefault();
     var modal = new bootstrap.Modal(document.getElementById('modalTambahJadwal'));
     modal.show();
+    // Populate lokasi sesuai kelas terpilih
+    populateLokasi(document.getElementById('create_kelas_id'), document.getElementById('create_lokasi'));
+  });
+
+  // Ubah lokasi saat kelas dipilih pada modal tambah
+  document.getElementById('create_kelas_id')?.addEventListener('change', function() {
+    populateLokasi(this, document.getElementById('create_lokasi'));
   });
 
   // Handler edit jadwal
@@ -252,7 +295,8 @@
       document.getElementById('edit_kelas_id').value = tr.dataset.kelasId;
       document.getElementById('edit_tanggal_mulai').value = tr.dataset.tanggalMulai;
       document.getElementById('edit_tanggal_selesai').value = tr.dataset.tanggalSelesai;
-      document.getElementById('edit_lokasi').value = tr.dataset.lokasi;
+      // Populate lokasi sesuai kelas terpilih, lalu set value
+      populateLokasi(document.getElementById('edit_kelas_id'), document.getElementById('edit_lokasi'), tr.dataset.lokasi);
       document.getElementById('edit_instruktur').value = tr.dataset.instruktur;
       document.getElementById('edit_kapasitas').value = tr.dataset.kapasitas;
 

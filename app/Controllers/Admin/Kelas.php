@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\Kelas as KelasModel;
+use App\Models\KotaKelas as KotaKelasModel;
 
 class Kelas extends BaseController
 {
@@ -27,7 +28,7 @@ class Kelas extends BaseController
             ->orWhere('kategori', 'Kursus')
             ->orWhere('kategori', 'Jasa')
             ->groupEnd()
-            ->orderBy('updated_at', 'DESC')
+            ->orderBy('kode_kelas', 'ASC')
             ->paginate(10);
         $pager = $model->pager;
 
@@ -55,10 +56,17 @@ class Kelas extends BaseController
 
     public function create()
     {
-        // Placeholder form untuk tambah kelas offline
+        // Form tambah kelas
+        $kotaOptions = model(KotaKelasModel::class)
+            ->select('kode, nama, status')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
         return view('layout/admin_layout', [
             'title' => 'Tambah Kelas Offline',
-            'content' => view('admin/kelas/tambahkelas'),
+            'content' => view('admin/kelas/tambahkelas', [
+                'kotaOptions' => $kotaOptions,
+            ]),
         ]);
     }
 
@@ -189,13 +197,68 @@ class Kelas extends BaseController
         $backUrl = base_url('admin/kelas');
         $title = 'Edit Kelas';
 
+        $kotaOptions = model(KotaKelasModel::class)
+            ->select('kode, nama, status')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+
         return view('layout/admin_layout', [
             'title' => $title,
             'content' => view('admin/kelas/editkelas', [
                 'kelas' => $kelas,
                 'backUrl' => $backUrl,
+                'kotaOptions' => $kotaOptions,
             ]),
         ]);
+    }
+
+    /**
+     * Kota Kelas: halaman daftar & tambah kota
+     */
+    public function kota()
+    {
+        $model = model(KotaKelasModel::class);
+        $kotaList = $model->orderBy('nama', 'ASC')->findAll();
+        return view('layout/admin_layout', [
+            'title' => 'Kota Kelas',
+            'content' => view('admin/kelas/kotakelas', [
+                'kotaList' => $kotaList,
+            ]),
+        ]);
+    }
+
+    public function storeKota()
+    {
+        $kode = trim((string) $this->request->getPost('kode'));
+        $nama = trim((string) $this->request->getPost('nama'));
+        $status = trim((string) $this->request->getPost('status'));
+        if ($kode === '' || $nama === '' || !in_array($status, ['aktif', 'nonaktif'], true)) {
+            return redirect()->back()->with('error', 'Data kota tidak valid');
+        }
+        $model = model(KotaKelasModel::class);
+        try {
+            $model->insert([
+                'kode' => strtolower($kode),
+                'nama' => $nama,
+                'status' => $status,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal menyimpan kota: ' . $e->getMessage());
+        }
+        return redirect()->to(base_url('admin/kelas/kota'))->with('message', 'Kota berhasil ditambahkan');
+    }
+
+    public function deleteKota(int $id)
+    {
+        $model = model(KotaKelasModel::class);
+        if (!$model->find($id)) {
+            return redirect()->back()->with('error', 'Kota tidak ditemukan');
+        }
+        $model->delete($id);
+        return redirect()->to(base_url('admin/kelas/kota'))->with('message', 'Kota dihapus');
     }
 
     public function update(int $id)

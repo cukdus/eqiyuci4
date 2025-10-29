@@ -106,12 +106,20 @@ class Registrasi extends BaseController
         
         $pager = $model->pager;
 
+        // Ambil daftar kota pusat untuk pemetaan kode->nama pada tampilan
+        $kotaOptions = model(\App\Models\KotaKelas::class)
+            ->select('kode, nama')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+
         return view('layout/admin_layout', [
             'title' => 'Data Registrasi',
             'content' => view('admin/registrasi/dataregistrasi', [
                 'registrations' => $registrations,
                 'pager' => $pager,
                 'search' => $search,
+                'kotaOptions' => $kotaOptions,
             ]),
         ]);
     }
@@ -124,25 +132,18 @@ class Registrasi extends BaseController
                                 ->orderBy('kode_kelas', 'ASC')
                                 ->findAll();
 
-        // Ambil daftar lokasi (kota) dari field kota_tersedia pada tabel kelas
-        $lokasiOptions = [];
-        foreach ($kelasList as $k) {
-            if (!empty($k['kota_tersedia'])) {
-                $parts = array_map('trim', explode(',', (string) $k['kota_tersedia']));
-                foreach ($parts as $p) {
-                    if ($p !== '') {
-                        $lokasiOptions[] = $p;
-                    }
-                }
-            }
-        }
-        $lokasiOptions = array_values(array_unique($lokasiOptions));
+        // Ambil daftar kota dari tabel pusat kota_kelas
+        $kotaOptions = model(\App\Models\KotaKelas::class)
+            ->select('kode, nama')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
 
         return view('layout/admin_layout', [
             'title' => 'Tambah Registrasi',
             'content' => view('admin/registrasi/tambahregistrasi', [
                 'kelasList' => $kelasList,
-                'lokasiOptions' => $lokasiOptions,
+                'kotaOptions' => $kotaOptions,
             ]),
         ]);
     }
@@ -236,7 +237,24 @@ class Registrasi extends BaseController
         // Pastikan lokasi jadwal sama dengan lokasi yang dipilih di form
         $lokasiForm = strtolower(trim((string) $data['lokasi']));
         $lokasiJadwal = strtolower(trim((string) ($jadwalRow['lokasi'] ?? '')));
-        if ($lokasiForm === '' || $lokasiForm !== $lokasiJadwal) {
+        // Izinkan kecocokan baik dengan kode kota maupun nama kota dari pusat
+        $kotaMap = [];
+        try {
+            $rows = model(\App\Models\KotaKelas::class)
+                ->select('kode, nama')
+                ->where('status', 'aktif')
+                ->findAll();
+            foreach ($rows as $r) {
+                $code = strtolower((string) ($r['kode'] ?? ''));
+                $name = strtolower((string) ($r['nama'] ?? ''));
+                if ($code !== '') { $kotaMap[$code] = $name ?: $code; }
+            }
+        } catch (\Throwable $e) {
+            // Jika gagal memuat, lanjutkan tanpa peta
+        }
+        $lokasiFormName = isset($kotaMap[$lokasiForm]) ? $kotaMap[$lokasiForm] : '';
+        $match = ($lokasiForm !== '' && ($lokasiForm === $lokasiJadwal || ($lokasiFormName !== '' && $lokasiFormName === $lokasiJadwal)));
+        if (!$match) {
             return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan lokasi yang dipilih']);
         }
 

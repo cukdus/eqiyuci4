@@ -148,19 +148,18 @@
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label class="form-label d-block">Kota Tersedia</label>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="kota_malang" name="kota_tersedia[]" value="malang" <?= in_array('malang', $oldKota) ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="kota_malang">Malang</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="kota_jogja" name="kota_tersedia[]" value="jogja" <?= in_array('jogja', $oldKota) ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="kota_jogja">Jogja</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="kota_world" name="kota_tersedia[]" value="se-dunia" <?= in_array('se-dunia', $oldKota) || (($kelas['kategori'] ?? '') === 'kursusonline') ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="kota_world">Se-Dunia</label>
-                  </div>
-                  <small class="text-muted d-block mt-1">Untuk kelas online, opsi ini akan otomatis ditambahkan.</small>
+                  <?php if (!empty($kotaOptions)): ?>
+                    <?php foreach ($kotaOptions as $opt): ?>
+                      <?php $code = strtolower((string) ($opt['kode'] ?? '')); $name = (string) ($opt['nama'] ?? $code); ?>
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="kota_<?= esc($code) ?>" name="kota_tersedia[]" value="<?= esc($code) ?>" <?= in_array($code, array_map('strtolower', $oldKota)) ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="kota_<?= esc($code) ?>"><?= esc($name) ?></label>
+                      </div>
+                    <?php endforeach; ?>
+                  <?php else: ?>
+                    <div class="text-muted">Belum ada data kota. Tambahkan di menu Kota Kelas.</div>
+                  <?php endif; ?>
+                  <small class="text-muted d-block mt-1">Untuk kelas online, opsi "se-dunia" akan otomatis ditambahkan saat simpan.</small>
                 </div>
                 <div class="col-md-6">
                   <label for="badge" class="form-label">Badge</label>

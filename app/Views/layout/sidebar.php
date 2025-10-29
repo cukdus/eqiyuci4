@@ -18,6 +18,7 @@ $isKelasOnline = ($isKelas && $seg3 === null);
 $isKelasOffline = ($isKelas && $seg3 === 'offline');
 $isBonusKelas = ($isKelas && $seg3 === 'bonus');
 $isVoucherKelas = ($isKelas && $seg3 === 'voucher');
+$isKotaKelas = ($isKelas && $seg3 === 'kota');
 
 // Jadwal
 $isJadwal = ($seg2 === 'jadwal');
@@ -117,6 +118,12 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
               <a href="<?= base_url('admin/kelas/bonus') ?>" class="nav-link <?= $isBonusKelas ? 'active' : '' ?>">
                 <i class="nav-icon fa fa-gift"></i>
                 <p><small>Bonus Kelas</small></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<?= base_url('admin/kelas/kota') ?>" class="nav-link <?= $isKotaKelas ? 'active' : '' ?>">
+                <i class="nav-icon fas fa-city"></i>
+                <p><small>Kota Kelas</small></p>
               </a>
             </li>
             <li class="nav-item">
