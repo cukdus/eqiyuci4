@@ -230,4 +230,180 @@
       });
     })();
   </script>
+
+  <script>
+    // Ambil daftar tag dari endpoint JSON untuk dropdown kustom (token-aware)
+    (function(){
+      const endpoint = '<?= base_url('admin/artikel/tags.json') ?>';
+      fetch(endpoint, { headers: { 'Accept': 'application/json' } })
+        .then(function(res){ return res.json(); })
+        .then(function(json){
+          if (!json || !json.ok || !Array.isArray(json.tags)) return;
+          window.__allTags = json.tags.slice();
+        })
+        .catch(function(err){
+          console.warn('Gagal memuat daftar tag:', err);
+        });
+    })();
+  </script>
+
+  <style>
+    /* Dropdown saran kustom untuk Tag (tidak bergantung pada Bootstrap) */
+    .tag-suggest-box {
+      position: absolute;
+      z-index: 1055;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      padding: 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+    }
+    .tag-suggest-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .tag-suggest-item:hover,
+    .tag-suggest-item.active {
+      background: #f0f4ff;
+    }
+    .tag-suggest-empty {
+      padding: 6px 10px;
+      color: #888;
+    }
+  </style>
+
+  <script>
+    // Dropdown saran kustom berbasis token terakhir (setelah koma)
+    (function(){
+      const input = document.getElementById('tags');
+      if (!input) return;
+
+      const box = document.createElement('div');
+      box.id = 'tagSuggestBox';
+      box.className = 'tag-suggest-box';
+      document.body.appendChild(box);
+
+      let items = [];
+      let activeIndex = -1;
+
+      function rect(el){ return el.getBoundingClientRect(); }
+      function positionBox(){
+        const r = rect(input);
+        box.style.minWidth = r.width + 'px';
+        box.style.left = (window.scrollX + r.left) + 'px';
+        box.style.top = (window.scrollY + r.bottom + 2) + 'px';
+      }
+
+      function getTokens(){
+        return input.value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+      }
+      function getLastTermRaw(){
+        const parts = input.value.split(',');
+        return parts[parts.length - 1] ?? '';
+      }
+      function getLastTerm(){
+        return getLastTermRaw().trim().toLowerCase();
+      }
+      function normalize(s){ return (s || '').trim().toLowerCase(); }
+
+      function buildList(){
+        const all = Array.isArray(window.__allTags) ? window.__allTags : [];
+        const tokens = getTokens().map(normalize);
+        const term = getLastTerm();
+        let candidates = all
+          .filter(function(t){ return !tokens.includes(normalize(t)); })
+          .filter(function(t){ return term ? normalize(t).startsWith(term) : true; })
+          .slice(0, 30);
+
+        box.innerHTML = '';
+        activeIndex = -1;
+        items = [];
+
+        if (candidates.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'tag-suggest-empty';
+          empty.textContent = term ? 'Tidak ada saran yang cocok' : 'Tidak ada saran';
+          box.appendChild(empty);
+          return;
+        }
+
+        candidates.forEach(function(name, idx){
+          const div = document.createElement('div');
+          div.className = 'tag-suggest-item';
+          div.textContent = name;
+          div.dataset.value = name;
+          div.addEventListener('mousedown', function(e){
+            // gunakan mousedown agar eksekusi sebelum blur
+            e.preventDefault();
+            applyValue(name);
+          });
+          box.appendChild(div);
+          items.push(div);
+        });
+      }
+
+      function show(){ positionBox(); box.style.display = 'block'; }
+      function hide(){ box.style.display = 'none'; activeIndex = -1; }
+      function isVisible(){ return box.style.display !== 'none'; }
+
+      function applyValue(val){
+        const parts = input.value.split(',');
+        // ganti token terakhir dengan nilai terpilih
+        const head = parts.slice(0, -1);
+        const newTokens = head.concat([val]);
+        // tambahkan koma spasi untuk memudahkan tambah tag berikutnya
+        input.value = newTokens.join(', ') + ', ';
+        // setelah insert, tampilkan saran untuk token kosong berikutnya
+        buildList();
+        show();
+        input.focus();
+      }
+
+      function setActive(i){
+        items.forEach(function(el){ el.classList.remove('active'); });
+        activeIndex = i;
+        if (items[activeIndex]) items[activeIndex].classList.add('active');
+      }
+
+      input.addEventListener('input', function(){
+        buildList();
+        show();
+      });
+
+      input.addEventListener('focus', function(){
+        buildList();
+        show();
+      });
+
+      input.addEventListener('keydown', function(e){
+        if (!isVisible()) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (items.length) setActive((activeIndex + 1) % items.length);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (items.length) setActive((activeIndex - 1 + items.length) % items.length);
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+          if (items.length && activeIndex >= 0) {
+            e.preventDefault();
+            applyValue(items[activeIndex].dataset.value);
+          }
+        } else if (e.key === 'Escape') {
+          hide();
+        }
+      });
+
+      input.addEventListener('blur', function(){
+        // beri waktu untuk klik mousedown
+        setTimeout(hide, 120);
+      });
+
+      window.addEventListener('resize', function(){ if (isVisible()) positionBox(); });
+      window.addEventListener('scroll', function(){ if (isVisible()) positionBox(); }, true);
+    })();
+  </script>
 </section>

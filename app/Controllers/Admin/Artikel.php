@@ -30,6 +30,35 @@ class Artikel extends BaseController
     }
 
     /**
+     * Mengembalikan daftar tag (nama_tag) sebagai JSON untuk auto-complete.
+     */
+    public function tagsJson()
+    {
+        $this->response->setContentType('application/json');
+        try {
+            $tagModel = model(Tag::class);
+            $rows = $tagModel
+                ->select('nama_tag')
+                ->orderBy('nama_tag', 'ASC')
+                ->findAll();
+            $tags = array_values(array_filter(array_map(static function($r){
+                $v = (string) ($r['nama_tag'] ?? '');
+                return trim($v) !== '' ? $v : null;
+            }, $rows)));
+            return $this->response->setJSON([
+                'ok' => true,
+                'count' => count($tags),
+                'tags' => $tags,
+            ]);
+        } catch (\Throwable $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'ok' => false,
+                'error' => 'Gagal mengambil data tag',
+            ]);
+        }
+    }
+
+    /**
      * JSON endpoint: list articles with pagination and optional search.
      * GET params: page (int), per_page (int), search (string)
      */

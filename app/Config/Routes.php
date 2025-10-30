@@ -19,6 +19,8 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->get('artikel', 'Admin\\Artikel::index');
     // Artikel: JSON list endpoint
     $routes->get('artikel.json', 'Admin\\Artikel::listJson');
+    // Artikel: Tags JSON (untuk auto-complete input tag)
+    $routes->get('artikel/tags.json', 'Admin\\Artikel::tagsJson');
     $routes->get('artikel/tambah', 'Admin\\Artikel::create');
     $routes->post('artikel/tambah', 'Admin\\Artikel::store');
     // Artikel: Edit & Update

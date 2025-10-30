@@ -50,7 +50,7 @@
                   <th style="width:80px" data-sort="lokasi">Lokasi</th>
                   <th style="width:350px" data-sort="nama_kelas">Kelas</th>
                   <th style="width:50px" data-sort="akses_aktif">Akses OC</th>
-                  <th style="width:160px" data-sort="status_pembayaran">Status</th>
+                  <th style="width:100px" data-sort="status_pembayaran">Status $</th>
                   <th style="width:100px">Aksi</th>
                 </tr>
               </thead>
@@ -63,13 +63,13 @@
                     <td><?= esc($r['email'] ?? '-') ?></td>
                     <td>
                       <?php
-        $phoneRaw = preg_replace('/[^0-9]/', '', (string) ($r['no_telp'] ?? ''));
-        $waUrl = '#';
-        if ($phoneRaw !== '') {
-            $waNumber = ($phoneRaw[0] === '0') ? ('62' . substr($phoneRaw, 1)) : $phoneRaw;
-            $waUrl = 'https://wa.me/' . $waNumber;
-        }
-        ?>
+                      $phoneRaw = preg_replace('/[^0-9]/', '', (string) ($r['no_telp'] ?? ''));
+                      $waUrl = '#';
+                      if ($phoneRaw !== '') {
+                        $waNumber = ($phoneRaw[0] === '0') ? ('62' . substr($phoneRaw, 1)) : $phoneRaw;
+                        $waUrl = 'https://wa.me/' . $waNumber;
+                      }
+                      ?>
                       <div class="btn-group">
                       <a href="<?= esc($waUrl) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-success">
                         <i class="bi bi-whatsapp me-1"></i>
@@ -80,18 +80,20 @@
                       </div>
                     </td>
                     <?php
-                      // Pemetaan kode kota -> nama kota (SSR)
-                      $kotaMap = [];
-                      if (!empty($kotaOptions)) {
-                        foreach ($kotaOptions as $ko) {
-                          $code = strtolower((string)($ko['kode'] ?? ''));
-                          $name = (string)($ko['nama'] ?? $code);
-                          if ($code !== '') { $kotaMap[$code] = $name; }
+                    // Pemetaan kode kota -> nama kota (SSR)
+                    $kotaMap = [];
+                    if (!empty($kotaOptions)) {
+                      foreach ($kotaOptions as $ko) {
+                        $code = strtolower((string) ($ko['kode'] ?? ''));
+                        $name = (string) ($ko['nama'] ?? $code);
+                        if ($code !== '') {
+                          $kotaMap[$code] = $name;
                         }
                       }
-                      $lokRaw = (string)($r['lokasi'] ?? '');
-                      $lokKey = strtolower(trim($lokRaw));
-                      $lokNama = $kotaMap[$lokKey] ?? $lokRaw;
+                    }
+                    $lokRaw = (string) ($r['lokasi'] ?? '');
+                    $lokKey = strtolower(trim($lokRaw));
+                    $lokNama = $kotaMap[$lokKey] ?? $lokRaw;
                     ?>
                     <td><?= esc($lokNama !== '' ? $lokNama : '-') ?></td>
                     <td><?= esc($r['nama_kelas'] ?? '-') ?></td>
@@ -105,9 +107,8 @@
                     </td>
                     <td>
                       <?php $status = strtolower((string) ($r['status_pembayaran'] ?? '')); ?>
-                      <span class="badge <?= $status === 'dp 50%' ? 'bg-warning' : ($status === 'lunas' ? 'bg-success' : 'bg-secondary') ?>">
-                        <?= esc(ucfirst($status ?: 'unknown')) ?>
-                      </span>
+                      <i class="bi bi-cash <?= $status === 'dp 50%' ? 'text-warning' : ($status === 'lunas' ? 'text-success' : 'text-secondary') ?>">
+                      </i>
                     </td>
                     <td>
                         <div class="btn-group" role="group">
@@ -150,16 +151,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Peta kota pusat: kode -> nama (AJAX)
     const ALL_CITIES = <?php
-      $map = [];
-      if (!empty($kotaOptions)) {
-        foreach ($kotaOptions as $ko) {
-          $code = strtolower((string)($ko['kode'] ?? ''));
-          $name = (string)($ko['nama'] ?? $code);
-          if ($code !== '') { $map[$code] = $name; }
-        }
-      }
-      echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
-    ?>;
+$map = [];
+if (!empty($kotaOptions)) {
+  foreach ($kotaOptions as $ko) {
+    $code = strtolower((string) ($ko['kode'] ?? ''));
+    $name = (string) ($ko['nama'] ?? $code);
+    if ($code !== '') {
+      $map[$code] = $name;
+    }
+  }
+}
+echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+?>;
     // Toggle akses aktif
     document.querySelectorAll('.akses-toggle').forEach(function(toggle) {
         toggle.addEventListener('change', function() {
