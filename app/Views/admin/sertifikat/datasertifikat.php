@@ -166,6 +166,7 @@
               <td>${escapeHtml(s.nama_kelas || '-')}</td>
               <td>
                 <div class="btn-group">
+                  <a class="btn btn-sm btn-info" href="<?= base_url('admin/sertifikat') ?>/${s.id}/view" target="_blank" title="Lihat Sertifikat"><i class="fas fa-eye"></i></a>
                   <button class="btn btn-sm btn-outline-danger" data-act="del" data-id="${s.id}"><i class="fas fa-trash"></i></button>
                 </div>
               </td>

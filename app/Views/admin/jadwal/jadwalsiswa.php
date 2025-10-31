@@ -1,7 +1,7 @@
 <section class="content">
   <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">Data Kelas</h5>
+      <h5 class="mb-0">Data Jadwal Peserta</h5>
     </div>
     <?php if (session()->has('alert')):
       $alert = session('alert'); ?>
@@ -101,7 +101,8 @@
         page: 1,
         per_page: 10,
         sort: 'tanggal_mulai',
-        order: 'desc'
+        order: 'desc',
+        filtered: false
       };
       let availableSchedules = [];
 
@@ -300,6 +301,7 @@
       document.getElementById('filterForm').addEventListener('submit', function(e) {
         e.preventDefault();
         state.page = 1;
+        state.filtered = true;
         loadData();
       });
       document.getElementById('btnReset').addEventListener('click', function() {
@@ -310,6 +312,7 @@
         state.page = 1;
         state.sort = 'tanggal_mulai';
         state.order = 'desc';
+        state.filtered = false;
         loadData();
       });
 

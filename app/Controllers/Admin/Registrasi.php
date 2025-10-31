@@ -127,7 +127,7 @@ class Registrasi extends BaseController
     public function tambah()
     {
         $kelasModel = model(KelasModel::class);
-        $kelasList = $kelasModel->select('kode_kelas, nama_kelas, kota_tersedia, harga')
+        $kelasList = $kelasModel->select('kode_kelas, nama_kelas, kota_tersedia, harga, kategori')
                                 ->where('status_kelas', 'aktif')
                                 ->orderBy('kode_kelas', 'ASC')
                                 ->findAll();
@@ -150,13 +150,26 @@ class Registrasi extends BaseController
 
     public function store()
     {
+        // Tentukan apakah kelas yang dipilih adalah kelas private (Jasa atau nama mengandung 'Private')
+        $submittedKodeKelas = (string) ($this->request->getPost('kode_kelas') ?? '');
+        $kelasModel = model(KelasModel::class);
+        $kelasForRule = $submittedKodeKelas !== ''
+            ? $kelasModel->where('kode_kelas', $submittedKodeKelas)->first()
+            : null;
+        $isPrivate = false;
+        if ($kelasForRule) {
+            $nm  = strtolower((string) ($kelasForRule['nama_kelas'] ?? ''));
+            $isPrivate = (strpos($nm, 'private') !== false);
+        }
+
+        // Bangun rules validasi secara dinamis: jadwal_id opsional untuk kelas private
         $rules = [
             'nama' => 'required|min_length[3]|max_length[100]',
             'email' => 'permit_empty|valid_email|max_length[100]',
             'no_telp' => 'permit_empty|max_length[20]',
             'kode_kelas' => 'required|max_length[20]',
             'lokasi' => 'required|max_length[100]',
-            'jadwal_id' => 'required|is_natural_no_zero',
+            'jadwal_id' => ($isPrivate ? 'permit_empty|is_natural_no_zero' : 'required|is_natural_no_zero'),
             'status_pembayaran' => 'required|in_list[DP 50%,lunas]',
             'akses_aktif' => 'permit_empty|in_list[0,1]',
             'kode_voucher' => 'permit_empty|max_length[50]',
@@ -221,41 +234,55 @@ class Registrasi extends BaseController
         $kelas = $kelasModel->where('kode_kelas', $data['kode_kelas'])->first();
         $data['biaya_total'] = isset($kelas['harga']) ? (float) $kelas['harga'] : 0.0;
 
-        // Validasi bahwa jadwal_id sesuai dengan kelas yang dipilih
+        // Validasi jadwal: hanya lakukan jika jadwal dipilih atau kelas bukan private
         $db = \Config\Database::connect();
-        $jadwalRow = $db->table('jadwal_kelas')
-            ->select('id, kelas_id, lokasi')
-            ->where('id', (int) $data['jadwal_id'])
-            ->get()
-            ->getRowArray();
-        if (!$jadwalRow) {
-            return redirect()->back()->withInput()->with('errors', ['Jadwal tidak ditemukan']);
+        $selectedJadwalId = (int) ($data['jadwal_id'] ?? 0);
+        $isPrivateNow = false;
+        if ($kelas) {
+            $nm2  = strtolower((string) ($kelas['nama_kelas'] ?? ''));
+            $isPrivateNow = (strpos($nm2, 'private') !== false);
         }
-        if ($kelas && isset($kelas['id']) && (int) $jadwalRow['kelas_id'] !== (int) $kelas['id']) {
-            return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan kelas yang dipilih']);
-        }
-        // Pastikan lokasi jadwal sama dengan lokasi yang dipilih di form
-        $lokasiForm = strtolower(trim((string) $data['lokasi']));
-        $lokasiJadwal = strtolower(trim((string) ($jadwalRow['lokasi'] ?? '')));
-        // Izinkan kecocokan baik dengan kode kota maupun nama kota dari pusat
-        $kotaMap = [];
-        try {
-            $rows = model(\App\Models\KotaKelas::class)
-                ->select('kode, nama')
-                ->where('status', 'aktif')
-                ->findAll();
-            foreach ($rows as $r) {
-                $code = strtolower((string) ($r['kode'] ?? ''));
-                $name = strtolower((string) ($r['nama'] ?? ''));
-                if ($code !== '') { $kotaMap[$code] = $name ?: $code; }
+        if ($selectedJadwalId > 0) {
+            // Jika ada jadwal dipilih, wajib validasi keterkaitan dan lokasi
+            $jadwalRow = $db->table('jadwal_kelas')
+                ->select('id, kelas_id, lokasi')
+                ->where('id', $selectedJadwalId)
+                ->get()
+                ->getRowArray();
+            if (!$jadwalRow) {
+                return redirect()->back()->withInput()->with('errors', ['Jadwal tidak ditemukan']);
             }
-        } catch (\Throwable $e) {
-            // Jika gagal memuat, lanjutkan tanpa peta
-        }
-        $lokasiFormName = isset($kotaMap[$lokasiForm]) ? $kotaMap[$lokasiForm] : '';
-        $match = ($lokasiForm !== '' && ($lokasiForm === $lokasiJadwal || ($lokasiFormName !== '' && $lokasiFormName === $lokasiJadwal)));
-        if (!$match) {
-            return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan lokasi yang dipilih']);
+            if ($kelas && isset($kelas['id']) && (int) $jadwalRow['kelas_id'] !== (int) $kelas['id']) {
+                return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan kelas yang dipilih']);
+            }
+            // Pastikan lokasi jadwal sama dengan lokasi yang dipilih di form
+            $lokasiForm = strtolower(trim((string) $data['lokasi']));
+            $lokasiJadwal = strtolower(trim((string) ($jadwalRow['lokasi'] ?? '')));
+            // Izinkan kecocokan baik dengan kode kota maupun nama kota dari pusat
+            $kotaMap = [];
+            try {
+                $rows = model(\App\Models\KotaKelas::class)
+                    ->select('kode, nama')
+                    ->where('status', 'aktif')
+                    ->findAll();
+                foreach ($rows as $r) {
+                    $code = strtolower((string) ($r['kode'] ?? ''));
+                    $name = strtolower((string) ($r['nama'] ?? ''));
+                    if ($code !== '') { $kotaMap[$code] = $name ?: $code; }
+                }
+            } catch (\Throwable $e) {
+                // Jika gagal memuat, lanjutkan tanpa peta
+            }
+            $lokasiFormName = isset($kotaMap[$lokasiForm]) ? $kotaMap[$lokasiForm] : '';
+            $match = ($lokasiForm !== '' && ($lokasiForm === $lokasiJadwal || ($lokasiFormName !== '' && $lokasiFormName === $lokasiJadwal)));
+            if (!$match) {
+                return redirect()->back()->withInput()->with('errors', ['Jadwal tidak sesuai dengan lokasi yang dipilih']);
+            }
+        } else {
+            // Tidak ada jadwal dipilih: izinkan hanya untuk kelas private
+            if (!$isPrivateNow) {
+                return redirect()->back()->withInput()->with('errors', ['Silakan pilih jadwal untuk kelas non-private']);
+            }
         }
 
         if (!$model->save($data)) {

@@ -1,5 +1,8 @@
 <section class="content">
   <div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">Data Jadwal Kelas</h5>
+    </div>
     <?php if (session()->has('message')): ?>
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <?= session('message') ?>
@@ -23,7 +26,7 @@
       </div>
     <?php endif; ?>
     <?php if (session()->has('alert')):
-        $alert = session('alert'); ?>
+      $alert = session('alert'); ?>
       <div class="alert alert-<?= esc($alert['type'] ?? 'info') ?> alert-dismissible fade show" role="alert">
         <?= esc($alert['message'] ?? '') ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -237,14 +240,16 @@
 <script>
   // Peta kota pusat: kode -> nama
   const ALL_CITIES = <?php
-    $map = [];
-    foreach (($kotaOptions ?? []) as $ko) {
-      $code = strtolower((string) ($ko['kode'] ?? ''));
-      $name = (string) ($ko['nama'] ?? $code);
-      if ($code !== '') { $map[$code] = $name; }
-    }
-    echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
-  ?>;
+$map = [];
+foreach (($kotaOptions ?? []) as $ko) {
+  $code = strtolower((string) ($ko['kode'] ?? ''));
+  $name = (string) ($ko['nama'] ?? $code);
+  if ($code !== '') {
+    $map[$code] = $name;
+  }
+}
+echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+?>;
 
   function populateLokasi(selectKelasEl, selectLokasiEl, presetValue) {
     if (!selectKelasEl || !selectLokasiEl) return;

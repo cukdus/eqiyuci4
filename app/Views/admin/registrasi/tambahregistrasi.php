@@ -37,6 +37,7 @@
                             value="<?= esc($k['kode_kelas']) ?>"
                             data-lokasi="<?= isset($k['kota_tersedia']) ? esc($k['kota_tersedia']) : '' ?>"
                             data-harga="<?= isset($k['harga']) ? esc($k['harga']) : '0' ?>"
+                            data-kategori="<?= isset($k['kategori']) ? esc($k['kategori']) : '' ?>"
                           >
                             <?= esc($k['kode_kelas']) ?> - <?= esc($k['nama_kelas']) ?>
                           </option>
@@ -149,6 +150,28 @@
                 const lokasiSelect = document.getElementById('lokasi');
                 const jadwalSelect = document.getElementById('jadwal_id');
                 const jadwalHelp = document.getElementById('jadwalHelp');
+                const isPrivateClass = (opt) => {
+                  if (!opt) return false;
+                  const label = (opt.textContent || '').toLowerCase();
+                  return label.includes('private class');
+                };
+
+                function configureJadwalBehaviorForClass() {
+                  const selected = kelasSelect.options[kelasSelect.selectedIndex];
+                  if (isPrivateClass(selected)) {
+                    // Kelas private: jadwal akan dibuat oleh admin setelah konfirmasi
+                    jadwalSelect.innerHTML = '<option value="">Jadwal akan ditentukan kemudian</option>';
+                    jadwalSelect.disabled = true;
+                    jadwalSelect.required = false;
+                    if (jadwalHelp) jadwalHelp.textContent = 'Kelas private: jadwal akan dibuat oleh admin setelah konfirmasi.';
+                  } else {
+                    // Non-private: wajib pilih jadwal
+                    jadwalSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+                    jadwalSelect.disabled = true;
+                    jadwalSelect.required = true;
+                    if (jadwalHelp) jadwalHelp.textContent = 'Pilih lokasi terlebih dahulu untuk memuat jadwal.';
+                  }
+                }
 
                 function capitalize(text) {
                   if (!text) return '';
@@ -202,16 +225,21 @@
                   kelasSelect.addEventListener('change', function() {
                     populateLokasi();
                     // reset jadwal ketika kelas berganti
-                    jadwalSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
-                    jadwalSelect.disabled = true;
-                    if (jadwalHelp) jadwalHelp.textContent = 'Pilih lokasi terlebih dahulu untuk memuat jadwal.';
+                    configureJadwalBehaviorForClass();
                   });
                   // Inisialisasi saat halaman pertama kali dibuka
                   populateLokasi();
+                  configureJadwalBehaviorForClass();
                 }
                 if (lokasiSelect) {
                   lokasiSelect.addEventListener('change', function() {
-                    loadJadwal();
+                    const selected = kelasSelect.options[kelasSelect.selectedIndex];
+                    if (isPrivateClass(selected)) {
+                      // Private class tidak memuat jadwal
+                      configureJadwalBehaviorForClass();
+                    } else {
+                      loadJadwal();
+                    }
                   });
                 }
 
@@ -225,9 +253,18 @@
                 function loadJadwal() {
                   const kode = (kelasSelect && kelasSelect.value) ? kelasSelect.value.trim() : '';
                   const lokasi = (lokasiSelect && lokasiSelect.value) ? lokasiSelect.value.trim() : '';
+                  const selected = kelasSelect.options[kelasSelect.selectedIndex];
                   // Reset jadwal select
                   jadwalSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
                   jadwalSelect.disabled = true;
+                  if (isPrivateClass(selected)) {
+                    // Untuk kelas private, lewati pemuatan jadwal
+                    jadwalSelect.innerHTML = '<option value="">Jadwal akan ditentukan kemudian</option>';
+                    jadwalSelect.disabled = true;
+                    jadwalSelect.required = false;
+                    if (jadwalHelp) jadwalHelp.textContent = 'Kelas private: jadwal akan dibuat oleh admin setelah konfirmasi.';
+                    return;
+                  }
                   if (!kode) {
                     if (jadwalHelp) jadwalHelp.textContent = 'Pilih kelas terlebih dahulu untuk memuat jadwal.';
                     return;

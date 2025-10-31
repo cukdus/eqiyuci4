@@ -6,6 +6,8 @@ use App\Controllers\BaseController;
 use App\Models\Registrasi as RegistrasiModel;
 use App\Models\Sertifikat as SertifikatModel;
 use App\Models\Kelas as KelasModel;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class Sertifikat extends BaseController
 {
@@ -41,8 +43,9 @@ class Sertifikat extends BaseController
 
         $db = \Config\Database::connect();
         $qb = $db->table('registrasi r')
-            ->select('r.id, r.nama, r.kode_kelas, r.lokasi, r.tanggal_daftar, k.nama_kelas')
+            ->select('r.id, r.nama, r.kode_kelas, r.lokasi, r.tanggal_daftar, k.nama_kelas, jk.tanggal_selesai')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+            ->join('jadwal_kelas jk', 'r.jadwal_id = jk.id', 'left')
             // Jangan tampilkan yang sudah punya sertifikat
             ->join('sertifikat s', 's.registrasi_id = r.id', 'left')
             ->where('s.id IS NULL');
@@ -55,6 +58,16 @@ class Sertifikat extends BaseController
         }
         if ($kodeKelas !== '') {
             $qb->where('r.kode_kelas', $kodeKelas);
+        }
+
+        // Default: sembunyikan registrasi dengan jadwal yang sudah berakhir,
+        // kecuali jika dilakukan pencarian melalui Filter (search/kode_kelas)
+        $isFiltered = ($search !== '' || $kodeKelas !== '');
+        if (! $isFiltered) {
+            $qb->groupStart()
+                ->where('jk.tanggal_selesai >= CURDATE()', null, false)
+                ->orWhere('(r.jadwal_id IS NULL OR r.jadwal_id = 0)', null, false)
+            ->groupEnd();
         }
 
         $countQb = clone $qb;
@@ -458,5 +471,94 @@ class Sertifikat extends BaseController
         }
 
         return ['created' => true, 'data' => $sertModel->find($sertModel->getInsertID())];
+    }
+
+    /**
+     * Tampilkan halaman view sertifikat berdasarkan ID sertifikat.
+     * URL: /admin/sertifikat/{id}/view
+     */
+    public function view($id)
+    {
+        $id = (int) $id;
+        if ($id <= 0) {
+            return $this->response->setStatusCode(404)->setBody('Sertifikat tidak ditemukan');
+        }
+
+        $db = \Config\Database::connect();
+        $row = $db->table('sertifikat s')
+            ->select('s.nomor_sertifikat, s.tanggal_terbit, s.kota_kelas, r.nama AS nama_pemilik, k.nama_kelas AS nama_kelas')
+            ->join('registrasi r', 'r.id = s.registrasi_id', 'left')
+            ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+            ->where('s.id', $id)
+            ->get()
+            ->getRowArray();
+
+        if (!$row) {
+            return $this->response->setStatusCode(404)->setBody('Sertifikat tidak ditemukan');
+        }
+
+        return view('admin/sertifikat/view_certificate', [
+            'data' => [
+                'id' => (int) $id,
+                'nomor_sertifikat' => (string) ($row['nomor_sertifikat'] ?? ''),
+                'tanggal_terbit' => (string) ($row['tanggal_terbit'] ?? ''),
+                'kota_kelas' => (string) ($row['kota_kelas'] ?? ''),
+                'nama_pemilik' => (string) ($row['nama_pemilik'] ?? ''),
+                'nama_kelas' => (string) ($row['nama_kelas'] ?? ''),
+            ],
+            'title' => 'Sertifikat ' . (string) ($row['nomor_sertifikat'] ?? ''),
+        ]);
+    }
+
+    /**
+     * Download PDF sertifikat secara server-side menggunakan Dompdf
+     * URL: /admin/sertifikat/{id}/download
+     */
+    public function download($id)
+    {
+        $id = (int) $id;
+        if ($id <= 0) {
+            return $this->response->setStatusCode(404)->setBody('Sertifikat tidak ditemukan');
+        }
+
+        $db = \Config\Database::connect();
+        $row = $db->table('sertifikat s')
+            ->select('s.nomor_sertifikat, s.tanggal_terbit, s.kota_kelas, r.nama AS nama_pemilik, k.nama_kelas AS nama_kelas')
+            ->join('registrasi r', 'r.id = s.registrasi_id', 'left')
+            ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+            ->where('s.id', $id)
+            ->get()
+            ->getRowArray();
+
+        if (!$row) {
+            return $this->response->setStatusCode(404)->setBody('Sertifikat tidak ditemukan');
+        }
+
+        // Render HTML view untuk PDF
+        $html = view('admin/sertifikat/pdf_certificate', [
+            'data' => [
+                'id' => (int) $id,
+                'nomor_sertifikat' => (string) ($row['nomor_sertifikat'] ?? ''),
+                'tanggal_terbit' => (string) ($row['tanggal_terbit'] ?? ''),
+                'kota_kelas' => (string) ($row['kota_kelas'] ?? ''),
+                'nama_pemilik' => (string) ($row['nama_pemilik'] ?? ''),
+                'nama_kelas' => (string) ($row['nama_kelas'] ?? ''),
+            ],
+            'title' => 'Sertifikat ' . (string) ($row['nomor_sertifikat'] ?? ''),
+        ]);
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        $filename = 'sertifikat-' . ((string) ($row['nomor_sertifikat'] ?? '')) . '.pdf';
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($dompdf->output());
     }
 }

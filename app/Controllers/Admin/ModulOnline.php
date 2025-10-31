@@ -186,4 +186,88 @@ class ModulOnline extends BaseController
         $fileModel->delete($fileId);
         return $this->response->setJSON(['success' => true]);
     }
+
+    public function updateFile(int $fileId): ResponseInterface
+    {
+        $fileModel = model(ModulFile::class);
+        $file = $fileModel->find($fileId);
+        if (! $file) {
+            return $this->response->setJSON(['success' => false, 'message' => 'File tidak ditemukan']);
+        }
+
+        $newType = strtolower(trim((string) $this->request->getPost('tipe')));
+        $newTitle = trim((string) $this->request->getPost('judul_file'));
+        $newOrder = $this->request->getPost('urutan') !== null ? (int) $this->request->getPost('urutan') : null;
+
+        if (! in_array($newType, ['youtube', 'pdf', 'excel'], true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Jenis file tidak valid']);
+        }
+
+        $update = [
+            'tipe'       => $newType,
+            'judul_file' => $newTitle !== '' ? $newTitle : ($file['judul_file'] ?? ''),
+            'urutan'     => $newOrder,
+        ];
+
+        // Handle perubahan tipe dan sumber data
+        if ($newType === 'youtube') {
+            $link = trim((string) $this->request->getPost('link_url'));
+            if ($link === '') {
+                return $this->response->setJSON(['success' => false, 'message' => 'Link YouTube wajib diisi']);
+            }
+            // Jika sebelumnya file fisik, hapus file lama
+            if ($file['tipe'] !== 'youtube' && ! empty($file['file_url'])) {
+                $path = FCPATH . ltrim($file['file_url'], '/');
+                if (is_file($path)) {
+                    @unlink($path);
+                }
+            }
+            $update['file_url'] = $link;
+        } else {
+            // PDF/Excel: cek apakah ada file upload baru
+            $upload = $this->request->getFile('file');
+            if ($upload && $upload->isValid() && ! $upload->hasMoved()) {
+                $ext = strtolower((string) $upload->getClientExtension());
+                $allowedExt = ['pdf', 'xls', 'xlsx'];
+                if (! in_array($ext, $allowedExt, true)) {
+                    return $this->response->setJSON(['success' => false, 'message' => 'Hanya file PDF atau Excel (xls/xlsx) yang diizinkan']);
+                }
+                $targetDir = FCPATH . 'uploads/kelas/modul';
+                if (! is_dir($targetDir)) {
+                    @mkdir($targetDir, 0775, true);
+                }
+                $newName = $upload->getRandomName();
+                try {
+                    $upload->move($targetDir, $newName);
+                } catch (\Throwable $e) {
+                    return $this->response->setJSON(['success' => false, 'message' => 'Gagal menyimpan file']);
+                }
+                $publicPath = '/uploads/kelas/modul/' . $newName;
+                // Hapus file lama jika sebelumnya juga file fisik
+                if ($file['tipe'] !== 'youtube' && ! empty($file['file_url'])) {
+                    $oldPath = FCPATH . ltrim($file['file_url'], '/');
+                    if (is_file($oldPath)) {
+                        @unlink($oldPath);
+                    }
+                }
+                $update['file_url'] = $publicPath;
+                // Set tipe sesuai target (pdf/excel)
+                $update['tipe'] = ($newType === 'pdf') ? 'pdf' : 'excel';
+            } else {
+                // Tidak ada file baru: perbolehkan perubahan label tipe antar pdf/excel tanpa mengganti file
+                if ($file['tipe'] === 'youtube') {
+                    // Pindah dari youtube ke pdf/excel wajib unggah file
+                    return $this->response->setJSON(['success' => false, 'message' => 'Unggah file untuk mengubah jenis ke PDF/Excel']);
+                }
+                // Tidak mengubah file_url, hanya tipe/judul/urutan
+                $update['file_url'] = $file['file_url'];
+            }
+        }
+
+        if (! $fileModel->update($fileId, $update)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Gagal mengupdate file']);
+        }
+
+        return $this->response->setJSON(['success' => true]);
+    }
 }

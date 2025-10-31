@@ -72,6 +72,7 @@
       const endpointFiles = '<?= base_url('admin/modulonline/files.json') ?>';
       const endpointUpload = (courseId) => '<?= base_url('admin/modulonline') ?>/' + courseId + '/file/upload';
       const endpointDeleteFile = (fileId) => '<?= base_url('admin/modulonline/file') ?>/' + fileId + '/delete';
+      const endpointUpdateFile = (fileId) => '<?= base_url('admin/modulonline/file') ?>/' + fileId + '/update';
       const csrfToken = '<?= csrf_token() ?>';
       const csrfHash = '<?= csrf_hash() ?>';
 
@@ -167,8 +168,17 @@
               <td>${escapeHtml(f.judul_file || '')}</td>
               <td>${renderLinkCell(f)}</td>
               <td>${f.urutan ?? '-'}</td>
-              <td><button class="btn btn-sm btn-danger" data-file-id="${f.id}"><i class="bi bi-trash"></i></button></td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button class="btn btn-primary" data-file-edit="${f.id}"><i class="bi bi-pencil-square"></i></button>
+                  <button class="btn btn-danger" data-file-id="${f.id}"><i class="bi bi-trash"></i></button>
+                </div>
+              </td>
             `;
+            const editBtn = tr.querySelector('[data-file-edit]');
+            editBtn.addEventListener('click', () => {
+              openEditFileModal(f);
+            });
             const del = tr.querySelector('[data-file-id]');
             del.addEventListener('click', async () => {
               const fd = new URLSearchParams(); fd.append(csrfToken, csrfHash);
@@ -351,6 +361,122 @@
           // Fallback: trigger filter submit
           const f = document.getElementById('formFilter');
           if (f) f.dispatchEvent(new Event('submit'));
+        }
+      });
+    })();
+  </script>
+</div>
+
+<!-- Edit File Modal -->
+<div class="modal fade" id="editFileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit File/Link</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEditFile">
+        <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Jenis</label>
+            <select class="form-select" name="tipe" id="editFileType">
+              <option value="youtube">YouTube</option>
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Judul</label>
+            <input type="text" class="form-control" name="judul_file" id="editFileTitle" required>
+          </div>
+          <div class="mb-3" id="editFileLinkGroup" style="display:none">
+            <label class="form-label">Link</label>
+            <input type="url" class="form-control" name="link_url" id="editFileLink" placeholder="https://...">
+          </div>
+          <div class="mb-3" id="editFileUploadGroup" style="display:none">
+            <label class="form-label">Upload File (opsional)</label>
+            <input type="file" class="form-control" name="file" id="editFileUpload" accept=".pdf,.xls,.xlsx">
+            <div class="form-text">Kosongkan bila tidak mengganti file.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Urutan</label>
+            <input type="number" class="form-control" name="urutan" id="editFileOrder" min="0">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveEditFile">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    (function(){
+      const modalEl = document.getElementById('editFileModal');
+      let modal, currentFile;
+      function ensureModal(){ if (typeof bootstrap !== 'undefined' && !modal) modal = new bootstrap.Modal(modalEl); }
+      function toggleInputs(){
+        const t = document.getElementById('editFileType').value;
+        document.getElementById('editFileLinkGroup').style.display = (t === 'youtube') ? '' : 'none';
+        document.getElementById('editFileUploadGroup').style.display = (t === 'youtube') ? 'none' : '';
+      }
+      window.openEditFileModal = function(f){
+        ensureModal();
+        currentFile = f;
+        document.getElementById('editFileType').value = f.tipe;
+        document.getElementById('editFileTitle').value = f.judul_file || '';
+        document.getElementById('editFileOrder').value = f.urutan ?? '';
+        document.getElementById('editFileLink').value = (f.tipe === 'youtube') ? (f.file_url || '') : '';
+        document.getElementById('editFileUpload').value = '';
+        toggleInputs();
+        if (modal) modal.show();
+      };
+      document.getElementById('editFileType').addEventListener('change', toggleInputs);
+      document.getElementById('formEditFile').addEventListener('submit', async function(e){
+        e.preventDefault();
+        if (!currentFile) return;
+        const btn = document.getElementById('btnSaveEditFile');
+        btn.disabled = true; btn.innerText = 'Menyimpan...';
+        try {
+          const tipe = document.getElementById('editFileType').value;
+          const judul = document.getElementById('editFileTitle').value.trim();
+          const urutan = document.getElementById('editFileOrder').value;
+          let body, headers;
+          if (tipe === 'youtube') {
+            body = new URLSearchParams();
+            body.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+            body.append('tipe', 'youtube');
+            if (judul) body.append('judul_file', judul);
+            const link = document.getElementById('editFileLink').value.trim();
+            body.append('link_url', link);
+            if (urutan) body.append('urutan', urutan);
+            headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+          } else {
+            body = new FormData();
+            body.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+            body.append('tipe', tipe);
+            if (judul) body.append('judul_file', judul);
+            const fileInput = document.getElementById('editFileUpload');
+            if (fileInput.files.length > 0) {
+              body.append('file', fileInput.files[0]);
+            }
+            if (urutan) body.append('urutan', urutan);
+            headers = undefined;
+          }
+          const res = await fetch('<?= base_url('admin/modulonline/file') ?>/' + currentFile.id + '/update', { method: 'POST', body, headers });
+          const j = await res.json();
+          if (j.success) {
+            if (modal) modal.hide();
+            const evt = new Event('modules-reload');
+            window.dispatchEvent(evt);
+          } else {
+            alert(j.message || 'Gagal menyimpan perubahan');
+          }
+        } catch (err) {
+          alert('Terjadi kesalahan jaringan');
+        } finally {
+          btn.disabled = false; btn.innerText = 'Simpan';
         }
       });
     })();

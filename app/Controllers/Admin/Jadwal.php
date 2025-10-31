@@ -143,6 +143,8 @@ class Jadwal extends BaseController
         $year = (int) $this->request->getGet('year');
         $kelasId = (int) $this->request->getGet('kelas_id');
         $jadwalId = (int) $this->request->getGet('jadwal_id');
+        $filteredFlag = (string) $this->request->getGet('filtered');
+        $isFiltered = ($filteredFlag === '1' || strtolower($filteredFlag) === 'true');
 
         $page = max(1, (int) $this->request->getGet('page'));
         $perPage = max(1, min(100, (int) $this->request->getGet('per_page') ?: 10));
@@ -155,23 +157,47 @@ class Jadwal extends BaseController
         $builder = $db->table('registrasi r')
             ->select('r.id, r.nama, r.no_telp, r.status_pembayaran, r.jadwal_id, r.biaya_total, r.biaya_dibayar, k.nama_kelas, jk.tanggal_mulai, jk.tanggal_selesai, jk.lokasi, jk.instruktur')
             ->join('jadwal_kelas jk', 'r.jadwal_id = jk.id', 'left')
-            ->join('kelas k', 'jk.kelas_id = k.id', 'left');
+            ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left');
+
+        // Default: sembunyikan jadwal yang sudah berakhir, tapi tetap tampilkan peserta tanpa jadwal
+        // Jika pengguna memang melakukan pencarian/filter eksplisit (filtered=true), tampilkan semuanya sesuai filter
+        if (!$isFiltered) {
+            $builder->groupStart()
+                        ->where('r.jadwal_id IS NULL', null, false)
+                        ->orWhere('r.jadwal_id', 0)
+                        ->orWhere('jk.tanggal_selesai >= CURDATE()', null, false)
+                    ->groupEnd();
+        }
 
         // Filter tanggal berdasarkan bulan/tahun (gunakan range untuk efisiensi index)
         if ($month > 0 && $year > 0) {
             $startDate = date('Y-m-01', strtotime(sprintf('%04d-%02d-01', $year, $month)));
             $endDate = date('Y-m-t', strtotime($startDate));
-            $builder->where('jk.tanggal_mulai >=', $startDate)
-                    ->where('jk.tanggal_mulai <=', $endDate);
+            // Sertakan peserta tanpa jadwal (jadwal_id NULL atau 0) sekalipun filter tanggal diterapkan
+            $builder->groupStart()
+                        ->where('r.jadwal_id IS NULL', null, false)
+                        ->orWhere('r.jadwal_id', 0)
+                        ->orGroupStart()
+                            ->where('jk.tanggal_mulai >=', $startDate)
+                            ->where('jk.tanggal_mulai <=', $endDate)
+                        ->groupEnd()
+                    ->groupEnd();
         } elseif ($year > 0 && $month === 0) {
             $startDate = sprintf('%04d-01-01', $year);
             $endDate = sprintf('%04d-12-31', $year);
-            $builder->where('jk.tanggal_mulai >=', $startDate)
-                    ->where('jk.tanggal_mulai <=', $endDate);
+            $builder->groupStart()
+                        ->where('r.jadwal_id IS NULL', null, false)
+                        ->orWhere('r.jadwal_id', 0)
+                        ->orGroupStart()
+                            ->where('jk.tanggal_mulai >=', $startDate)
+                            ->where('jk.tanggal_mulai <=', $endDate)
+                        ->groupEnd()
+                    ->groupEnd();
         }
 
         if ($kelasId > 0) {
-            $builder->where('jk.kelas_id', $kelasId);
+            // Filter kelas berdasarkan registrasi->kelas agar peserta tanpa jadwal tetap terlihat
+            $builder->where('k.id', $kelasId);
         }
         if ($jadwalId > 0) {
             $builder->where('r.jadwal_id', $jadwalId);
