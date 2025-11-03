@@ -10,10 +10,10 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
 
 $navItems = [
   ['slug' => 'index', 'label' => 'Beranda', 'path' => base_url()],
-  ['slug' => 'about', 'label' => 'Tentang', 'path' => base_url('about')],
-  ['slug' => 'blog', 'label' => 'Info', 'path' => base_url('blog')],
-  ['slug' => 'contact', 'label' => 'Kontak', 'path' => base_url('contact')],
-  ['slug' => 'schedule', 'label' => 'Jadwal', 'path' => base_url('schedule')],
+  ['slug' => 'tentang', 'label' => 'Tentang', 'path' => base_url('tentang')],
+  ['slug' => 'info', 'label' => 'Info', 'path' => base_url('info')],
+  ['slug' => 'kontak', 'label' => 'Kontak', 'path' => base_url('kontak')],
+  ['slug' => 'jadwal', 'label' => 'Jadwal', 'path' => base_url('jadwal')],
   ['slug' => 'sertifikat', 'label' => 'Sertifikat', 'path' => base_url('sertifikat')],
   ['slug' => 'bonus', 'label' => 'Bonus', 'path' => base_url('bonus')],
 ];
@@ -97,7 +97,7 @@ $navItems = [
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
-      <a class="btn-getstarted" href="<?= base_url('courses') ?>">Semua Kursus</a>
+      <a class="btn-getstarted" href="<?= base_url('kursus') ?>">Semua Kursus</a>
     </div>
   </header>
 

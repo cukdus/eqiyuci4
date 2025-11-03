@@ -4,16 +4,16 @@ $metaDescription = 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, 
 $metaKeywords = 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia';
 $canonicalUrl = base_url();
 $bodyClass = 'index-page';
-$activePage = 'index';
+$activePage = 'kursus';
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 
 $navItems = [
   ['slug' => 'index', 'label' => 'Beranda', 'path' => base_url()],
-  ['slug' => 'about', 'label' => 'Tentang', 'path' => base_url('about')],
-  ['slug' => 'blog', 'label' => 'Info', 'path' => base_url('blog')],
-  ['slug' => 'contact', 'label' => 'Kontak', 'path' => base_url('contact')],
-  ['slug' => 'schedule', 'label' => 'Jadwal', 'path' => base_url('schedule')],
+  ['slug' => 'tentang', 'label' => 'Tentang', 'path' => base_url('tentang')],
+  ['slug' => 'info', 'label' => 'Info', 'path' => base_url('info')],
+  ['slug' => 'kontak', 'label' => 'Kontak', 'path' => base_url('kontak')],
+  ['slug' => 'jadwal', 'label' => 'Jadwal', 'path' => base_url('jadwal')],
   ['slug' => 'sertifikat', 'label' => 'Sertifikat', 'path' => base_url('sertifikat')],
   ['slug' => 'bonus', 'label' => 'Bonus', 'path' => base_url('bonus')],
 ];

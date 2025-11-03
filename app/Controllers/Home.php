@@ -64,4 +64,44 @@ class Home extends BaseController
 
         return view('home', $data);
     }
+
+    public function tentang()
+    {
+        return view('tentang');
+    }
+
+    public function info()
+    {
+        return view('info');
+    }
+
+    public function kontak()
+    {
+        return view('kontak');
+    }
+
+    public function jadwal()
+    {
+        return view('jadwal');
+    }
+
+    public function sertifikat()
+    {
+        return view('sertifikat');
+    }
+
+    public function bonus()
+    {
+        return view('bonus');
+    }
+
+    public function kursus()
+    {
+        return view('kursus');
+    }
+
+    public function daftar()
+    {
+        return view('daftar');
+    }
 }

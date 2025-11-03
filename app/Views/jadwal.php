@@ -4,16 +4,16 @@ $metaDescription = 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, 
 $metaKeywords = 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia';
 $canonicalUrl = base_url();
 $bodyClass = 'index-page';
-$activePage = 'index';
+$activePage = 'jadwal';
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 
 $navItems = [
   ['slug' => 'index', 'label' => 'Beranda', 'path' => base_url()],
-  ['slug' => 'about', 'label' => 'Tentang', 'path' => base_url('about')],
-  ['slug' => 'blog', 'label' => 'Info', 'path' => base_url('blog')],
-  ['slug' => 'contact', 'label' => 'Kontak', 'path' => base_url('contact')],
-  ['slug' => 'schedule', 'label' => 'Jadwal', 'path' => base_url('schedule')],
+  ['slug' => 'tentang', 'label' => 'Tentang', 'path' => base_url('tentang')],
+  ['slug' => 'info', 'label' => 'Info', 'path' => base_url('info')],
+  ['slug' => 'kontak', 'label' => 'Kontak', 'path' => base_url('kontak')],
+  ['slug' => 'jadwal', 'label' => 'Jadwal', 'path' => base_url('jadwal')],
   ['slug' => 'sertifikat', 'label' => 'Sertifikat', 'path' => base_url('sertifikat')],
   ['slug' => 'bonus', 'label' => 'Bonus', 'path' => base_url('bonus')],
 ];
@@ -100,179 +100,373 @@ $navItems = [
       <a class="btn-getstarted" href="<?= base_url('courses') ?>">Semua Kursus</a>
     </div>
   </header>
-
 <main class="main">
   <!-- Page Title -->
   <div class="page-title light-background">
     <div
       class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">Kontak</h1>
+      <h1 class="mb-2 mb-lg-0">Jadwal Kelas</h1>
       <nav class="breadcrumbs">
         <ol>
           <li><a href="index.php">Beranda</a></li>
-          <li class="current">Kontak</li>
+          <li class="current">Jadwal</li>
         </ol>
       </nav>
     </div>
   </div>
   <!-- End Page Title -->
 
-  <!-- Contact Section -->
-  <section id="contact" class="contact section">
+  <!-- Courses Events Section -->
+  <section id="courses-events" class="courses-events section">
     <div class="container" data-aos="fade-up" data-aos-delay="100">
-      <div class="contact-main-wrapper">
-        <div class="map-wrapper">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.2903049907245!2d112.62654827588874!3d-7.968920479432775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd62974117b5143%3A0xac0a6f7e8b6c0c35!2sEqiyu%20Indonesia%20Malang%20(Kursus%20Barista%20%26%20Bisnis%20Kuliner)!5e0!3m2!1sen!2sid!4v1746086179700!5m2!1sen!2sid"
-            width="100%"
-            height="50%"
-            style="border: 0"
-            allowfullscreen=""
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"></iframe>
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.7700450055027!2d110.35300158485491!3d-7.814149257479901!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a57f7da45014d%3A0x6c71f9c11a0f935!2sEqiyu%20Indonesia%20Jogja!5e0!3m2!1sen!2sid!4v1746086112162!5m2!1sen!2sid"
-            width="100%"
-            height="50%"
-            style="border: 0"
-            allowfullscreen=""
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="row">
+        <div class="col-lg-8">
+          <!-- Event Item -->
+          <article
+            class="event-card"
+            data-aos="fade-up"
+            data-aos-delay="400">
+            <div class="row g-0">
+              <div class="col-md-4">
+                <div class="event-image">
+                  <img
+                    src="assets/img/education/events-5.webp"
+                    class="img-fluid"
+                    alt="Event Image" />
+                  <div class="date-badge">
+                    <span class="day">10</span>
+                    <span class="month">Okt</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="event-content">
+                  <div class="event-meta">
+                    <span class="time"><i class="bi bi-clock"></i> 10 Okt - 12 Okt
+                      2025</span>
+                    <span class="location"><i class="bi bi-geo-alt"></i> Jogja</span>
+                  </div>
+                  <h3 class="event-title">
+                    <a href="#">Mixology Class</a>
+                  </h3>
+                  <div class="event-footer">
+                    <div class="instructor">
+                      <i class="bi bi-people"></i><span>3 Orang Terdaftar | (Max 8 Orang)</span>
+                    </div>
+                    <div class="event-price">
+                      <span class="price">Rp. 500.000,-</span>
+                    </div>
+                  </div>
+                  <div class="event-actions">
+                    <a href="#" class="btn btn-primary">Daftar Sekarang</a>
+                    <a href="#" class="btn btn-outline">Pelajari Lebih Lanjut</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+          <!-- End Event Item -->
+
+          <!-- Event Item -->
+          <article
+            class="event-card"
+            data-aos="fade-up"
+            data-aos-delay="400">
+            <div class="row g-0">
+              <div class="col-md-4">
+                <div class="event-image">
+                  <img
+                    src="assets/img/education/events-5.webp"
+                    class="img-fluid"
+                    alt="Event Image" />
+                  <div class="date-badge">
+                    <span class="day">10</span>
+                    <span class="month">Okt</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="event-content">
+                  <div class="event-meta">
+                    <span class="time"><i class="bi bi-clock"></i> 10 Okt - 12 Okt
+                      2025</span>
+                    <span class="location"><i class="bi bi-geo-alt"></i> Jogja</span>
+                  </div>
+                  <h3 class="event-title">
+                    <a href="#">Basic Barista & Latte Art</a>
+                  </h3>
+                  <div class="event-footer">
+                    <div class="instructor">
+                      <i class="bi bi-people"></i><span>3 Orang Terdaftar | (Max 8 Orang)</span>
+                    </div>
+                    <div class="event-price">
+                      <span class="price">Rp. 500.000,-</span>
+                    </div>
+                  </div>
+                  <div class="event-actions">
+                    <a href="#" class="btn btn-primary">Daftar Sekarang</a>
+                    <a href="#" class="btn btn-outline">Pelajari Lebih Lanjut</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+          <!-- End Event Item -->
+
+          <!-- Event Item -->
+          <article
+            class="event-card"
+            data-aos="fade-up"
+            data-aos-delay="400">
+            <div class="row g-0">
+              <div class="col-md-4">
+                <div class="event-image">
+                  <img
+                    src="assets/img/education/events-5.webp"
+                    class="img-fluid"
+                    alt="Event Image" />
+                  <div class="date-badge">
+                    <span class="day">10</span>
+                    <span class="month">Okt</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="event-content">
+                  <div class="event-meta">
+                    <span class="time"><i class="bi bi-clock"></i> 10 Okt - 12 Okt
+                      2025</span>
+                    <span class="location"><i class="bi bi-geo-alt"></i> Malang</span>
+                  </div>
+                  <h3 class="event-title">
+                    <a href="#">Basic Barista & Latte Art</a>
+                  </h3>
+                  <div class="event-footer">
+                    <div class="instructor">
+                      <i class="bi bi-people"></i><span>3 Orang Terdaftar | (Max 8 Orang)</span>
+                    </div>
+                    <div class="event-price">
+                      <span class="price">Rp. 500.000,-</span>
+                    </div>
+                  </div>
+                  <div class="event-actions">
+                    <a href="#" class="btn btn-primary">Daftar Sekarang</a>
+                    <a href="#" class="btn btn-outline">Pelajari Lebih Lanjut</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+          <!-- End Event Item -->
+
+          <!-- Event Item -->
+          <article
+            class="event-card"
+            data-aos="fade-up"
+            data-aos-delay="400">
+            <div class="row g-0">
+              <div class="col-md-4">
+                <div class="event-image">
+                  <img
+                    src="assets/img/education/events-5.webp"
+                    class="img-fluid"
+                    alt="Event Image" />
+                  <div class="date-badge">
+                    <span class="day">10</span>
+                    <span class="month">Okt</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="event-content">
+                  <div class="event-meta">
+                    <span class="time"><i class="bi bi-clock"></i> 10 Okt - 12 Okt
+                      2025</span>
+                    <span class="location"><i class="bi bi-geo-alt"></i> Malang</span>
+                  </div>
+                  <h3 class="event-title">
+                    <a href="#">Espresso And Latte Art Class</a>
+                  </h3>
+                  <div class="event-footer">
+                    <div class="instructor">
+                      <i class="bi bi-people"></i><span>3 Orang Terdaftar | (Max 8 Orang)</span>
+                    </div>
+                    <div class="event-price">
+                      <span class="price">Rp. 500.000,-</span>
+                    </div>
+                  </div>
+                  <div class="event-actions">
+                    <a href="#" class="btn btn-primary">Daftar Sekarang</a>
+                    <a href="#" class="btn btn-outline">Pelajari Lebih Lanjut</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+          <!-- End Event Item -->
+
+          <!-- Pagination -->
+          <nav
+            class="pagination-wrapper"
+            data-aos="fade-up"
+            data-aos-delay="500">
+            <ul class="pagination justify-content-center">
+              <li class="page-item disabled">
+                <a class="page-link" href="#"><i class="bi bi-chevron-left"></i></a>
+              </li>
+              <li class="page-item active">
+                <a class="page-link" href="#">1</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#">2</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#">3</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
+              </li>
+            </ul>
+          </nav>
         </div>
 
-        <div class="contact-content">
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+          <!-- Filter Widget -->
           <div
-            class="contact-cards-container"
+            class="sidebar-widget filter-widget"
             data-aos="fade-up"
             data-aos-delay="300">
-            <div class="contact-card">
-              <div class="icon-box">
-                <i class="bi bi-geo-alt"></i>
+            <h4 class="widget-title">Filter Jadwal</h4>
+            <div class="filter-content">
+              <div class="filter-group">
+                <label class="filter-label">Jenis Kursus</label>
+                <select class="form-select">
+                  <option value="">Semua Kursus</option>
+                  <option value="kode kelas">Basic barista & Latte Art</option>
+                  <option value="kode kelas">Workshop Membangun Bisnis Cafe & Kedai Kopi</option>
+                  <option value="kode kelas">Private Class Beverage & Bisnis Culinary</option>
+                  <option value="kode kelas">Masterclass</option>
+                </select>
               </div>
-              <div class="contact-text">
-                <h4>Eqiyu Malang</h4>
-                <p>
-                  Jl. Brigjend Slamet Riadi No.76, Oro-oro Dowo, Kec.
-                  Klojen, Kota Malang, Jawa Timur 65119
-                </p>
+              <div class="filter-group">
+                <label class="filter-label">Jadwal Bulan</label>
+                <select class="form-select">
+                  <option value="">Semua</option>
+                  <option value="Januari">Januari</option>
+                  <option value="Februari">Februari</option>
+                  <option value="Maret">Maret</option>
+                  <option value="April">April</option>
+                </select>
               </div>
+              <div class="filter-group">
+                <label class="filter-label">Kota Kelas</label>
+                <select class="form-select">
+                  <option value="">Semua Kota</option>
+                  <option value="malang">Malang</option>
+                  <option value="jogja">Jogja</option>
+                </select>
+              </div>
+              <button class="btn btn-primary filter-apply-btn">
+                Terapkan
+              </button>
             </div>
+          </div>
+          <!-- End Filter Widget -->
 
-            <div class="contact-card">
-              <div class="icon-box">
-                <i class="bi bi-geo-alt"></i>
+          <!-- Upcoming Events Widget -->
+          <div
+            class="sidebar-widget upcoming-widget"
+            data-aos="fade-up"
+            data-aos-delay="400">
+            <h4 class="widget-title">Jadwal Mendatang</h4>
+            <div class="upcoming-list">
+              <div class="upcoming-item">
+                <div class="upcoming-date">
+                  <span class="day">18</span>
+                  <span class="month">Dec</span>
+                </div>
+                <div class="upcoming-content">
+                  <h5 class="upcoming-title">
+                    <a href="#">Basic Barista & Latte Art</a>
+                  </h5>
+                  <div class="upcoming-meta">
+                    <span class="time"><i class="bi bi-geo-alt"></i> Malang</span>
+                    <span class="price">Rp. 1.500.000,-</span>
+                  </div>
+                </div>
               </div>
-              <div class="contact-text">
-                <h4>Eqiyu Jogja</h4>
-                <p>
-                  Jl. Pugeran.11 - 15, Suryodiningratan, Kec. Mantrijeron,
-                  Kota Yogyakarta, DIY 55141
-                </p>
-              </div>
-            </div>
 
-            <div class="contact-card">
-              <div class="icon-box">
-                <i class="bi bi-telephone"></i>
+              <div class="upcoming-item">
+                <div class="upcoming-date">
+                  <span class="day">25</span>
+                  <span class="month">Dec</span>
+                </div>
+                <div class="upcoming-content">
+                  <h5 class="upcoming-title">
+                    <a href="#">Mixology Class</a>
+                  </h5>
+                  <div class="upcoming-meta">
+                    <span class="time"><i class="bi bi-geo-alt"></i> Jogja</span>
+                    <span class="price">Rp. 500.000,-</span>
+                  </div>
+                </div>
               </div>
-              <div class="contact-text">
-                <h4>Call</h4>
-                <p>+1 (212) 555-7890</p>
-              </div>
-            </div>
 
-            <div class="contact-card">
-              <div class="icon-box">
-                <i class="bi bi-clock"></i>
-              </div>
-              <div class="contact-text">
-                <h4>Jam Operasional</h4>
-                <p>Senin - Sabtu | 09.00 - 18.00 WIB</p>
+              <div class="upcoming-item">
+                <div class="upcoming-date">
+                  <span class="day">02</span>
+                  <span class="month">Jan</span>
+                </div>
+                <div class="upcoming-content">
+                  <h5 class="upcoming-title">
+                    <a href="#">Basic Barista & Latte Art</a>
+                  </h5>
+                  <div class="upcoming-meta">
+                    <span class="time"><i class="bi bi-geo-alt"></i> Malang</span>
+                    <span class="price">Rp. 1.500.000,-</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+          <!-- End Upcoming Events Widget -->
 
+          <!-- Newsletter Widget -->
           <div
-            class="contact-form-container"
+            class="sidebar-widget newsletter-widget"
             data-aos="fade-up"
-            data-aos-delay="400">
-            <h3>Get in Touch</h3>
+            data-aos-delay="500">
+            <h4 class="widget-title">Stay Updated</h4>
             <p>
-              Lorem ipsum dolor sit amet consectetur adipiscing elit sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua
-              consectetur adipiscing.
+              Berlangganan buletin kami dan jangan lewatkan jadwal penting
+              dan pengumuman kursus.
             </p>
-
             <form
-              action="forms/contact.php"
+              action="forms/newsletter.php"
               method="post"
-              class="php-email-form">
-              <div class="row">
-                <div class="col-md-6 form-group">
-                  <input
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    id="name"
-                    placeholder="Your Name"
-                    required="" />
-                </div>
-                <div class="col-md-6 form-group mt-3 mt-md-0">
-                  <input
-                    type="email"
-                    class="form-control"
-                    name="email"
-                    id="email"
-                    placeholder="Your Email"
-                    required="" />
-                </div>
-              </div>
-              <div class="form-group mt-3">
-                <input
-                  type="text"
-                  class="form-control"
-                  name="subject"
-                  id="subject"
-                  placeholder="Subject"
-                  required="" />
-              </div>
-              <div class="form-group mt-3">
-                <textarea
-                  class="form-control"
-                  name="message"
-                  rows="5"
-                  placeholder="Message"
-                  required=""></textarea>
-              </div>
-
-              <div class="my-3">
-                <div class="loading">Loading</div>
-                <div class="error-message"></div>
-                <div class="sent-message">
-                  Your message has been sent. Thank you!
-                </div>
-              </div>
-
-              <div class="form-submit">
-                <button type="submit">Send Message</button>
-                <div class="social-links">
-                  <a href="https://x.com/Eqiyu_Indonesia/"><i class="bi bi-twitter-x"></i></a>
-                  <a href="https://www.facebook.com/eqiyu.indonesia"><i class="bi bi-facebook"></i></a>
-                  <a href="https://www.instagram.com/eqiyu.indonesia"><i class="bi bi-instagram"></i></a>
-                  <a href="https://www.youtube.com/c/TokoBekasBaru"><i class="bi bi-youtube"></i></a>
-                  <a href="https://www.tiktok.com/@eqiyu.indonesia"><i class="bi bi-tiktok"></i></a>
-                </div>
+              class="php-email-form newsletter-form">
+              <input
+                type="email"
+                name="email"
+                placeholder="alamat email anda"
+                required="" />
+              <button type="submit">Berlangganan</button>
+              <div class="loading">Loading</div>
+              <div class="error-message"></div>
+              <div class="sent-message">
+                Your subscription request has been sent. Thank you!
               </div>
             </form>
           </div>
+          <!-- End Newsletter Widget -->
         </div>
       </div>
     </div>
   </section>
-  <!-- /Contact Section -->
+  <!-- /Courses Events Section -->
 </main>
-
-  <footer id="footer" class="footer accent-background">
+<footer id="footer" class="footer accent-background">
       <div class="support section light-background">
         <div class="container aos-init aos-animate" data-aos="zoom-in">
           <div class="swiper init-swiper swiper-initialized swiper-horizontal swiper-backface-hidden">
