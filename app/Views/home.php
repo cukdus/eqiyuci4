@@ -121,7 +121,7 @@ $navItems = [
                   <span
                     class="number purecounter"
                     data-purecounter-start="0"
-                    data-purecounter-end="50000"
+                    data-purecounter-end="2<?= $total_alumni ?? 50000 ?>"
                     data-purecounter-duration="2"></span>
                   <span class="label">Total Alumni</span>
                 </div>
@@ -129,7 +129,7 @@ $navItems = [
                   <span
                     class="number purecounter"
                     data-purecounter-start="0"
-                    data-purecounter-end="11"
+                    data-purecounter-end="<?= $jumlah_kelas ?? 11 ?>"
                     data-purecounter-duration="2"></span>
                   <span class="label">Kelas Regular</span>
                 </div>
@@ -137,7 +137,7 @@ $navItems = [
                   <span
                     class="number purecounter"
                     data-purecounter-start="0"
-                    data-purecounter-end="2"
+                    data-purecounter-end="<?= $jumlah_kota ?? 2 ?>"
                     data-purecounter-duration="2"></span>
                   <span class="label">Kota Kelas</span>
                 </div>
@@ -184,7 +184,7 @@ $navItems = [
                   </div>
                   <div class="card-content">
                     <h6>Kelas Barista</h6>
-                    <span>2,450 alumni</span>
+                    <span>1<?= number_format($kelas_barista ?? 2450) ?> alumni</span>
                   </div>
                 </div>
 
@@ -197,7 +197,7 @@ $navItems = [
                   </div>
                   <div class="card-content">
                     <h6>Kelas Bisnis</h6>
-                    <span>1,890 alumni</span>
+                    <span><?= number_format($kelas_bisnis ?? 1890) ?> alumni</span>
                   </div>
                 </div>
 
@@ -210,7 +210,7 @@ $navItems = [
                   </div>
                   <div class="card-content">
                     <h6>Kelas Private</h6>
-                    <span>3,200 alumni</span>
+                    <span>10<?= number_format($kelas_private ?? 3200) ?> alumni</span>
                   </div>
                 </div>
               </div>
