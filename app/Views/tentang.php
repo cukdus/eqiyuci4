@@ -4,7 +4,7 @@ $metaDescription = 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, 
 $metaKeywords = 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia';
 $canonicalUrl = base_url();
 $bodyClass = 'index-page';
-$activePage = 'index';
+$activePage = 'tentang';
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 
