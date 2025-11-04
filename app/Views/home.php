@@ -327,7 +327,7 @@ $navItems = [
           <div class="pricing-item">
             <div class="pricing-header">
               <h6 class="pricing-category">
-                Private Class Beverage & Bisnis
+                Private Class Beverage & Business
               </h6>
               <div class="price-wrap">
                 <div class="price">
@@ -1207,7 +1207,7 @@ $navItems = [
       <div class="container copyright text-center mt-4">
         <p>
           © <span>Copyright</span>
-          <strong class="px-1 sitename">Learner</strong>
+          <strong class="px-1 sitename"><a href="<?= base_url() ?>">Eqiyu Indonesia</a></strong>
           <span>All Rights Reserved</span>
         </p>
         <div class="credits">
