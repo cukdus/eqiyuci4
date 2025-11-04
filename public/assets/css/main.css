@@ -7005,6 +7005,22 @@ section,
 .blog-posts article:hover .post-img img {
   transform: scale(1.1);
 }
+.blog-posts .more-blog .btn-more {
+  display: inline-block;
+  background: transparent;
+  color: var(--accent-color);
+  padding: 15px 50px;
+  border: 2px solid var(--accent-color);
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.blog-posts .more-blog .btn-more:hover {
+  background: var(--accent-color);
+  color: var(--contrast-color);
+  transform: translateY(-3px);
+}
 
 /*--------------------------------------------------------------
 # Pagination 2 Section

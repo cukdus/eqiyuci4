@@ -144,8 +144,8 @@ $navItems = [
               </div>
 
               <div class="hero-buttons">
-                <a href="courses.php" class="btn btn-primary">Lihat Semua Kursus</a>
-                <a href="schedule.php" class="btn btn-outline">Lihat Jadwal</a>
+                <a href="<?= base_url('kursus') ?>" class="btn btn-primary">Lihat Semua Kursus</a>
+                <a href="<?= base_url('jadwal') ?>" class="btn btn-outline">Lihat Jadwal</a>
               </div>
 
               <div class="hero-features">
@@ -246,12 +246,12 @@ $navItems = [
                 class="img-fluid" />
             </div>
             <div class="course-content">
-              <h3><a href="#">Jadwal Kelas</a></h3>
+              <h3><a href="<?= base_url('jadwal') ?>">Jadwal Kelas</a></h3>
               <p>
                 Temukan jadwal pelatihan terbaru dari EQIYU INDONESIA.
                 Wujudkan karier dan bisnis kulinermu dengan langkah pasti!
               </p>
-              <a href="enroll.php" class="btn-course">Lihat</a>
+              <a href="<?= base_url('jadwal') ?>" class="btn-course">Lihat</a>
             </div>
           </div>
         </div>
@@ -269,13 +269,13 @@ $navItems = [
                 class="img-fluid" />
             </div>
             <div class="course-content">
-              <h3><a href="#">Informasi & Artikel</a></h3>
+              <h3><a href="<?= base_url('info') ?>">Informasi & Artikel</a></h3>
               <p>
                 Ikuti informasi terkini seputar dunia kopi, bisnis kuliner,
                 tips usaha, hingga cerita inspiratif alumni hanya di Info &
                 Artikel EQIYU INDONESIA.
               </p>
-              <a href="enroll.php" class="btn-course">Lihat</a>
+              <a href="<?= base_url('info') ?>" class="btn-course">Lihat</a>
             </div>
           </div>
         </div>
@@ -293,13 +293,13 @@ $navItems = [
                 class="img-fluid" />
             </div>
             <div class="course-content">
-              <h3><a href="#">Check Sertifikat</a></h3>
+              <h3><a href="<?= base_url('sertifikat') ?>">Check Sertifikat</a></h3>
               <p>
                 Sudah mengikuti kelas di EQIYU INDONESIA? Verifikasi
                 keikutsertaan dan validasi sertifikatmu dengan mudah melalui
                 fitur ini.
               </p>
-              <a href="enroll.php" class="btn-course">Lihat</a>
+              <a href="<?= base_url('sertifikat') ?>" class="btn-course">Lihat</a>
             </div>
           </div>
         </div>
@@ -488,7 +488,7 @@ $navItems = [
         class="more-pricing text-center"
         data-aos="fade-up"
         data-aos-delay="500">
-        <a href="courses.php" class="btn-more">Lihat Semua Kelas</a>
+        <a href="<?= base_url('kursus') ?>" class="btn-more">Lihat Semua Kursus</a>
       </div>
     </div>
   </section>
@@ -637,54 +637,56 @@ $navItems = [
       <div
       class="container section-title aos-init aos-animate"
       data-aos="fade-up">
-      <h2>Informasi & Artikel Terbaru</h2>
-    </div>
-    <div
-      class="container aos-init aos-animate"
-      data-aos="fade-up"
-      data-aos-delay="100">
+        <h2>Informasi & Artikel Terbaru</h2>
+      </div>
+      <div
+        class="container aos-init aos-animate"
+        data-aos="fade-up"
+        data-aos-delay="100">
 
-        <div class="row gy-4">
-          <?php if (!empty($berita) && is_array($berita)): ?>
-            <?php foreach ($berita as $artikel): ?>
-              <div class="col-lg-4">
-                <article class="position-relative h-100">
-                  <div class="post-img position-relative overflow-hidden">
-                    <?php if (!empty($artikel['gambar_utama'])): ?>
-                      <img src="<?= base_url($artikel['gambar_utama']) ?>" alt="<?= esc($artikel['judul']) ?>" class="img-fluid">
-                    <?php else: ?>
-                      <img src="<?= base_url('assets/img/no-image.jpg') ?>" alt="No Image" class="img-fluid">
-                    <?php endif; ?>
-                  </div>
-
-                  <div class="meta d-flex align-items-end">
-                    <span class="post-date"><span><?= date('d', strtotime($artikel['tanggal_terbit'])) ?></span><?= date('M', strtotime($artikel['tanggal_terbit'])) ?></span>
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-person"></i>
-                      <span class="ps-2"><?= esc($artikel['penulis']) ?></span>
+          <div class="row gy-4">
+            <?php if (!empty($berita) && is_array($berita)): ?>
+              <?php foreach ($berita as $artikel): ?>
+                <div class="col-lg-4">
+                  <article class="position-relative h-100">
+                    <div class="post-img position-relative overflow-hidden">
+                      <?php if (!empty($artikel['gambar_utama'])): ?>
+                        <img src="<?= base_url($artikel['gambar_utama']) ?>" alt="<?= esc($artikel['judul']) ?>" class="img-fluid">
+                      <?php else: ?>
+                        <img src="<?= base_url('assets/img/no-image.jpg') ?>" alt="No Image" class="img-fluid">
+                      <?php endif; ?>
                     </div>
-                    <span class="px-3 text-black-50">/</span>
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-folder2"></i>
-                      <span class="ps-2"><?= esc($artikel['kategori_nama'] ?? 'Uncategorized') ?></span>
-                    </div>
-                  </div>
 
-                  <div class="post-content d-flex flex-column">
-                    <h3 class="post-title">
-                      <?= esc($artikel['judul']) ?>
-                    </h3>
-                    <a href="blog-details.php" class="readmore stretched-link"><span>Selengkapnya</span><i class="bi bi-arrow-right"></i></a>
-                  </div>
-                </article>
+                    <div class="meta d-flex align-items-end">
+                      <span class="post-date"><span><?= date('d', strtotime($artikel['tanggal_terbit'])) ?></span><?= date('M', strtotime($artikel['tanggal_terbit'])) ?></span>
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-person"></i>
+                        <span class="ps-2"><?= esc($artikel['penulis']) ?></span>
+                      </div>
+                      <span class="px-3 text-black-50">/</span>
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-folder2"></i>
+                        <span class="ps-2"><?= esc($artikel['kategori_nama'] ?? 'Uncategorized') ?></span>
+                      </div>
+                    </div>
+
+                    <div class="post-content d-flex flex-column">
+                      <h3 class="post-title">
+                        <?= esc($artikel['judul']) ?>
+                      </h3>
+                      <a href="blog-details.php" class="readmore stretched-link"><span>Selengkapnya</span><i class="bi bi-arrow-right"></i></a>
+                    </div>
+                  </article>
+                </div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <div class="col-12 text-center">
+                <p>Belum ada artikel terbaru.</p>
               </div>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <div class="col-12 text-center">
-              <p>Belum ada artikel terbaru.</p>
+            <?php endif; ?>
+            <div class="more-blog text-center aos-init aos-animate" data-aos="fade-up" data-aos-delay="500">
+              <a href="<?= base_url('info') ?>" class="btn-more">Lihat Semua Info</a>
             </div>
-          <?php endif; ?>
-        </div>
           </div>
       </div>
     </section>

@@ -418,6 +418,7 @@ $navItems = [
       class="container section-title aos-init aos-animate"
       data-aos="fade-up">
       <h2>Team</h2>
+      <p>6 Man Power Expert F & B Departement Minimal 5 tahun. Semua Team adalah Ex. Trainer di Perusahaan Konsultan F&B dengan pengalaman Min 2 tahun.</p>
     </div>
     <!-- End Section Title -->
 
