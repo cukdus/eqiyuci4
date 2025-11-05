@@ -8,10 +8,22 @@ $routes->get('tentang', 'Home::tentang');
 $routes->get('info', 'Home::info');
 $routes->get('kontak', 'Home::kontak');
 $routes->get('jadwal', 'Home::jadwal');
-$routes->get('sertifikat', 'Home::sertifikat');
+$routes->match(['GET', 'POST'], 'sertifikat', 'Home::sertifikat');
+// Endpoint JSON untuk cek sertifikat
+$routes->get('api/sertifikat', 'Home::sertifikatJson');
+// Endpoint JSON publik untuk daftar kursus (filter + infinite scroll)
+$routes->get('api/kursus', 'Home::kursusJson');
+// Endpoint publik untuk download sertifikat berdasarkan nomor
+$routes->get('lihatsertifikat', 'Home::lihatsertifikat');
 $routes->get('bonus', 'Home::bonus');
 $routes->get('kursus', 'Home::kursus');
+// Halaman detail kursus berdasarkan slug
+$routes->get('kursus/(:segment)', 'Home::kursusDetail/$1');
 $routes->get('daftar', 'Home::daftar');
+// Public API: list schedules by kode_kelas (for daftar page)
+$routes->get('api/jadwal/by-kode', 'Home::jadwalByKode');
+// Public API: check voucher validity and metadata
+$routes->match(['GET','POST'], 'api/voucher/check', 'Home::voucherCheck');
 
 // Auth routes
 $routes->get('login', 'AuthController::login');

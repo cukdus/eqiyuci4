@@ -30,3 +30,23 @@ spl_autoload_register(function ($class) {
         }
     }
 }, true, true);
+
+if (! function_exists('get_nav_items')) {
+    /**
+     * Mengembalikan array item navigasi utama.
+     *
+     * @return array
+     */
+    function get_nav_items(): array
+    {
+        return [
+            ['slug' => 'index', 'label' => 'Beranda', 'path' => base_url()],
+            ['slug' => 'tentang', 'label' => 'Tentang', 'path' => base_url('tentang')],
+            ['slug' => 'info', 'label' => 'Info', 'path' => base_url('info')],
+            ['slug' => 'kontak', 'label' => 'Kontak', 'path' => base_url('kontak')],
+            ['slug' => 'jadwal', 'label' => 'Jadwal', 'path' => base_url('jadwal')],
+            ['slug' => 'sertifikat', 'label' => 'Sertifikat', 'path' => base_url('sertifikat')],
+            ['slug' => 'bonus', 'label' => 'Bonus', 'path' => base_url('bonus')],
+        ];
+    }
+}

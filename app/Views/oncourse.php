@@ -1,115 +1,25 @@
 <?php
-$pageTitle = 'Beranda | Eqiyu Indonesia | Kursus Barista, Mixology, Tea & Tea Blending, Roastery, Pelatihan & Konsultan Membangun Bisnis Caffe & Coffeshop.';
-$metaDescription = 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, Roastery, serta pelatihan dan konsultasi untuk membangun bisnis Cafe & Coffeeshop di Malang dan Jogja.';
-$metaKeywords = 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia';
-$canonicalUrl = base_url();
-$bodyClass = 'index-page';
-$activePage = 'index';
+$this->setVar('pageTitle', 'Kursus Online | Eqiyu Indonesia | Kursus Barista, Mixology, Tea & Tea Blending, Roastery, Pelatihan & Konsultan Membangun Bisnis Caffe & Coffeshop.');
+$this->setVar('metaDescription', 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, Roastery, serta pelatihan dan konsultasi untuk membangun bisnis Cafe & Coffeeshop di Malang dan Jogja.');
+$this->setVar('metaKeywords', 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia');
+$this->setVar('canonicalUrl', base_url());
+$this->setVar('bodyClass', 'index-page');
+$this->setVar('activePage', 'index');
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-
-$navItems = [
-  ['slug' => 'index', 'label' => 'Beranda', 'path' => base_url()],
-  ['slug' => 'tentang', 'label' => 'Tentang', 'path' => base_url('tentang')],
-  ['slug' => 'info', 'label' => 'Info', 'path' => base_url('info')],
-  ['slug' => 'kontak', 'label' => 'Kontak', 'path' => base_url('kontak')],
-  ['slug' => 'jadwal', 'label' => 'Jadwal', 'path' => base_url('jadwal')],
-  ['slug' => 'sertifikat', 'label' => 'Sertifikat', 'path' => base_url('sertifikat')],
-  ['slug' => 'bonus', 'label' => 'Bonus', 'path' => base_url('bonus')],
-];
 ?>
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title><?= $escape($pageTitle) ?></title>
-  <meta name="description" content="<?= $escape($metaDescription) ?>" />
-  <meta name="keywords" content="<?= $escape($metaKeywords) ?>" />
-  <link rel="canonical" href="<?= $escape($canonicalUrl) ?>" />
-  <meta name="robots" content="index, follow" />
-  <meta property="og:locale" content="id_ID" />
-  <meta property="og:type" content="website" />
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="<?= base_url() ?>" />
-  <meta property="og:site_name" content="EQIYU INDONESIA" />
-  <meta property="og:locale" content="id_ID" />
-  <meta
-    property="og:title"
-    content="EQIYU INDONESIA - Lembaga Pendidikan Profesional Barista &amp; Bisnis Kuliner" />
-  <meta
-    property="og:description"
-    content="Kursus dan pelatihan profesional untuk menjadi Barista handal dan membangun bisnis kuliner sukses." />
-  <meta property="og:image" content="<?= base_url('assets/img/eqiyu-logo.png') ?>" />
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:site" content="@Eqiyu_Indonesia" />
-  <meta property="twitter:url" content="<?= base_url() ?>" />
-  <meta
-    property="twitter:title"
-    content="EQIYU INDONESIA - Lembaga Pendidikan Profesional Barista &amp; Bisnis Kuliner" />
-  <meta
-    property="twitter:description"
-    content="Kursus dan pelatihan profesional untuk menjadi Barista handal dan membangun bisnis kuliner sukses." />
-  <meta property="twitter:image" content="<?= base_url('assets/img/eqiyu-logo.png') ?>" />
-  <!-- Canonical URL -->
-  <link rel="canonical" href="<?= $escape($canonicalUrl) ?>" />
-
-  <!-- Favicons -->
-  <link href="<?= base_url('assets/img/favicon.png') ?>" rel="icon" />
-  <link href="<?= base_url('assets/img/apple-touch-icon.png') ?>" rel="apple-touch-icon" />
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap"
-    rel="stylesheet" />
-
-  <!-- Vendor CSS Files -->
-  <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet" />
-  <link href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet" />
-  <link href="<?= base_url('assets/vendor/aos/aos.css') ?>" rel="stylesheet" />
-  <link href="<?= base_url('assets/vendor/swiper/swiper-bundle.min.css') ?>" rel="stylesheet" />
-
-  <!-- Template Main CSS Files -->
-  <link href="<?= base_url('assets/css/main.css') ?>" rel="stylesheet" />
-</head>
-
-<body class="<?= $escape($bodyClass) ?>">
-  <header id="header" class="header d-flex align-items-center sticky-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center">
-      <a href="<?= base_url() ?>" class="logo d-flex align-items-center me-auto">
-        <img src="<?= base_url('assets/img/logo.webp') ?>" alt="logo Eqiyu Indonesia" />
-      </a>
-
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <?php foreach ($navItems as $item): ?>
-            <?php $isActive = $activePage === $item['slug']; ?>
-            <li>
-              <a href="<?= $item['path'] ?>" <?= $isActive ? ' class="active"' : '' ?>><?= $item['label'] ?></a>
-            </li>
-          <?php endforeach; ?>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-      </nav>
-
-      <a class="btn-getstarted" href="<?= base_url('courses') ?>">Semua Kursus</a>
-    </div>
-  </header>
+<?= $this->extend('layout/main_home') ?>
+<?= $this->section('content') ?>
 <main class="main">
   <!-- Page Title -->
   <div class="page-title light-background">
     <div
       class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">Course Details</h1>
+      <h1 class="mb-2 mb-lg-0">Modul Online</h1>
       <nav class="breadcrumbs">
         <ol>
-          <li><a href="index.php">Home</a></li>
-          <li class="current">Course Details</li>
+          <li><a href="<?= base_url() ?>">Beranda</a></li>
+          <li class="current">Kursus Online</li>
         </ol>
       </nav>
     </div>

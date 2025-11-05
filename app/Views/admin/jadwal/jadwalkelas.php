@@ -136,7 +136,7 @@
               <label class="form-label">Kelas</label>
               <select class="form-select" name="kelas_id" id="create_kelas_id" required>
                 <?php foreach (($kelasOptions ?? []) as $kelas): ?>
-                  <option value="<?= esc($kelas['id']) ?>" data-kota="<?= esc($kelas['kota_tersedia'] ?? '') ?>"><?= esc($kelas['nama_kelas']) ?></option>
+                  <option value="<?= esc($kelas['id']) ?>" data-kota="<?= esc($kelas['kota_tersedia'] ?? '') ?>" data-kategori="<?= esc($kelas['kategori'] ?? '') ?>"><?= esc($kelas['nama_kelas']) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
@@ -194,7 +194,7 @@
               <label class="form-label">Kelas</label>
               <select class="form-select" name="kelas_id" id="edit_kelas_id" required>
                 <?php foreach (($kelasOptions ?? []) as $kelas): ?>
-                  <option value="<?= esc($kelas['id']) ?>" data-kota="<?= esc($kelas['kota_tersedia'] ?? '') ?>"><?= esc($kelas['nama_kelas']) ?></option>
+                  <option value="<?= esc($kelas['id']) ?>" data-kota="<?= esc($kelas['kota_tersedia'] ?? '') ?>" data-kategori="<?= esc($kelas['kategori'] ?? '') ?>"><?= esc($kelas['nama_kelas']) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
@@ -255,10 +255,11 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
     if (!selectKelasEl || !selectLokasiEl) return;
     const opt = selectKelasEl.options[selectKelasEl.selectedIndex];
     const raw = opt ? (opt.getAttribute('data-kota') || '') : '';
+    const kategori = opt ? (opt.getAttribute('data-kategori') || '').toLowerCase() : '';
     const codes = raw.split(/[,;]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
     selectLokasiEl.innerHTML = '<option value="">-- Pilih Lokasi --</option>';
     let entries = [];
-    if (codes.includes('se-dunia')) {
+    if (kategori === 'kursusonline') {
       entries = Object.entries(ALL_CITIES);
     } else {
       entries = codes.filter(c => Object.prototype.hasOwnProperty.call(ALL_CITIES, c)).map(c => [c, ALL_CITIES[c]]);

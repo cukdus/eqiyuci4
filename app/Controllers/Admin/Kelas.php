@@ -106,30 +106,18 @@ class Kelas extends BaseController
         $namaKelas = (string) $this->request->getPost('nama_kelas');
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', preg_replace('/\s+/', '-', $namaKelas))));
 
-        // kota_tersedia from checkboxes -> comma separated
-        $kategoriVal = (string) $this->request->getPost('kategori');
+        // kota_tersedia from checkboxes -> comma separated (codes-only)
         $kotaList = $this->request->getPost('kota_tersedia');
         if (is_array($kotaList)) {
             $lower = array_map('strtolower', $kotaList);
-            if ($kategoriVal === 'kursusonline' && !in_array('se-dunia', $lower, true)) {
-                $lower[] = 'se-dunia';
-            }
-            // unique & implode
             $kotaStr = implode(',', array_values(array_unique($lower)));
         } else {
-            $kotaStr = (string) $kotaList;
-            if ($kategoriVal === 'kursusonline') {
-                $kotaStr = trim($kotaStr) !== '' ? strtolower($kotaStr) : 'se-dunia';
-                // ensure 'se-dunia' included if not already
-                $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
-                    return $v !== '';
-                });
-                $arr = array_map('strtolower', $arr);
-                if (!in_array('se-dunia', $arr, true)) {
-                    $arr[] = 'se-dunia';
-                }
-                $kotaStr = implode(',', array_values(array_unique($arr)));
-            }
+            $kotaStr = strtolower((string) $kotaList);
+            $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
+                return $v !== '';
+            });
+            $arr = array_map('strtolower', $arr);
+            $kotaStr = implode(',', array_values(array_unique($arr)));
         }
 
         // Handle uploads
@@ -300,28 +288,18 @@ class Kelas extends BaseController
         $namaKelas = (string) $this->request->getPost('nama_kelas');
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', preg_replace('/\s+/', '-', $namaKelas))));
 
-        // kota_tersedia from checkboxes -> comma separated
-        $kategoriVal = (string) $this->request->getPost('kategori');
+        // kota_tersedia from checkboxes -> comma separated (codes-only)
         $kotaList = $this->request->getPost('kota_tersedia');
         if (is_array($kotaList)) {
             $lower = array_map('strtolower', $kotaList);
-            if ($kategoriVal === 'kursusonline' && !in_array('se-dunia', $lower, true)) {
-                $lower[] = 'se-dunia';
-            }
             $kotaStr = implode(',', array_values(array_unique($lower)));
         } else {
-            $kotaStr = (string) $kotaList;
-            if ($kategoriVal === 'kursusonline') {
-                $kotaStr = trim($kotaStr) !== '' ? strtolower($kotaStr) : '';
-                $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
-                    return $v !== '';
-                });
-                $arr = array_map('strtolower', $arr);
-                if (!in_array('se-dunia', $arr, true)) {
-                    $arr[] = 'se-dunia';
-                }
-                $kotaStr = implode(',', array_values(array_unique($arr)));
-            }
+            $kotaStr = strtolower((string) $kotaList);
+            $arr = array_filter(array_map('trim', explode(',', $kotaStr)), static function ($v) {
+                return $v !== '';
+            });
+            $arr = array_map('strtolower', $arr);
+            $kotaStr = implode(',', array_values(array_unique($arr)));
         }
 
         // Handle uploads

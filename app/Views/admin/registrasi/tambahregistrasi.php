@@ -155,10 +155,22 @@
                   const label = (opt.textContent || '').toLowerCase();
                   return label.includes('private class');
                 };
+                const isOnlineClass = (opt) => {
+                  if (!opt) return false;
+                  const kategori = (opt.getAttribute('data-kategori') || '').toLowerCase();
+                  // Mendukung penamaan 'kelasonline' atau 'kursusonline'
+                  return kategori === 'kelasonline' || kategori === 'kursusonline' || kategori.includes('online');
+                };
 
                 function configureJadwalBehaviorForClass() {
                   const selected = kelasSelect.options[kelasSelect.selectedIndex];
-                  if (isPrivateClass(selected)) {
+                  if (isOnlineClass(selected)) {
+                    // Kelas online: jadwal fleksibel setiap saat
+                    jadwalSelect.innerHTML = '<option value="">Setiap Saat</option>';
+                    jadwalSelect.disabled = true;
+                    jadwalSelect.required = false;
+                    if (jadwalHelp) jadwalHelp.textContent = 'Kelas online: jadwal setiap saat (fleksibel).';
+                  } else if (isPrivateClass(selected)) {
                     // Kelas private: jadwal akan dibuat oleh admin setelah konfirmasi
                     jadwalSelect.innerHTML = '<option value="">Jadwal akan ditentukan kemudian</option>';
                     jadwalSelect.disabled = true;
@@ -202,16 +214,11 @@
                   // reset options
                   lokasiSelect.innerHTML = '<option value="">-- Pilih Lokasi --</option>';
 
-                  let entries = [];
-                  if (codes.includes('se-dunia')) {
-                    // Jika kelas online: tampilkan semua kota pusat
-                    entries = Object.entries(allCities);
-                  } else {
-                    // Filter sesuai kota tersedia untuk kelas
-                    entries = codes
-                      .filter(code => allCities.hasOwnProperty(code))
-                      .map(code => [code, allCities[code]]);
-                  }
+                  // Hanya tampilkan kota_tersedia dari tabel kelas
+                  const entries = codes
+                    .filter(code => code !== 'se-dunia')
+                    .filter(code => allCities.hasOwnProperty(code))
+                    .map(code => [code, allCities[code]]);
 
                   entries.forEach(([code, name]) => {
                     const opt = document.createElement('option');
@@ -234,7 +241,10 @@
                 if (lokasiSelect) {
                   lokasiSelect.addEventListener('change', function() {
                     const selected = kelasSelect.options[kelasSelect.selectedIndex];
-                    if (isPrivateClass(selected)) {
+                    if (isOnlineClass(selected)) {
+                      // Online class: tidak perlu memuat jadwal, selalu "Setiap Saat"
+                      configureJadwalBehaviorForClass();
+                    } else if (isPrivateClass(selected)) {
                       // Private class tidak memuat jadwal
                       configureJadwalBehaviorForClass();
                     } else {
@@ -257,6 +267,14 @@
                   // Reset jadwal select
                   jadwalSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
                   jadwalSelect.disabled = true;
+                  if (isOnlineClass(selected)) {
+                    // Untuk kelas online, jadwal selalu fleksibel
+                    jadwalSelect.innerHTML = '<option value="">Setiap Saat</option>';
+                    jadwalSelect.disabled = true;
+                    jadwalSelect.required = false;
+                    if (jadwalHelp) jadwalHelp.textContent = 'Kelas online: jadwal setiap saat (fleksibel).';
+                    return;
+                  }
                   if (isPrivateClass(selected)) {
                     // Untuk kelas private, lewati pemuatan jadwal
                     jadwalSelect.innerHTML = '<option value="">Jadwal akan ditentukan kemudian</option>';

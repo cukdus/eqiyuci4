@@ -1,105 +1,15 @@
 <?php
-$pageTitle = 'Beranda | Eqiyu Indonesia | Kursus Barista, Mixology, Tea & Tea Blending, Roastery, Pelatihan & Konsultan Membangun Bisnis Caffe & Coffeshop.';
-$metaDescription = 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, Roastery, serta pelatihan dan konsultasi untuk membangun bisnis Cafe & Coffeeshop di Malang dan Jogja.';
-$metaKeywords = 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia';
-$canonicalUrl = base_url();
-$bodyClass = 'index-page';
-$activePage = 'index';
+$this->setVar('pageTitle', 'Daftar Kursus | Eqiyu Indonesia | Kursus Barista, Mixology, Tea & Tea Blending, Roastery, Pelatihan & Konsultan Membangun Bisnis Caffe & Coffeshop.');
+$this->setVar('metaDescription', 'kursus dan pelatihan Barista, Mixology, Tea & Tea Blending, Roastery, serta pelatihan dan konsultasi untuk membangun bisnis Cafe & Coffeeshop di Malang dan Jogja.');
+$this->setVar('metaKeywords', 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia');
+$this->setVar('canonicalUrl', base_url());
+$this->setVar('bodyClass', 'index-page');
+$this->setVar('activePage', 'index');
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-
-$navItems = [
-  ['slug' => 'index', 'label' => 'Beranda', 'path' => base_url()],
-  ['slug' => 'about', 'label' => 'Tentang', 'path' => base_url('about')],
-  ['slug' => 'blog', 'label' => 'Info', 'path' => base_url('blog')],
-  ['slug' => 'contact', 'label' => 'Kontak', 'path' => base_url('contact')],
-  ['slug' => 'schedule', 'label' => 'Jadwal', 'path' => base_url('schedule')],
-  ['slug' => 'sertifikat', 'label' => 'Sertifikat', 'path' => base_url('sertifikat')],
-  ['slug' => 'bonus', 'label' => 'Bonus', 'path' => base_url('bonus')],
-];
 ?>
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title><?= $escape($pageTitle) ?></title>
-  <meta name="description" content="<?= $escape($metaDescription) ?>" />
-  <meta name="keywords" content="<?= $escape($metaKeywords) ?>" />
-  <link rel="canonical" href="<?= $escape($canonicalUrl) ?>" />
-  <meta name="robots" content="index, follow" />
-  <meta property="og:locale" content="id_ID" />
-  <meta property="og:type" content="website" />
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="<?= base_url() ?>" />
-  <meta property="og:site_name" content="EQIYU INDONESIA" />
-  <meta property="og:locale" content="id_ID" />
-  <meta
-    property="og:title"
-    content="EQIYU INDONESIA - Lembaga Pendidikan Profesional Barista &amp; Bisnis Kuliner" />
-  <meta
-    property="og:description"
-    content="Kursus dan pelatihan profesional untuk menjadi Barista handal dan membangun bisnis kuliner sukses." />
-  <meta property="og:image" content="<?= base_url('assets/img/eqiyu-logo.png') ?>" />
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:site" content="@Eqiyu_Indonesia" />
-  <meta property="twitter:url" content="<?= base_url() ?>" />
-  <meta
-    property="twitter:title"
-    content="EQIYU INDONESIA - Lembaga Pendidikan Profesional Barista &amp; Bisnis Kuliner" />
-  <meta
-    property="twitter:description"
-    content="Kursus dan pelatihan profesional untuk menjadi Barista handal dan membangun bisnis kuliner sukses." />
-  <meta property="twitter:image" content="<?= base_url('assets/img/eqiyu-logo.png') ?>" />
-  <!-- Canonical URL -->
-  <link rel="canonical" href="<?= $escape($canonicalUrl) ?>" />
-
-  <!-- Favicons -->
-  <link href="<?= base_url('assets/img/favicon.png') ?>" rel="icon" />
-  <link href="<?= base_url('assets/img/apple-touch-icon.png') ?>" rel="apple-touch-icon" />
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap"
-    rel="stylesheet" />
-
-  <!-- Vendor CSS Files -->
-  <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet" />
-  <link href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet" />
-  <link href="<?= base_url('assets/vendor/aos/aos.css') ?>" rel="stylesheet" />
-  <link href="<?= base_url('assets/vendor/swiper/swiper-bundle.min.css') ?>" rel="stylesheet" />
-
-  <!-- Template Main CSS Files -->
-  <link href="<?= base_url('assets/css/main.css') ?>" rel="stylesheet" />
-</head>
-
-<body class="<?= $escape($bodyClass) ?>">
-  <header id="header" class="header d-flex align-items-center sticky-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center">
-      <a href="<?= base_url() ?>" class="logo d-flex align-items-center me-auto">
-        <img src="<?= base_url('assets/img/logo.webp') ?>" alt="logo Eqiyu Indonesia" />
-      </a>
-
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <?php foreach ($navItems as $item): ?>
-            <?php $isActive = $activePage === $item['slug']; ?>
-            <li>
-              <a href="<?= $item['path'] ?>" <?= $isActive ? ' class="active"' : '' ?>><?= $item['label'] ?></a>
-            </li>
-          <?php endforeach; ?>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-      </nav>
-
-      <a class="btn-getstarted" href="<?= base_url('courses') ?>">Semua Kursus</a>
-    </div>
-  </header>
+<?= $this->extend('layout/main_home') ?>
+<?= $this->section('content') ?>
 <main class="main">
       <!-- Page Title -->
       <div class="page-title light-background">
@@ -149,24 +59,18 @@ $navItems = [
                           class="form-select"
                           required="">
                           <option value="">Pilih kursus...</option>
-                          <option value="web-development">
-                            Full Stack Web Development
-                          </option>
-                          <option value="data-science">
-                            Data Science &amp; Analytics
-                          </option>
-                          <option value="digital-marketing">
-                            Digital Marketing Mastery
-                          </option>
-                          <option value="ui-ux-design">
-                            UI/UX Design Fundamentals
-                          </option>
-                          <option value="cybersecurity">
-                            Cybersecurity Essentials
-                          </option>
-                          <option value="mobile-development">
-                            Mobile App Development
-                          </option>
+                          <?php if (!empty($kelasList)): ?>
+                            <?php foreach ($kelasList as $k): ?>
+                              <option
+                                value="<?= esc($k['kode_kelas']) ?>"
+                                data-lokasi="<?= isset($k['kota_tersedia']) ? esc($k['kota_tersedia']) : '' ?>"
+                                data-harga="<?= isset($k['harga']) ? esc($k['harga']) : '0' ?>"
+                                data-kategori="<?= isset($k['kategori']) ? esc($k['kategori']) : '' ?>"
+                              >
+                                <?= esc($k['kode_kelas']) ?> - <?= esc($k['nama_kelas']) ?>
+                              </option>
+                            <?php endforeach; ?>
+                          <?php endif; ?>
                         </select>
                       </div>
                     </div>
@@ -208,7 +112,7 @@ $navItems = [
                     <div class="col-6">
                       <div class="form-group">
                         <label for="schedule" class="form-label"
-                          >Jadwal *</label
+                          >Pilih Jadwal *</label
                         >
                         <select
                           id="schedule"
@@ -281,26 +185,10 @@ $navItems = [
                           name="Pembayaran"
                           class="form-select"
                           required="">
-                          <option value="">Pilih model pembayaran...</option>
-                          <option value="web-development">
-                            Full Stack Web Development
-                          </option>
-                          <option value="data-science">
-                            Data Science &amp; Analytics
-                          </option>
-                          <option value="digital-marketing">
-                            Digital Marketing Mastery
-                          </option>
-                          <option value="ui-ux-design">
-                            UI/UX Design Fundamentals
-                          </option>
-                          <option value="cybersecurity">
-                            Cybersecurity Essentials
-                          </option>
-                          <option value="mobile-development">
-                            Mobile App Development
-                          </option>
-                        </select>
+                          <option value="">-- Pilih Pembayaran --</option>
+                          <option value="lunas">Pembayaran penuh</option>
+                          <option value="DP 50%">DP 50%</option>
+                          </select>
                       </div>
                     </div>
                   </div>
@@ -468,7 +356,327 @@ $navItems = [
                       </p>
                     </div>
                   </div>
-                </form>
+</form>
+<script>
+  (function () {
+    const courseSelect = document.getElementById('course');
+    const locationSelect = document.getElementById('location');
+    const scheduleSelect = document.getElementById('schedule');
+    const paymentSelect = document.getElementById('Pembayaran');
+    const paymentDetails = document.getElementById('paymentDetails');
+    // Kode unik pembayaran seperti admin (tetap selama sesi halaman)
+    const kodeUnik = Math.floor(100 + Math.random() * 900);
+
+    // Kota map injected from PHP
+    const allCities = (function () {
+      const map = {};
+      <?php if (!empty($kotaOptions)): ?>
+        <?php
+        foreach ($kotaOptions as $k):
+          $kode = (string) ($k['kode'] ?? '');
+          $nama = (string) ($k['nama'] ?? '');
+          ?>
+          map['<?= addslashes($kode) ?>'] = '<?= addslashes($nama) ?>';
+        <?php endforeach; ?>
+      <?php endif; ?>
+      return map;
+    })();
+
+    function formatDate(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function isOnlineSelected() {
+      const opt = courseSelect.options[courseSelect.selectedIndex];
+      if (!opt) return false;
+      const kategori = (opt.getAttribute('data-kategori') || '').toLowerCase();
+      return kategori === 'kelasonline' || kategori === 'kursusonline' || kategori === 'online';
+    }
+
+    function isPrivateSelected() {
+      const opt = courseSelect.options[courseSelect.selectedIndex];
+      if (!opt) return false;
+      const label = (opt.textContent || '').toLowerCase();
+      return label.includes('private');
+    }
+
+    function clearSelect(sel, placeholder) {
+      sel.innerHTML = '';
+      if (placeholder) {
+        const ph = document.createElement('option');
+        ph.value = '';
+        ph.textContent = placeholder;
+        sel.appendChild(ph);
+      }
+      sel.value = '';
+    }
+
+    async function populateLokasiForSelectedCourse() {
+      clearSelect(locationSelect, 'Pilih kota...');
+      const opt = courseSelect.options[courseSelect.selectedIndex];
+      if (!opt) return;
+      const lokasiRaw = (opt.getAttribute('data-lokasi') || '').trim().toLowerCase();
+      // Hanya tampilkan kota_tersedia dari tabel kelas (abaikan token lama seperti 'se-dunia')
+      const parts = lokasiRaw
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .filter(code => code !== 'se-dunia');
+      parts.forEach(kode => {
+        const nama = allCities[kode] || kode;
+        const o = document.createElement('option');
+        o.value = kode;
+        o.textContent = nama;
+        locationSelect.appendChild(o);
+      });
+      locationSelect.disabled = false;
+      // Reset schedule when course changes
+      clearSelect(scheduleSelect, 'Pilih jadwal...');
+      scheduleSelect.disabled = true;
+    }
+
+    async function loadJadwalForSelected() {
+      clearSelect(scheduleSelect, 'Memuat jadwal...');
+      scheduleSelect.disabled = true;
+      const kode = courseSelect.value ? courseSelect.value.trim() : '';
+      const kota = locationSelect.value ? locationSelect.value.trim().toLowerCase() : '';
+      if (!kode || !kota) {
+        clearSelect(scheduleSelect, 'Pilih jadwal...');
+        return;
+      }
+      if (isOnlineSelected()) {
+        clearSelect(scheduleSelect, 'Setiap Saat');
+        scheduleSelect.disabled = true;
+        scheduleSelect.required = false;
+        return;
+      }
+      if (isPrivateSelected()) {
+        clearSelect(scheduleSelect, 'Jadwal akan ditentukan kemudian');
+        scheduleSelect.disabled = true;
+        scheduleSelect.required = false;
+        return;
+      }
+      try {
+        const url = '<?= base_url('api/jadwal/by-kode') ?>' + '?kode_kelas=' + encodeURIComponent(kode);
+        const res = await fetch(url);
+        const json = await res.json();
+        clearSelect(scheduleSelect, 'Pilih jadwal...');
+        if (!json || !json.success || !Array.isArray(json.data)) {
+          const msg = document.createElement('option');
+          msg.value = '';
+          msg.textContent = 'Jadwal belum tersedia';
+          scheduleSelect.appendChild(msg);
+          return;
+        }
+        const rows = Array.isArray(json.data) ? json.data : [];
+        const matched = rows.filter(j => {
+          const jl = (j.lokasi || '').trim().toLowerCase();
+          const slName = (allCities && allCities[kota]) ? String(allCities[kota]).trim().toLowerCase() : '';
+          return jl === kota || (slName && jl === slName);
+        });
+        if (matched.length === 0) {
+          const msg = document.createElement('option');
+          msg.value = '';
+          msg.textContent = 'Belum ada jadwal untuk kelas dan lokasi ini.';
+          scheduleSelect.appendChild(msg);
+          return;
+        }
+        matched.forEach(j => {
+          const o = document.createElement('option');
+          o.value = String(j.id);
+          const mulai = formatDate(j.tanggal_mulai);
+          const selesai = formatDate(j.tanggal_selesai);
+          o.textContent = `${mulai}${selesai ? ' s/d ' + selesai : ''}`;
+          scheduleSelect.appendChild(o);
+        });
+        scheduleSelect.disabled = false;
+      } catch (err) {
+        clearSelect(scheduleSelect, 'Gagal memuat jadwal');
+      }
+    }
+
+    function parseHargaFromSelected() {
+      const opt = courseSelect.options[courseSelect.selectedIndex];
+      if (!opt) return 0;
+      const hargaStr = opt.getAttribute('data-harga') || '0';
+      const h = parseInt(hargaStr, 10);
+      return Number.isFinite(h) ? h : 0;
+    }
+
+    let currentDiskonPersen = 0; // Integrasi voucher dapat mengubah ini ke >0
+    // Hook seperti admin: window.__setVoucherDiscountPercent(persen, apply)
+    window.__setVoucherDiscountPercent = function (persen, apply) {
+      const v = parseInt(persen, 10);
+      currentDiskonPersen = (apply === true && Number.isFinite(v) && v > 0) ? Math.min(v, 100) : 0;
+      updatePaymentDetails();
+    };
+
+    // Check voucher seperti admin (public API)
+    (function voucherModule(){
+      const kodeInput = document.getElementById('kodeVoucher');
+      const checkBtn = document.getElementById('checkVoucherBtn');
+      const feedback = document.getElementById('voucherFeedback');
+      let appliedVoucher = null;
+
+      function setFeedback(text, type) {
+        if (!feedback) return;
+        feedback.textContent = text || '';
+        feedback.className = 'form-text' + (type ? ' text-' + type : '');
+      }
+
+      async function doCheck() {
+        const kode = (kodeInput && kodeInput.value || '').trim();
+        const kodeKelas = (courseSelect && courseSelect.value || '').trim();
+        if (!kode) {
+          setFeedback('Masukkan kode voucher terlebih dahulu', 'warning');
+          if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+          appliedVoucher = null; return;
+        }
+        if (!kodeKelas) {
+          setFeedback('Pilih kelas terlebih dahulu sebelum cek voucher', 'warning');
+          if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+          appliedVoucher = null; return;
+        }
+        checkBtn.disabled = true;
+        const originalText = checkBtn.textContent;
+        checkBtn.textContent = 'Checking...';
+        try {
+          const res = await fetch('<?= base_url('api/voucher/check') ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kode_voucher: kode, kode_kelas: kodeKelas }),
+          });
+          const data = await res.json();
+          if (data && data.found) {
+            const persen = data.diskon_persen;
+            const voucherNamaKelas = data.voucher_kelas_nama || '';
+            const voucherKodeKelas = data.voucher_kelas_kode || '';
+            const validDate = data.validDate !== false;
+            const validForClass = (data.validForClass === true);
+
+            if (data.validForClass === false) {
+              const kelasInfo = voucherNamaKelas || voucherKodeKelas || 'kelas tertentu';
+              setFeedback(`Voucher untuk ${kelasInfo}. Tidak bisa digunakan pada kelas yang berbeda.`, 'danger');
+              if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+              appliedVoucher = null;
+            } else if (!validDate) {
+              setFeedback('Voucher ditemukan namun di luar masa berlaku.', 'warning');
+              if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+              appliedVoucher = null;
+            } else {
+              const msg = `Voucher ditemukan${persen ? ' • Diskon ' + persen + '%' : ''}` + (voucherNamaKelas ? ` • Untuk kelas: ${voucherNamaKelas}` : (voucherKodeKelas ? ` • Kode kelas: ${voucherKodeKelas}` : ''));
+              setFeedback(msg, 'success');
+              if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(persen || 0, true);
+              appliedVoucher = { code: kode, kelasKode: voucherKodeKelas, kelasNama: voucherNamaKelas, persen: persen || 0 };
+            }
+          } else {
+            setFeedback((data && data.message) ? data.message : 'Voucher tidak ditemukan', 'danger');
+            if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+            appliedVoucher = null;
+          }
+        } catch (e) {
+          setFeedback('Gagal cek voucher. Coba lagi.', 'danger');
+          if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+          appliedVoucher = null;
+        } finally {
+          checkBtn.disabled = false;
+          checkBtn.textContent = originalText;
+        }
+      }
+
+      if (checkBtn) { checkBtn.addEventListener('click', doCheck); }
+      if (kodeInput) {
+        kodeInput.addEventListener('input', function(){
+          setFeedback('', '');
+          if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+          appliedVoucher = null;
+          updatePaymentDetails();
+        });
+      }
+      // Reset voucher if course changes
+      courseSelect.addEventListener('change', function(){
+        setFeedback('', '');
+        if (window.__setVoucherDiscountPercent) window.__setVoucherDiscountPercent(0, false);
+        appliedVoucher = null;
+      });
+    })();
+
+    function updatePaymentDetails() {
+      if (!paymentDetails) return;
+      const harga = parseHargaFromSelected();
+      const diskon = Math.round(harga * currentDiskonPersen / 100);
+      const subtotal = Math.max(0, harga - diskon);
+
+      // Metode pembayaran: default ke lunas kecuali value == 'DP 50%'
+      const metode = paymentSelect ? (paymentSelect.value || '').trim() : '';
+      const isDP = (metode.toLowerCase() === 'dp 50%');
+      const nominal = isDP ? Math.round(subtotal * 0.5) : subtotal;
+      const totalBayar = Math.max(0, nominal + kodeUnik);
+
+      paymentDetails.classList.remove('d-none');
+      paymentDetails.innerHTML = `
+        <div>Harga: Rp ${harga.toLocaleString('id-ID')}</div>
+        <div>Diskon: Rp ${diskon.toLocaleString('id-ID')} (${currentDiskonPersen}% voucher)</div>
+        <div>Subtotal: Rp ${subtotal.toLocaleString('id-ID')}</div>
+        <div>Metode: ${metode || 'Lunas'}</div>
+        <div>Kode unik: ${kodeUnik}</div>
+        <div><strong>Total Dibayar + kode unik: Rp ${totalBayar.toLocaleString('id-ID')}</strong></div>
+      `;
+    }
+
+    function applyPreselection() {
+      const selectedKodeServer = '<?= addslashes($selectedKode ?? '') ?>';
+      if (selectedKodeServer) {
+        courseSelect.value = selectedKodeServer;
+      } else {
+        const last = localStorage.getItem('lastViewedKelas') || '';
+        if (last) {
+          courseSelect.value = last;
+        }
+      }
+    }
+
+    // Event wiring
+    courseSelect.addEventListener('change', function () {
+      populateLokasiForSelectedCourse();
+      // Untuk kelas online, jadwal bebas dan select jadwal dinonaktifkan
+      if (isOnlineSelected()) {
+        clearSelect(scheduleSelect, 'Setiap Saat');
+        scheduleSelect.disabled = true;
+        scheduleSelect.required = false;
+      }
+      if (isPrivateSelected()) {
+        clearSelect(scheduleSelect, 'Jadwal akan ditentukan kemudian');
+        scheduleSelect.disabled = true;
+        scheduleSelect.required = false;
+      }
+      updatePaymentDetails();
+    });
+    locationSelect.addEventListener('change', function () {
+      loadJadwalForSelected();
+    });
+    if (paymentSelect) {
+      paymentSelect.addEventListener('change', function () {
+        updatePaymentDetails();
+      });
+    }
+
+    // Init on load
+    applyPreselection();
+    populateLokasiForSelectedCourse();
+    if (isOnlineSelected()) {
+      clearSelect(scheduleSelect, 'Setiap Saat');
+      scheduleSelect.disabled = true;
+      scheduleSelect.required = false;
+    }
+    updatePaymentDetails();
+    // Jadwal will be loaded when kota is chosen
+  })();
+</script>
+                
               </div>
             </div>
             <!-- End Form Column -->
@@ -523,16 +731,8 @@ $navItems = [
 
                 <div class="enrollment-stats mt-4">
                   <div class="stat-item">
-                    <span class="stat-number">1298</span>
-                    <span class="stat-label">Lulusan Kelas Barista</span>
-                  </div>
-                  <div class="stat-item">
                     <span class="stat-number">2515</span>
-                    <span class="stat-label">Total Lulusan</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-number">4.9/5</span>
-                    <span class="stat-label">Rating Rata-rata</span>
+                    <span class="stat-label">Total Alumni</span>
                   </div>
                 </div>
                 <!-- End Stats -->
@@ -544,199 +744,4 @@ $navItems = [
       </section>
       <!-- /Enroll Section -->
     </main>
-<footer id="footer" class="footer accent-background">
-      <div class="support section light-background">
-        <div class="container aos-init aos-animate" data-aos="zoom-in">
-          <div class="swiper init-swiper swiper-initialized swiper-horizontal swiper-backface-hidden">
-            <script type="application/json" class="swiper-config">
-              {
-                "loop": true,
-                "speed": 600,
-                "autoplay": {
-                  "delay": 5000
-                },
-                "slidesPerView": "auto",
-                "pagination": {
-                  "el": ".swiper-pagination",
-                  "type": "bullets",
-                  "clickable": true
-                },
-                "breakpoints": {
-                  "320": {
-                    "slidesPerView": 2,
-                    "spaceBetween": 40
-                  },
-                  "480": {
-                    "slidesPerView": 3,
-                    "spaceBetween": 60
-                  },
-                  "640": {
-                    "slidesPerView": 4,
-                    "spaceBetween": 80
-                  },
-                  "992": {
-                    "slidesPerView": 5,
-                    "spaceBetween": 120
-                  },
-                  "1200": {
-                    "slidesPerView": 6,
-                    "spaceBetween": 120
-                  }
-                }
-              }
-            </script>
-            <div class="swiper-wrapper align-items-center" id="swiper-wrapper-c4bc11742d10cf612" aria-live="off" style="transition-duration: 0ms; transform: translate3d(-236px, 0px, 0px); transition-delay: 0ms;">
-
-
-              <div class="swiper-slide swiper-slide-prev" style="width: 120px; margin-right: 120px; " role="group" aria-label="3 / 7" data-swiper-slide-index="2">
-                <a href="https://mbowis.id/" target="_blank">
-                  <img src="assets/img/support/mbowis.webp" class="img-fluid" alt="mbowis" title="mbowis syrup">
-                </a>
-              </div>
-              <div class="swiper-slide swiper-slide-active" style="width: 120px; margin-right: 120px;" role="group" aria-label="4 / 7" data-swiper-slide-index="3">
-                <a href="https://atourwis.id/" target="_blank">
-                  <img src="assets/img/support/atourwis.webp" class="img-fluid" alt="atourwis" title="Atourwis Travel">
-                </a>
-              </div>
-              <div class="swiper-slide swiper-slide-next" style="width: 120px; margin-right: 120px;" role="group" aria-label="5 / 7" data-swiper-slide-index="4">
-                <a href="https://mlgcoffee.com/" target="_blank">
-                  <img src="assets/img/support/mlg.webp" class="img-fluid" alt="MLG management" title="MLG coffee">
-                </a>
-              </div>
-              <div class="swiper-slide" style="width: 120px; margin-right: 120px;" role="group" aria-label="6 / 7" data-swiper-slide-index="5">
-                <a href="https://www.instagram.com/pressolve/" target="_blank">
-                  <img src="assets/img/support/pressolve.webp" class="img-fluid" alt="pressolve" title="pressolve Website">
-                </a>
-              </div>
-              <div class="swiper-slide" style="width: 120px; margin-right: 120px;" role="group" aria-label="7 / 7" data-swiper-slide-index="6">
-                <a href="https://overhaul.id/" target="_blank">
-                  <img src="assets/img/support/overhaul.webp" class="img-fluid" alt="overhaul" title="Overhaul Website">
-                </a>
-              </div>
-              <div class="swiper-slide" style="width: 120px; margin-right: 120px;" role="group" aria-label="1 / 7" data-swiper-slide-index="0">
-                <a href="https://bekasbaru.com/" target="_blank">
-                  <img src="assets/img/support/bekasbaru.webp" class="img-fluid" alt="EQIYU" title="BekasBaru.com - Toko alat kopi Bekas dan Baru">
-                </a>
-              </div>
-              <div class="swiper-slide" style="width: 120px; margin-right: 120px;" role="group" aria-label="2 / 7" data-swiper-slide-index="1">
-                <a href="https://azkaindiesatu.id/" target="_blank">
-                  <img src="assets/img/support/ais.webp" class="img-fluid" alt="AIS" title="Azka Indie Satu">
-                </a>
-              </div>
-            </div>
-            <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
-          </div>
-          <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
-        </div>
-      </div>
-      <div class="container footer-top">
-        <div class="row gy-4">
-          <div class="col-lg-6 col-md-12 footer-about">
-            <a href="index.php" class="logo d-flex align-items-center">
-              <img src="assets/img/logofooter.webp" alt="Eqiyu Indonesia" />
-            </a>
-            <h3>Lembaga Pendidikan Profesional</h3>
-            <p>
-              Kursus Barista, Mixology, Tea &amp; Tea Blending, Roastery, Pelatihan &amp; Konsultan
-              Membangun Bisnis Caffe &amp; Coffeshop.
-            </p>
-            <div class="social-links d-flex mt-4">
-              <a href="https://x.com/Eqiyu_Indonesia/"><i class="bi bi-twitter-x"></i></a>
-              <a href="https://www.facebook.com/eqiyu.indonesia"><i class="bi bi-facebook"></i></a>
-              <a href="https://www.instagram.com/eqiyu.indonesia"><i class="bi bi-instagram"></i></a>
-              <a href="https://www.youtube.com/c/TokoBekasBaru"><i class="bi bi-youtube"></i></a>
-              <a href="https://www.tiktok.com/@eqiyu.indonesia"><i class="bi bi-tiktok"></i></a>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-6 footer-links">
-            <h4>Eqiyu Malang</h4>
-            <div class="d-flex align-items-start mb-2">
-              <i class="bi bi-geo-alt me-2 mt-1"></i>
-              <span>
-                Jl. Brigjend Slamet Riadi No.76,<br />
-                Oro-oro Dowo, Kec. Klojen,<br />
-                Kota Malang, Jawa Timur 65119.
-              </span>
-            </div>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-pin-map me-2 mt-1"></i>
-              <span>
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.2903049907245!2d112.62654827588874!3d-7.968920479432775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd62974117b5143%3A0xac0a6f7e8b6c0c35!2sEqiyu%20Indonesia%20Malang%20(Kursus%20Barista%20%26%20Bisnis%20Kuliner)!5e0!3m2!1sen!2sid!4v1746086179700!5m2!1sen!2sid"
-                  width="100%"
-                  height="100%"
-                  style="border: 0; border-radius: 10px"
-                  allowfullscreen=""
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"></iframe>
-              </span>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-6 footer-links">
-            <h4>Eqiyu Jogja</h4>
-            <div class="d-flex align-items-start mb-2">
-              <i class="bi bi-geo-alt me-2 mt-1"></i>
-              <span>
-                Jl. Pugeran.11 - 15,<br />
-                Suryodiningratan, Kec. Mantrijeron,<br />
-                Kota Yogyakarta, DIY 55141.
-              </span>
-            </div>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-pin-map me-2 mt-1"></i>
-              <span>
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.7700450055027!2d110.35300158485491!3d-7.814149257479901!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a57f7da45014d%3A0x6c71f9c11a0f935!2sEqiyu%20Indonesia%20Jogja!5e0!3m2!1sen!2sid!4v1746086112162!5m2!1sen!2sid"
-                  width="100%"
-                  height="100%"
-                  style="border: 0; border-radius: 10px"
-                  allowfullscreen=""
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"></iframe>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="container copyright text-center mt-4">
-        <p>
-          © <span>Copyright</span>
-          <strong class="px-1 sitename">Learner</strong>
-          <span>All Rights Reserved</span>
-        </p>
-        <div class="credits">
-          Dibangun dengan ❤️ oleh <a href="https://azkaindiesatu.id">AIS</a>
-        </div>
-      </div>
-    </footer>
-    <!-- WhatsApp Float Button -->
-    <a
-      href="https://wa.me/6285852229959?text=Hallo%2C%20Saya%20tahu%20info%20dari%20web%20https%3A%2F%2Feqiyu.id%20ingin%20bertanya%20tentang%20kelas%2Fkursus"
-      class="whatsapp-float"
-      target="_blank">
-      <i class="bi bi-whatsapp"></i>
-    </a>
-    <!-- Scroll Top -->
-    <a
-      href="#"
-      id="scroll-top"
-      class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-    <!-- Preloader -->
-    <div id="preloader"></div>
-
-    <!-- Vendor JS Files -->
-    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/vendor/php-email-form/validate.js"></script>
-    <script src="assets/vendor/aos/aos.js"></script>
-    <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
-    <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-
-    <!-- Main JS File -->
-    <script src="assets/js/main.js"></script>
-    </body>
-
-    </html>
+<?= $this->endSection() ?>

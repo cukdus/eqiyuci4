@@ -45,9 +45,9 @@ class Jadwal extends BaseController
             ->get()
             ->getResultArray();
 
-        // Kelas options for modal select (include kota_tersedia to constrain lokasi choices)
+        // Kelas options for modal select (include kategori to detect online class)
         $kelasOptions = model(KelasModel::class)
-            ->select('id, nama_kelas, kota_tersedia')
+            ->select('id, nama_kelas, kota_tersedia, kategori')
             ->orderBy('nama_kelas', 'ASC')
             ->findAll();
 

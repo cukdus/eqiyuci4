@@ -150,7 +150,8 @@
                   <label class="form-label d-block">Kota Tersedia</label>
                   <?php if (!empty($kotaOptions)): ?>
                     <?php foreach ($kotaOptions as $opt): ?>
-                      <?php $code = strtolower((string) ($opt['kode'] ?? '')); $name = (string) ($opt['nama'] ?? $code); ?>
+                      <?php $code = strtolower((string) ($opt['kode'] ?? ''));
+                      $name = (string) ($opt['nama'] ?? $code); ?>
                       <div class="form-check form-check-inline">
                         <input class="form-check-input" type="checkbox" id="kota_<?= esc($code) ?>" name="kota_tersedia[]" value="<?= esc($code) ?>" <?= in_array($code, array_map('strtolower', $oldKota)) ? 'checked' : '' ?>>
                         <label class="form-check-label" for="kota_<?= esc($code) ?>"><?= esc($name) ?></label>
@@ -159,7 +160,7 @@
                   <?php else: ?>
                     <div class="text-muted">Belum ada data kota. Tambahkan di menu Kota Kelas.</div>
                   <?php endif; ?>
-                  <small class="text-muted d-block mt-1">Untuk kelas online, opsi "se-dunia" akan otomatis ditambahkan saat simpan.</small>
+                  <small class="text-muted d-block mt-1">Centang kota-kota yang tersedia. Untuk kelas online, sistem akan memperlakukan lokasi sebagai fleksibel tanpa menyimpan kode khusus.</small>
                 </div>
                 <div class="col-md-6">
                   <label for="badge" class="form-label">Badge</label>
@@ -219,18 +220,7 @@
       });
     }
 
-    // Auto-check "Se-Dunia" when kategori is set to kelas online
-    var kategoriSelect = document.getElementById('kategori');
-    var kotaWorld = document.getElementById('kota_world');
-    if (kategoriSelect && kotaWorld) {
-      var ensureWorld = function() {
-        if (kategoriSelect.value === 'kursusonline') {
-          kotaWorld.checked = true;
-        }
-      };
-      ensureWorld();
-      kategoriSelect.addEventListener('change', ensureWorld);
-    }
+    // Tidak ada penanganan checkbox khusus "Se-Dunia"; lokasi disimpan sebagai kode kota saja.
   });
 </script>
 <style>
