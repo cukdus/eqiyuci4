@@ -76,9 +76,25 @@ class Home extends BaseController
         $kategoriModel = new \App\Models\KategoriBerita();
 
         $now = date('Y-m-d H:i:s');
-        $berita = $beritaModel
+        $tagParamRaw = (string) ($this->request->getGet('tag') ?? '');
+        $tagParam = trim(mb_strtolower($tagParamRaw));
+
+        // Builder untuk daftar berita
+        $builder = $beritaModel
+            ->select('berita.*')
             ->where('status', 'publish')
-            ->where('tanggal_terbit <=', $now)
+            ->where('tanggal_terbit <=', $now);
+
+        // Filter berdasarkan tag jika ada
+        if ($tagParam !== '') {
+            $builder = $builder
+                ->join('berita_tag bt', 'bt.berita_id = berita.id', 'left')
+                ->join('tag t', 't.id = bt.tag_id', 'left')
+                ->where('t.nama_tag', $tagParam)
+                ->groupBy('berita.id');
+        }
+
+        $berita = $builder
             ->orderBy('tanggal_terbit', 'DESC')
             ->paginate(9);
 
@@ -92,12 +108,73 @@ class Home extends BaseController
             }
         }
 
+        // Siapkan pager path agar mempertahankan query ?tag=...
+        $pager = $beritaModel->pager;
+        $path = site_url('info');
+        if ($tagParam !== '') {
+            $path .= '?tag=' . urlencode($tagParam);
+        }
+        $pager->setPath($path);
+
         $data = [
             'berita' => $berita,
-            'pager' => $beritaModel->pager,
+            'pager' => $pager,
+            'currentTag' => $tagParam,
         ];
 
         return view('info', $data);
+    }
+
+    public function infoDetail(string $slug = '')
+    {
+        $beritaModel = new \App\Models\Berita();
+        $kategoriModel = new \App\Models\KategoriBerita();
+
+        $now = date('Y-m-d H:i:s');
+        $artikel = $beritaModel
+            ->where('slug', $slug)
+            ->where('status', 'publish')
+            ->where('tanggal_terbit <=', $now)
+            ->first();
+
+        if (!$artikel) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Artikel tidak ditemukan');
+        }
+
+        // Kategori nama untuk tampilan
+        $artikel['kategori_nama'] = 'Uncategorized';
+        if (!empty($artikel['kategori_id'])) {
+            $kategori = $kategoriModel->find($artikel['kategori_id']);
+            if ($kategori) {
+                $artikel['kategori_nama'] = (string) ($kategori['nama_kategori'] ?? 'Uncategorized');
+            }
+        }
+
+        // URL gambar utama
+        $imgUrl = !empty($artikel['gambar_utama'])
+            ? base_url('uploads/artikel/' . $artikel['gambar_utama'])
+            : base_url('assets/img/blog/blog-hero-1.webp');
+
+        // Ambil tags terkait artikel dari pivot berita_tag
+        $db = \Config\Database::connect();
+        $rows = $db
+            ->table('berita_tag bt')
+            ->select('t.nama_tag')
+            ->join('tag t', 't.id = bt.tag_id', 'left')
+            ->where('bt.berita_id', (int) ($artikel['id'] ?? 0))
+            ->get()
+            ->getResultArray();
+        $tags = array_values(array_filter(array_map(static function ($r) {
+            return trim((string) ($r['nama_tag'] ?? ''));
+        }, $rows), static function ($v) {
+            return $v !== '';
+        }));
+
+        return view('info-details', [
+            'artikel' => $artikel,
+            'imgUrl' => $imgUrl,
+            'tags' => $tags,
+        ]);
     }
 
     public function kontak()
@@ -107,7 +184,126 @@ class Home extends BaseController
 
     public function jadwal()
     {
-        return view('jadwal');
+        // Tampilkan semua kelas offline (kategori = 'Kursus') berstatus aktif
+        $kelasModel = new \App\Models\Kelas();
+        $kelasOptions = $kelasModel
+            ->select('nama_kelas, slug, kode_kelas, kategori, status_kelas')
+            ->where('kategori', 'Kursus')
+            ->where('status_kelas', 'aktif')
+            ->orderBy('nama_kelas', 'ASC')
+            ->findAll();
+
+        return view('jadwal', [
+            'kelasOptions' => $kelasOptions,
+        ]);
+    }
+
+    /**
+     * Public JSON: List jadwal per bulan dengan filter.
+     * GET /api/jadwal?month=MM&year=YYYY&kelas=...&lokasi=...
+     * Returns: { ok, data: [ { id, kelas_id, nama_kelas, slug, tanggal_mulai, tanggal_selesai, lokasi, harga } ] }
+     */
+    public function jadwalJson()
+    {
+        $month = (int) ($this->request->getGet('month') ?? 0);
+        $year = (int) ($this->request->getGet('year') ?? 0);
+        $kelas = trim((string) ($this->request->getGet('kelas') ?? ''));
+        $lokasi = trim(mb_strtolower((string) ($this->request->getGet('lokasi') ?? '')));
+
+        // Default ke bulan & tahun sekarang jika tidak diisi
+        if ($month < 1 || $month > 12) {
+            $month = (int) date('n');
+        }
+        if ($year < 2000 || $year > 2100) {
+            $year = (int) date('Y');
+        }
+
+        $db = \Config\Database::connect();
+        $builder = $db
+            ->table('jadwal_kelas jk')
+            ->select('jk.id, jk.kelas_id, jk.tanggal_mulai, jk.tanggal_selesai, jk.lokasi, jk.kapasitas, k.nama_kelas, k.slug, k.harga, k.gambar_utama')
+            ->join('kelas k', 'k.id = jk.kelas_id', 'left')
+            ->where('MONTH(jk.tanggal_mulai)', $month)
+            ->where('YEAR(jk.tanggal_mulai)', $year)
+            ->orderBy('jk.tanggal_mulai', 'ASC');
+
+        if ($kelas !== '') {
+            $builder
+                ->groupStart()
+                ->like('k.nama_kelas', $kelas)
+                ->orLike('k.slug', $kelas)
+                ->groupEnd();
+        }
+        if ($lokasi !== '') {
+            $builder->where('LOWER(jk.lokasi) =', $lokasi);
+        }
+
+        $rows = $builder->get()->getResultArray();
+        return $this->response->setJSON([
+            'ok' => true,
+            'data' => array_map(static function ($r) {
+                // Normalisasi harga ke integer jika numeric
+                $harga = $r['harga'] ?? null;
+                if (!is_null($harga) && is_numeric($harga)) {
+                    $r['harga'] = (int) $harga;
+                } else {
+                    $r['harga'] = null;
+                }
+                return $r;
+            }, $rows),
+        ]);
+    }
+
+    /**
+     * Public JSON: Jadwal mendatang (upcoming) global.
+     * GET /api/jadwal/upcoming?limit=N&lokasi=&kelas=
+     */
+    public function jadwalUpcomingJson()
+    {
+        $limit = (int) ($this->request->getGet('limit') ?? 5);
+        if ($limit < 1) {
+            $limit = 5;
+        }
+        if ($limit > 50) {
+            $limit = 50;
+        }
+
+        $kelas = trim((string) ($this->request->getGet('kelas') ?? ''));
+        $lokasi = trim(mb_strtolower((string) ($this->request->getGet('lokasi') ?? '')));
+
+        $db = \Config\Database::connect();
+        $builder = $db
+            ->table('jadwal_kelas jk')
+            ->select('jk.id, jk.kelas_id, jk.tanggal_mulai, jk.tanggal_selesai, jk.lokasi, jk.kapasitas, k.nama_kelas, k.slug, k.harga, k.gambar_utama')
+            ->join('kelas k', 'k.id = jk.kelas_id', 'left')
+            ->where('jk.tanggal_selesai >= CURDATE()', null, false)
+            ->orderBy('jk.tanggal_mulai', 'ASC')
+            ->limit($limit);
+
+        if ($kelas !== '') {
+            $builder
+                ->groupStart()
+                ->like('k.nama_kelas', $kelas)
+                ->orLike('k.slug', $kelas)
+                ->groupEnd();
+        }
+        if ($lokasi !== '') {
+            $builder->where('LOWER(jk.lokasi) =', $lokasi);
+        }
+
+        $rows = $builder->get()->getResultArray();
+        return $this->response->setJSON([
+            'ok' => true,
+            'data' => array_map(static function ($r) {
+                $harga = $r['harga'] ?? null;
+                if (!is_null($harga) && is_numeric($harga)) {
+                    $r['harga'] = (int) $harga;
+                } else {
+                    $r['harga'] = null;
+                }
+                return $r;
+            }, $rows),
+        ]);
     }
 
     public function daftar()
@@ -115,10 +311,10 @@ class Home extends BaseController
         $kelasModel = new \App\Models\Kelas();
         $kotaModel = new \App\Models\KotaKelas();
 
-        // Ambil daftar kelas aktif untuk pilihan
+        // Ambil daftar kelas dengan status_kelas 'aktif' saja
         $kelasList = $kelasModel
             ->select('kode_kelas, nama_kelas, kota_tersedia, harga, kategori, slug, status_kelas')
-            ->where('status_kelas !=', 'nonaktif')
+            ->where('status_kelas', 'aktif')
             ->orderBy('kode_kelas', 'ASC')
             ->findAll();
 
@@ -172,7 +368,8 @@ class Home extends BaseController
         $db = \Config\Database::connect();
 
         // Find kelas by kode_kelas
-        $kelas = $db->table('kelas')
+        $kelas = $db
+            ->table('kelas')
             ->select('id, nama_kelas')
             ->where('kode_kelas', $kode)
             ->get()
@@ -184,7 +381,8 @@ class Home extends BaseController
         }
 
         // Get upcoming schedules for kelas_id
-        $jadwal = $db->table('jadwal_kelas jk')
+        $jadwal = $db
+            ->table('jadwal_kelas jk')
             ->select('jk.id, jk.tanggal_mulai, jk.tanggal_selesai, jk.lokasi, jk.instruktur, jk.kapasitas')
             ->where('jk.kelas_id', (int) $kelas['id'])
             ->where('jk.tanggal_selesai >= CURDATE()', null, false)
@@ -209,16 +407,24 @@ class Home extends BaseController
         $requestedKodeKelas = '';
 
         $postKode = $this->request->getPost('kode_voucher');
-        if ($postKode !== null) { $kode = trim((string) $postKode); }
+        if ($postKode !== null) {
+            $kode = trim((string) $postKode);
+        }
         $postKodeKelas = $this->request->getPost('kode_kelas');
-        if ($postKodeKelas !== null) { $requestedKodeKelas = trim((string) $postKodeKelas); }
+        if ($postKodeKelas !== null) {
+            $requestedKodeKelas = trim((string) $postKodeKelas);
+        }
 
         if ($kode === '') {
             try {
                 $json = $this->request->getJSON(true);
                 if (is_array($json)) {
-                    if (isset($json['kode_voucher'])) { $kode = trim((string) $json['kode_voucher']); }
-                    if (isset($json['kode_kelas'])) { $requestedKodeKelas = trim((string) $json['kode_kelas']); }
+                    if (isset($json['kode_voucher'])) {
+                        $kode = trim((string) $json['kode_voucher']);
+                    }
+                    if (isset($json['kode_kelas'])) {
+                        $requestedKodeKelas = trim((string) $json['kode_kelas']);
+                    }
                 }
             } catch (\Throwable $e) {
                 // ignore
@@ -250,8 +456,12 @@ class Home extends BaseController
         $sampai = $row['tanggal_berlaku_sampai'] ?? null;
         $today = date('Y-m-d');
         $validDate = true;
-        if ($mulai && $today < $mulai) { $validDate = false; }
-        if ($sampai && $today > $sampai) { $validDate = false; }
+        if ($mulai && $today < $mulai) {
+            $validDate = false;
+        }
+        if ($sampai && $today > $sampai) {
+            $validDate = false;
+        }
 
         // Class validity: if voucher ties to specific class and the requested differs
         $validForClass = true;
@@ -347,7 +557,8 @@ class Home extends BaseController
         }
 
         $db = \Config\Database::connect();
-        $row = $db->table('sertifikat s')
+        $row = $db
+            ->table('sertifikat s')
             ->select('s.nomor_sertifikat, s.tanggal_terbit, s.kota_kelas, r.nama AS nama_pemilik, k.nama_kelas AS nama_kelas, s.id AS id')
             ->join('registrasi r', 'r.id = s.registrasi_id', 'left')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
@@ -382,7 +593,8 @@ class Home extends BaseController
         $dompdf->render();
 
         $filename = 'sertifikat-' . ((string) ($row['nomor_sertifikat'] ?? '')) . '.pdf';
-        return $this->response
+        return $this
+            ->response
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->setBody($dompdf->output());
@@ -390,14 +602,116 @@ class Home extends BaseController
 
     public function bonus()
     {
-        return view('bonus');
+        $data = [];
+
+        if ($this->request->getMethod() === 'post') {
+            $number = trim((string) $this->request->getPost('certificate_number'));
+
+            if ($number !== '') {
+                $db = \Config\Database::connect();
+                // Cari sertifikat lalu join ke registrasi untuk ambil kode_kelas
+                $row = $db
+                    ->table('sertifikat s')
+                    ->select('s.nomor_sertifikat, r.kode_kelas, k.id as kelas_id, k.nama_kelas')
+                    ->join('registrasi r', 'r.id = s.registrasi_id', 'left')
+                    ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+                    ->where('s.nomor_sertifikat', $number)
+                    ->get()
+                    ->getRowArray();
+
+                if ($row && !empty($row['kode_kelas'])) {
+                    $data['cert_data'] = [
+                        'nomor_sertifikat' => (string) ($row['nomor_sertifikat'] ?? ''),
+                        'kode_kelas' => (string) ($row['kode_kelas'] ?? ''),
+                        'nama_kelas' => (string) ($row['nama_kelas'] ?? ''),
+                    ];
+
+                    // Ambil bonus berdasarkan kelas_id dari tabel bonus_file
+                    $bonusModel = new \App\Models\BonusFile();
+                    $files = $bonusModel
+                        ->where('kelas_id', (int) ($row['kelas_id'] ?? 0))
+                        ->orderBy('urutan', 'ASC')
+                        ->orderBy('id', 'DESC')
+                        ->findAll();
+
+                    $data['bonusFiles'] = $files;  // tidak dipakai langsung di UI JS
+                    if (!empty($files)) {
+                        $data['message_success'] = 'Bonus kelas ditemukan untuk sertifikat ini.';
+                    } else {
+                        $data['message_error'] = 'Tidak ada bonus yang tersedia untuk kode kelas ini.';
+                    }
+                } else {
+                    $data['message_error'] = 'Sertifikat tidak ditemukan atau tidak valid.';
+                }
+            } else {
+                $data['message_error'] = 'Nomor sertifikat wajib diisi.';
+            }
+        }
+
+        return view('bonus', $data);
+    }
+
+    /**
+     * Endpoint JSON: Ambil bonus kelas berdasarkan nomor sertifikat.
+     * GET /api/bonus?certificate_number=EQxxxx
+     */
+    public function bonusJson()
+    {
+        $number = trim((string) $this->request->getGet('certificate_number'));
+        if ($number === '') {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok' => false,
+                'message' => 'Nomor sertifikat wajib diisi.',
+            ]);
+        }
+
+        $db = \Config\Database::connect();
+        $row = $db
+            ->table('sertifikat s')
+            ->select('s.nomor_sertifikat, r.kode_kelas, k.id as kelas_id, k.nama_kelas')
+            ->join('registrasi r', 'r.id = s.registrasi_id', 'left')
+            ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+            ->where('s.nomor_sertifikat', $number)
+            ->get()
+            ->getRowArray();
+
+        if (!$row || empty($row['kode_kelas'])) {
+            return $this->response->setJSON([
+                'ok' => false,
+                'message' => 'Sertifikat tidak ditemukan atau tidak valid.',
+            ]);
+        }
+
+        // Ambil dari bonus_file berdasarkan kelas_id
+        $bonusModel = new \App\Models\BonusFile();
+        $filesRaw = $bonusModel
+            ->where('kelas_id', (int) ($row['kelas_id'] ?? 0))
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'DESC')
+            ->findAll();
+
+        return $this->response->setJSON([
+            'ok' => true,
+            'data' => [
+                'nomor_sertifikat' => (string) ($row['nomor_sertifikat'] ?? ''),
+                'kode_kelas' => (string) ($row['kode_kelas'] ?? ''),
+                'nama_kelas' => (string) ($row['nama_kelas'] ?? ''),
+                'files' => array_map(static function (array $bf) {
+                    return [
+                        'nama_file' => (string) ($bf['judul_file'] ?? ($bf['tipe'] ?? 'Bonus')),
+                        'path_file' => ltrim((string) ($bf['file_url'] ?? ''), '/'),
+                        'deskripsi' => '',
+                        'created_at' => (string) ($bf['created_at'] ?? ''),
+                    ];
+                }, $filesRaw),
+            ],
+        ]);
     }
 
     public function kursus()
     {
         return view('kursus');
     }
-
 
     /**
      * Endpoint JSON: Daftar kursus dengan filter dan paginasi.
@@ -438,7 +752,8 @@ class Home extends BaseController
                     // type=semua
                     if ($category === 'kursus') {
                         // Hanya kursus (offline+online), exclude jasa
-                        $builder->groupStart()
+                        $builder
+                            ->groupStart()
                             ->where('kategori', 'Kursus')
                             ->orWhere('kategori', 'kursusonline')
                             ->groupEnd();
@@ -470,36 +785,31 @@ class Home extends BaseController
                     }
                     // Jika tetap kosong, gunakan nilai mentah (capitalize) agar tetap tampil
                     if (empty($kotaNames)) {
-                        $kotaNames = array_map(static function ($c) { return $c === 'se-dunia' ? 'Se-Dunia' : ucwords($c); }, $codes);
+                        $kotaNames = array_map(static function ($c) {
+                            return $c === 'se-dunia' ? 'Se-Dunia' : ucwords($c);
+                        }, $codes);
                     }
                 }
                 // Online: berdasarkan kategori 'kursusonline'
-                $isOnline = strtolower((string)($row['kategori'] ?? '')) === 'kursusonline';
+                $isOnline = strtolower((string) ($row['kategori'] ?? '')) === 'kursusonline';
 
-                // Tentukan badge text berdasarkan field 'badge'
+                // Sesuaikan badge dengan nilai di tabel kelas
                 $badgeRaw = strtolower(trim((string) ($row['badge'] ?? '')));
-                $badgeText = '';
-                $badgeType = '';
-                if ($badgeRaw === 'hot') {
-                    $badgeText = 'Best Seller';
-                    $badgeType = 'default';
-                } elseif ($badgeRaw === 'free') {
-                    $badgeText = 'Free';
+                $badgeText = (string) ($row['badge'] ?? '');
+                // Tentukan tipe style berdasarkan beberapa nilai yang didukung
+                if ($badgeRaw === 'free') {
                     $badgeType = 'free';
                 } elseif ($badgeRaw === 'new') {
-                    $badgeText = 'New';
                     $badgeType = 'new';
-                } elseif ($badgeRaw === 'popular') {
-                    $badgeText = 'Popular';
-                    $badgeType = 'default';
                 } elseif ($badgeRaw === 'certificate') {
-                    $badgeText = 'Certificate';
                     $badgeType = 'certificate';
+                } else {
+                    $badgeType = 'default';
                 }
 
                 $imageFile = (string) ($row['gambar_utama'] ?? '');
                 $imageUrl = $imageFile !== ''
-                    ? base_url('uploads/kelas/' . $imageFile)
+                    ? base_url($imageFile)
                     : base_url('assets/img/education/courses-3.webp');
 
                 $detailSlug = (string) ($row['slug'] ?? '');
@@ -557,8 +867,21 @@ class Home extends BaseController
         // Bangun data tampilan
         $imageFile = (string) ($kelas['gambar_utama'] ?? '');
         $heroImageUrl = $imageFile !== ''
-            ? base_url('uploads/kelas/' . $imageFile)
+            ? base_url($imageFile)
             : base_url('assets/img/education/courses-8.webp');
+        // Build hero images array: main image followed by any additional images
+        $heroImages = [$heroImageUrl];
+        $extraRaw = $kelas['gambar_tambahan'] ?? null;
+        if (is_string($extraRaw) && trim($extraRaw) !== '') {
+            $decoded = json_decode($extraRaw, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $p) {
+                    if (is_string($p) && trim($p) !== '') {
+                        $heroImages[] = base_url($p);
+                    }
+                }
+            }
+        }
 
         $kategori = (string) ($kelas['kategori'] ?? '');
         $kategoriLabel = $kategori === 'kursusonline' ? 'Kursus Online' : ($kategori ?: '');
@@ -576,7 +899,9 @@ class Home extends BaseController
                 $kotaNames[] = $kr['nama'];
             }
             if (empty($kotaNames)) {
-                $kotaNames = array_map(static function ($c) { return $c === 'se-dunia' ? 'Se-Dunia' : ucwords($c); }, $codes);
+                $kotaNames = array_map(static function ($c) {
+                    return $c === 'se-dunia' ? 'Se-Dunia' : ucwords($c);
+                }, $codes);
             }
         }
         $kotaString = implode(', ', $kotaNames);
@@ -595,12 +920,206 @@ class Home extends BaseController
         return view('detail-kursus', [
             'kelas' => $kelas,
             'heroImageUrl' => $heroImageUrl,
+            'heroImages' => $heroImages,
             'kategoriLabel' => $kategoriLabel,
             'kotaString' => $kotaString,
             'hargaFormatted' => $hargaFormatted,
             'deskripsiSingkat' => $deskripsiSingkat,
             'deskripsiHtml' => $deskripsiHtml,
             'daftarUrl' => $daftarUrl,
+        ]);
+    }
+
+    /**
+     * Halaman jembatan untuk akses kelas online, login via no_telp.
+     * UI dipertahankan sesuai template yang ada di Views/loginkelas.php
+     */
+    public function loginkelas()
+    {
+        return view('loginkelas');
+    }
+
+    /**
+     * Halaman kelas online. Jika belum login via loginkelas, redirect ke loginkelas.
+     */
+    public function kelasonline()
+    {
+        $auth = session()->get('kelasonline_auth');
+        if (empty($auth)) {
+            return redirect()->to(site_url('loginkelas'));
+        }
+
+        // Optional: cek expiry manual jika diset
+        if (!empty($auth['expires_at']) && time() > (int) $auth['expires_at']) {
+            session()->remove('kelasonline_auth');
+            return redirect()->to(site_url('loginkelas'));
+        }
+
+        // Ambil data kelas untuk deskripsi singkat
+        $kelas = null;
+        try {
+            $kelasModel = model(\App\Models\Kelas::class);
+            $kelasId = (int) ($auth['kelas_id'] ?? 0);
+            if ($kelasId > 0) {
+                $kelas = $kelasModel->find($kelasId);
+            }
+        } catch (\Throwable $e) {
+            // abaikan bila terjadi error
+            $kelas = null;
+        }
+
+        return view('kelasonline', ['kelas' => $kelas]);
+    }
+
+    /**
+     * Logout khusus Kelas Online: hapus session kelasonline_auth
+     * lalu arahkan kembali ke halaman loginkelas.
+     */
+    public function kelasonlineLogout()
+    {
+        session()->remove('kelasonline_auth');
+        return redirect()->to(site_url('loginkelas'));
+    }
+
+    /**
+     * JSON login untuk Kelas Online.
+     * GET /api/kelasonline/login?phone=08xxxx
+     * Valid jika ditemukan di registrasi dengan akses_aktif=1 dan join kelas untuk kelas_id.
+     * Meng-set session 'kelasonline_auth' dengan masa berlaku 2 jam.
+     */
+    public function kelasonlineLoginJson()
+    {
+        $phone = trim((string) ($this->request->getGet('phone') ?? $this->request->getGet('no_tlp') ?? ''));
+        if ($phone === '') {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok' => false,
+                'message' => 'Nomor telepon wajib diisi',
+            ]);
+        }
+
+        $db = \Config\Database::connect();
+        $row = $db
+            ->table('registrasi r')
+            ->select('r.id as registrasi_id, r.no_telp, r.kode_kelas, r.akses_aktif, k.id as kelas_id, k.nama_kelas')
+            ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+            ->where('r.no_telp', $phone)
+            ->where('r.akses_aktif', 1)
+            ->where('r.deleted_at IS NULL', null, false)
+            ->orderBy('r.id', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        if (!$row || empty($row['kelas_id'])) {
+            return $this->response->setJSON([
+                'ok' => false,
+                'message' => 'Akun tidak ditemukan atau akses tidak aktif untuk kelas online',
+            ]);
+        }
+
+        // Set session login 2 jam (7200 detik)
+        $authData = [
+            'no_telp' => (string) ($row['no_telp'] ?? $phone),
+            'registrasi_id' => (int) ($row['registrasi_id'] ?? 0),
+            'kelas_id' => (int) ($row['kelas_id'] ?? 0),
+            'kode_kelas' => (string) ($row['kode_kelas'] ?? ''),
+            'nama_kelas' => (string) ($row['nama_kelas'] ?? ''),
+            'expires_at' => time() + 7200,
+        ];
+        session()->set('kelasonline_auth', $authData);
+
+        return $this->response->setJSON([
+            'ok' => true,
+            'data' => [
+                'kode_kelas' => $authData['kode_kelas'],
+                'nama_kelas' => $authData['nama_kelas'],
+                'kelas_id' => $authData['kelas_id'],
+            ],
+        ]);
+    }
+
+    /**
+     * JSON modul Kelas Online berdasarkan session login.
+     * GET /api/kelasonline/modules
+     * Returns: { ok, modules: [ { id, judul_modul, deskripsi, urutan } ] }
+     */
+    public function kelasonlineModulesJson()
+    {
+        $auth = session()->get('kelasonline_auth');
+        if (empty($auth)) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'ok' => false,
+                'message' => 'Belum login kelas online',
+            ]);
+        }
+        if (!empty($auth['expires_at']) && time() > (int) $auth['expires_at']) {
+            session()->remove('kelasonline_auth');
+            return $this->response->setStatusCode(401)->setJSON([
+                'ok' => false,
+                'message' => 'Sesi login berakhir. Silakan login ulang.',
+            ]);
+        }
+
+        $kelasId = (int) ($auth['kelas_id'] ?? 0);
+        if ($kelasId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'ok' => false,
+                'message' => 'Kelas tidak valid pada sesi',
+            ]);
+        }
+
+        $courseModel = new \App\Models\CourseOnline();
+        $fileModel = new \App\Models\ModulFile();
+
+        $modules = $courseModel
+            ->where('kelas_id', $kelasId)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'DESC')
+            ->findAll();
+
+        // Ambil semua file modul untuk course_id yang relevan
+        $courseIds = array_values(array_filter(array_map(static function($m){
+            return (int)($m['id'] ?? 0);
+        }, $modules), static function($v){ return $v > 0; }));
+
+        $filesByCourse = [];
+        if (!empty($courseIds)) {
+            $db = \Config\Database::connect();
+            $rows = $db->table('modul_file')
+                ->whereIn('course_id', $courseIds)
+                ->orderBy('urutan', 'ASC')
+                ->orderBy('id', 'ASC')
+                ->get()
+                ->getResultArray();
+            foreach ($rows as $r) {
+                $cid = (int)($r['course_id'] ?? 0);
+                if (!isset($filesByCourse[$cid])) $filesByCourse[$cid] = [];
+                $filesByCourse[$cid][] = [
+                    'id' => (int)($r['id'] ?? 0),
+                    'tipe' => (string)($r['tipe'] ?? ''),
+                    'judul_file' => (string)($r['judul_file'] ?? ''),
+                    'file_url' => (string)($r['file_url'] ?? ''),
+                    'urutan' => is_numeric($r['urutan'] ?? null) ? (int)$r['urutan'] : null,
+                ];
+            }
+        }
+
+        return $this->response->setJSON([
+            'ok' => true,
+            'kelas' => [
+                'id' => $kelasId,
+                'nama_kelas' => (string) ($auth['nama_kelas'] ?? ''),
+                'kode_kelas' => (string) ($auth['kode_kelas'] ?? ''),
+            ],
+            'modules' => array_map(static function (array $m) use ($filesByCourse) {
+                $cid = (int)($m['id'] ?? 0);
+                return [
+                    'id' => $cid,
+                    'judul_modul' => (string) ($m['judul_modul'] ?? ''),
+                    'deskripsi' => (string) ($m['deskripsi'] ?? ''),
+                    'urutan' => is_numeric($m['urutan'] ?? null) ? (int) $m['urutan'] : null,
+                    'files' => $filesByCourse[$cid] ?? [],
+                ];
+            }, $modules),
         ]);
     }
 }

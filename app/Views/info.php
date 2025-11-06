@@ -27,6 +27,16 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
   </div>
   <!-- End Page Title -->
 
+  <?php if (!empty($currentTag)): ?>
+    <div class="container" data-aos="fade-up" data-aos-delay="50">
+      <p class="text-black-50 small mb-3">
+        Menampilkan artikel dengan tag:
+        <span class="badge bg-secondary text-light"><?= esc(ucwords($currentTag)) ?></span>
+        <a href="<?= base_url('info') ?>" class="ms-2">Reset</a>
+      </p>
+    </div>
+  <?php endif; ?>
+
   <!-- Blog Posts Section -->
   <section id="blog-posts" class="blog-posts section">
     <div class="container" data-aos="fade-up" data-aos-delay="100">
@@ -50,7 +60,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               $judul = $item['judul'] ?? '';
               $slug = $item['slug'] ?? '';
               $img = !empty($item['gambar_utama']) ? base_url('uploads/artikel/'.$item['gambar_utama']) : base_url('assets/img/blog/blog-post-1.webp');
-              $detailUrl = base_url('blog-details.php');
+              $detailUrl = !empty($slug) ? base_url('info/'.$slug) : base_url('info');
             ?>
             <div class="col-lg-4">
               <article class="position-relative h-100">
@@ -80,7 +90,9 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
           <?php endforeach; ?>
         <?php else: ?>
           <div class="col-12">
-            <p class="text-center text-muted">Belum ada berita.</p>
+            <p class="text-center text-muted">
+              <?= !empty($currentTag) ? 'Tidak ada artikel untuk tag ini.' : 'Belum ada berita.' ?>
+            </p>
           </div>
         <?php endif; ?>
       </div>
@@ -89,7 +101,9 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
   <!-- /Blog Posts Section -->
 
   <!-- Pagination 2 Section -->
-  <?= isset($pager) ? $pager->links('default', 'front_pagination_2') : '' ?>
+  <?php if (!empty($berita) && is_array($berita) && count($berita) > 0): ?>
+    <?= isset($pager) ? $pager->links('default', 'front_pagination_2') : '' ?>
+  <?php endif; ?>
   <!-- /Pagination 2 Section -->
 </main>
 <?= $this->endSection() ?>

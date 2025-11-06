@@ -247,7 +247,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             </div>
 
             <div class="pricing-cta">
-              <a href="#" class="btn btn-primary w-100">Lihat Detail</a>
+              <a href="<?= base_url('kursus/private-class-beverage---business-culinary') ?>" class="btn btn-primary w-100">Lihat Detail</a>
             </div>
 
             <div class="pricing-features">
@@ -305,7 +305,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             </div>
 
             <div class="pricing-cta">
-              <a href="#" class="btn btn-primary w-100">Lihat Detail</a>
+              <a href="<?= base_url('kursus/basic-barista---latte-art') ?>" class="btn btn-primary w-100">Lihat Detail</a>
             </div>
 
             <div class="pricing-features">
@@ -359,7 +359,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             </div>
 
             <div class="pricing-cta">
-              <a href="#" class="btn btn-primary w-100">Lihat Detail</a>
+              <a href="<?= base_url('kursus/workshop-membangun-bisnis-cafe-kedai-kopi') ?>" class="btn btn-primary w-100">Lihat Detail</a>
             </div>
 
             <div class="pricing-features">

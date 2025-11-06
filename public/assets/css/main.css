@@ -4213,21 +4213,21 @@ section,
 }
 
 .course-details .share-course-card .social-links .social-link.twitter {
-  background-color: #1da1f2;
+  background-color: #000;
   color: white;
 }
 
 .course-details .share-course-card .social-links .social-link.twitter:hover {
-  background-color: color-mix(in srgb, #1da1f2, black 10%);
+  background-color: color-mix(in srgb, #000, black 10%);
 }
 
-.course-details .share-course-card .social-links .social-link.linkedin {
-  background-color: #0077b5;
+.course-details .share-course-card .social-links .social-link.whatsapp {
+  background-color: #25d366;
   color: white;
 }
 
-.course-details .share-course-card .social-links .social-link.linkedin:hover {
-  background-color: color-mix(in srgb, #0077b5, black 10%);
+.course-details .share-course-card .social-links .social-link.whatsapp:hover {
+  background-color: color-mix(in srgb, #25d366, black 10%);
 }
 
 .course-details .share-course-card .social-links .social-link.email {
@@ -7239,7 +7239,7 @@ section,
 }
 
 .blog-details .article-wrapper {
-  display: grid;
+  display: flex;
   grid-template-columns: minmax(200px, 300px) 1fr;
   gap: 3rem;
   position: relative;

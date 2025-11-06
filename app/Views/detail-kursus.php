@@ -4,7 +4,6 @@ $this->setVar('metaDescription', 'kursus dan pelatihan Barista, Mixology, Tea & 
 $this->setVar('metaKeywords', 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia');
 $this->setVar('canonicalUrl', base_url());
 $this->setVar('bodyClass', 'index-page');
-$this->setVar('activePage', 'index');
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 ?>
@@ -15,11 +14,11 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
   <div class="page-title light-background">
     <div
       class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">Course Details</h1>
+      <h1 class="mb-2 mb-lg-0">Detail Kursus</h1>
       <nav class="breadcrumbs">
         <ol>
           <li><a href="index.php">Home</a></li>
-          <li class="current">Course Details</li>
+          <li class="current">Detail Kursus</li>
         </ol>
       </nav>
     </div>
@@ -50,10 +49,27 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   </div>-->
             </div>
             <div class="hero-image">
-              <img
-                src="<?= esc($heroImageUrl ?? '') ?>"
-                alt="Course Preview"
-                class="img-fluid" />
+              <?php $images = is_array($heroImages ?? null) ? $heroImages : [($heroImageUrl ?? '')]; ?>
+              <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-touch="true">
+                <div class="carousel-inner">
+                  <?php foreach ($images as $i => $url): ?>
+                    <?php if (trim((string) $url) === '') continue; ?>
+                    <div class="carousel-item <?= $i === 0 ? 'active' : '' ?>">
+                      <img src="<?= esc($url) ?>" alt="Course Image" class="d-block w-100 img-fluid" />
+                    </div>
+                  <?php endforeach; ?>
+                </div>
+                <?php if (count($images) > 1): ?>
+                  <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <i class="bi bi-arrow-left-circle-fill text-warning fs-1" aria-hidden="true"></i>
+                    <span class="visually-hidden">Sebelumnya</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <i class="bi bi-arrow-right-circle-fill text-warning fs-1" aria-hidden="true"></i>
+                    <span class="visually-hidden">Berikutnya</span>
+                  </button>
+                <?php endif; ?>
+              </div>
             </div>
           </div>
           <!-- End Course Hero -->
@@ -183,8 +199,14 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               </div>
 
               <div class="action-buttons">
-                <a href="<?= esc($daftarUrl ?? '#') ?>">
-                  <button class="btn-primary">Daftar Sekarang</button></a>
+                <?php $isSegera = strtolower((string) ($kelas['status_kelas'] ?? '')) === 'segera'; ?>
+                <?php if ($isSegera): ?>
+                  <button class="btn-primary" disabled>Contact Admin</button>
+                <?php else: ?>
+                  <a href="<?= esc($daftarUrl ?? '#') ?>">
+                    <button class="btn-primary">Daftar Sekarang</button>
+                  </a>
+                <?php endif; ?>
               </div>
             </div>
           </div>
@@ -197,16 +219,16 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             data-aos-delay="400">
             <h4>Share This Course</h4>
             <div class="social-links">
-              <a href="#" class="social-link facebook">
+              <a href="#" class="social-link facebook" data-network="facebook" aria-label="Bagikan ke Facebook" title="Bagikan ke Facebook">
                 <i class="bi bi-facebook"></i>
               </a>
-              <a href="#" class="social-link twitter">
-                <i class="bi bi-twitter"></i>
+              <a href="#" class="social-link twitter" data-network="twitter" aria-label="Bagikan ke Twitter/X" title="Bagikan ke Twitter/X">
+                <i class="bi bi-twitter-x"></i>
               </a>
-              <a href="#" class="social-link linkedin">
-                <i class="bi bi-linkedin"></i>
+              <a href="#" class="social-link whatsapp" data-network="whatsapp" aria-label="Bagikan ke WhatsApp" title="Bagikan ke WhatsApp">
+                <i class="bi bi-whatsapp"></i>
               </a>
-              <a href="#" class="social-link email">
+              <a href="#" class="social-link email" data-network="email" aria-label="Bagikan via Email" title="Bagikan via Email">
                 <i class="bi bi-envelope"></i>
               </a>
             </div>
@@ -226,6 +248,107 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
         localStorage.setItem('lastViewedKelas', kode);
       }
     } catch (e) {}
+  })();
+
+  // Share buttons functionality: open native apps on mobile, fallback to web share
+  (function(){
+    var title = '<?= esc($kelas['nama_kelas'] ?? 'Kursus Eqiyu Indonesia') ?>';
+    var detailSlug = '<?= esc((string) (isset($kelas['slug']) && trim((string)$kelas['slug']) !== '' ? $kelas['slug'] : ($kelas['kode_kelas'] ?? ''))) ?>';
+    var pageUrl = '<?= esc(base_url('kursus')) ?>' + '/' + detailSlug;
+    var shareText = 'Lihat kursus "' + title + '" di Eqiyu Indonesia';
+
+    function isMobile(){
+      return /(android|iphone|ipad|ipod|windows phone)/i.test(navigator.userAgent || '');
+    }
+
+    function openUrl(url){
+      try {
+        window.location.href = url;
+      } catch(e) {
+        // noop
+      }
+    }
+
+    function openInNew(url){
+      try {
+        window.open(url, '_blank', 'noopener');
+      } catch(e) {
+        // noop
+      }
+    }
+
+    function handleShare(network){
+      var mobile = isMobile();
+      var textEnc = encodeURIComponent(shareText + ' ' + pageUrl);
+      var urlEnc = encodeURIComponent(pageUrl);
+      var titleEnc = encodeURIComponent(title);
+
+      // Prefer the Web Share API on supported mobile browsers
+      if (mobile && navigator.share) {
+        navigator.share({ title: title, text: shareText, url: pageUrl })
+          .catch(function(){
+            // If user cancels or it fails, continue to deep-link fallback
+            doNetworkShare(network, mobile, textEnc, urlEnc, titleEnc);
+          });
+        return;
+      }
+
+      doNetworkShare(network, mobile, textEnc, urlEnc, titleEnc);
+    }
+
+    function doNetworkShare(network, mobile, textEnc, urlEnc, titleEnc){
+      if (network === 'whatsapp') {
+        var deep = 'whatsapp://send?text=' + textEnc;
+        var web = 'https://wa.me/?text=' + textEnc;
+        if (mobile) {
+          openUrl(deep);
+          setTimeout(function(){ openInNew(web); }, 800);
+        } else {
+          openInNew(web);
+        }
+        return;
+      }
+
+      if (network === 'facebook') {
+        var deepFb = 'fb://facewebmodal/f?href=' + encodeURIComponent('https://www.facebook.com/sharer/sharer.php?u=' + pageUrl);
+        var webFb = 'https://www.facebook.com/sharer/sharer.php?u=' + urlEnc + '&quote=' + textEnc;
+        if (mobile) {
+          openUrl(deepFb);
+          setTimeout(function(){ openInNew(webFb); }, 800);
+        } else {
+          openInNew(webFb);
+        }
+        return;
+      }
+
+      if (network === 'twitter') {
+        var deepTw = 'twitter://post?message=' + textEnc;
+        var webTw = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + urlEnc;
+        if (mobile) {
+          openUrl(deepTw);
+          setTimeout(function(){ openInNew(webTw); }, 800);
+        } else {
+          openInNew(webTw);
+        }
+        return;
+      }
+
+      if (network === 'email') {
+        var mail = 'mailto:?subject=' + titleEnc + '&body=' + encodeURIComponent(shareText + '\n' + pageUrl);
+        openUrl(mail);
+        return;
+      }
+    }
+
+    var links = document.querySelectorAll('.share-course-card .social-link');
+    links.forEach(function(link){
+      link.addEventListener('click', function(ev){
+        ev.preventDefault();
+        var network = (link.getAttribute('data-network') || '').toLowerCase();
+        if (!network) return;
+        handleShare(network);
+      });
+    });
   })();
 </script>
 <?= $this->endSection() ?>

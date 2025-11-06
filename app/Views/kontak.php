@@ -106,11 +106,9 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             class="contact-form-container"
             data-aos="fade-up"
             data-aos-delay="400">
-            <h3>Get in Touch</h3>
+            <h3>Laporkan!</h3>
             <p>
-              Lorem ipsum dolor sit amet consectetur adipiscing elit sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua
-              consectetur adipiscing.
+              Jika Menemukan Tindak Anomali atau Kesalahan, Silahkan Laporkan di sini atau hubungi Admin.
             </p>
 
             <form
@@ -124,7 +122,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                     name="name"
                     class="form-control"
                     id="name"
-                    placeholder="Your Name"
+                    placeholder="Nama Anda"
                     required="" />
                 </div>
                 <div class="col-md-6 form-group mt-3 mt-md-0">
@@ -133,7 +131,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                     class="form-control"
                     name="email"
                     id="email"
-                    placeholder="Your Email"
+                    placeholder="Email Anda"
                     required="" />
                 </div>
               </div>
@@ -143,7 +141,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   class="form-control"
                   name="subject"
                   id="subject"
-                  placeholder="Subject"
+                  placeholder="Subjek"
                   required="" />
               </div>
               <div class="form-group mt-3">
@@ -151,7 +149,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   class="form-control"
                   name="message"
                   rows="5"
-                  placeholder="Message"
+                  placeholder="Pesan"
                   required=""></textarea>
               </div>
 
@@ -159,12 +157,12 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                 <div class="loading">Loading</div>
                 <div class="error-message"></div>
                 <div class="sent-message">
-                  Your message has been sent. Thank you!
+                  Pesan Anda Telah Dikirim. Terima Kasih!
                 </div>
               </div>
 
               <div class="form-submit">
-                <button type="submit">Send Message</button>
+                <button type="submit">Kirim</button>
                 <div class="social-links">
                   <a href="https://x.com/Eqiyu_Indonesia/"><i class="bi bi-twitter-x"></i></a>
                   <a href="https://www.facebook.com/eqiyu.indonesia"><i class="bi bi-facebook"></i></a>

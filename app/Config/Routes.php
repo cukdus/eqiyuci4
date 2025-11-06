@@ -6,24 +6,42 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('tentang', 'Home::tentang');
 $routes->get('info', 'Home::info');
+// Detail artikel berdasarkan slug
+$routes->get('info/(:segment)', 'Home::infoDetail/$1');
+// Legacy route for static template (kept for backward compatibility)
+$routes->get('blog-details.php', 'Home::infoDetail');
 $routes->get('kontak', 'Home::kontak');
 $routes->get('jadwal', 'Home::jadwal');
 $routes->match(['GET', 'POST'], 'sertifikat', 'Home::sertifikat');
 // Endpoint JSON untuk cek sertifikat
 $routes->get('api/sertifikat', 'Home::sertifikatJson');
+// Endpoint JSON untuk bonus berdasarkan nomor sertifikat
+$routes->get('api/bonus', 'Home::bonusJson');
 // Endpoint JSON publik untuk daftar kursus (filter + infinite scroll)
 $routes->get('api/kursus', 'Home::kursusJson');
 // Endpoint publik untuk download sertifikat berdasarkan nomor
 $routes->get('lihatsertifikat', 'Home::lihatsertifikat');
-$routes->get('bonus', 'Home::bonus');
+$routes->match(['GET', 'POST'], 'bonus', 'Home::bonus');
 $routes->get('kursus', 'Home::kursus');
 // Halaman detail kursus berdasarkan slug
 $routes->get('kursus/(:segment)', 'Home::kursusDetail/$1');
 $routes->get('daftar', 'Home::daftar');
 // Public API: list schedules by kode_kelas (for daftar page)
 $routes->get('api/jadwal/by-kode', 'Home::jadwalByKode');
+// Public API: list schedules per month (filters: month, year, kelas, lokasi)
+$routes->get('api/jadwal', 'Home::jadwalJson');
+// Public API: upcoming schedules
+$routes->get('api/jadwal/upcoming', 'Home::jadwalUpcomingJson');
 // Public API: check voucher validity and metadata
-$routes->match(['GET','POST'], 'api/voucher/check', 'Home::voucherCheck');
+$routes->match(['GET', 'POST'], 'api/voucher/check', 'Home::voucherCheck');
+
+// Kelas Online: login bridge and content page
+$routes->get('loginkelas', 'Home::loginkelas');
+$routes->get('kelasonline', 'Home::kelasonline');
+$routes->get('kelasonline/logout', 'Home::kelasonlineLogout');
+// Kelas Online: JSON endpoints for login and content
+$routes->get('api/kelasonline/login', 'Home::kelasonlineLoginJson');
+$routes->get('api/kelasonline/modules', 'Home::kelasonlineModulesJson');
 
 // Auth routes
 $routes->get('login', 'AuthController::login');

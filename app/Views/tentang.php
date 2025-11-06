@@ -47,7 +47,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               teknis hingga soft skill, kami membantu Anda menjadi versi
               terbaik diri Anda.
             </p>
-            <div class="stats-row">
+            <div class="stats-row mb-4">
               <div class="stats-item">
                 <span class="count">15+</span>
                 <p>Tahun Pengalaman</p>
@@ -57,8 +57,38 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                 <p>Kelas Reguler</p>
               </div>
               <div class="stats-item">
-                <span class="count">2k+</span>
+                <span class="count">20k+</span>
                 <p>Peserta Didik</p>
+              </div>
+            </div>
+            <p><strong>Bekerja sama dengan :</strong></p>
+            <div class="stats-row mb-4">
+              <div class="stats-item">
+                <span class="count">200+</span>
+                <p>Brand UMKM & Start Up</p>
+              </div>
+              <div class="stats-item">
+                <span class="count">10</span>
+                <p>Lembaga Pendidikan</p>
+              </div>
+              <div class="stats-item">
+                <span class="count">5</span>
+                <p>Perusahaan BUMN & Multinasional</p>
+              </div>
+            </div>
+            <p><strong>output :</strong></p>
+            <div class="stats-row">
+              <div class="stats-item">
+                <span class="count">300+</span>
+                <p>Bisnis Baru</p>
+              </div>
+              <div class="stats-item">
+                <span class="count">20+</span>
+                <p>Brand Startup</p>
+              </div>
+              <div class="stats-item">
+                <span class="count">6+</span>
+                <p>Juara Kompetisi Bisnis & Kompetensi</p>
               </div>
             </div>
           </div>
@@ -469,7 +499,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                 alt="" />
             </div>
             <div class="instructor-info">
-              <h5>Ulum Novianti</h5>
+              <h5>Ulum Novianto</h5>
               <p class="specialty">Trainer Food & Kitchen</p>
               <div class="action-buttons">
                 <div class="social-links">

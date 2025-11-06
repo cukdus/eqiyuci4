@@ -4,7 +4,7 @@ $this->setVar('metaDescription', 'kursus dan pelatihan Barista, Mixology, Tea & 
 $this->setVar('metaKeywords', 'kursus barista, kursus barista malang, kursus barista jogja, pelatihan barista, sekolah kopi, bisnis cafe, kursus mixology, tea blending, roastery, konsultan cafe, pelatihan bisnis kuliner, eqiyu indonesia');
 $this->setVar('canonicalUrl', base_url());
 $this->setVar('bodyClass', 'index-page');
-$this->setVar('activePage', 'index');
+$this->setVar('activePage', 'kursus');
 
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 ?>
