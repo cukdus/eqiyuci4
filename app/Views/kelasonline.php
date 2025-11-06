@@ -127,22 +127,22 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                 class="tab-pane fade"
                 id="course-detailscurriculum"
                 role="tabpanel">
-                <!--<div class="curriculum-overview">
+                <div class="curriculum-overview">
                   <div class="curriculum-stats">
                     <div class="stat">
                       <i class="bi bi-collection-play"></i>
-                      <span>12 Sections</span>
+                      <span>0 Sections</span>
                     </div>
                     <div class="stat">
                       <i class="bi bi-play-circle"></i>
-                      <span>89 video</span>
+                      <span>0 video</span>
                     </div>
                     <div class="stat">
                       <i class="bi bi-clock"></i>
-                      <span>18 file</span>
+                      <span>0 file</span>
                     </div>
                   </div>
-                </div> -->
+                </div>
 
                 <div class="accordion" id="curriculumAccordion">
                   <div class="accordion-item curriculum-module">
