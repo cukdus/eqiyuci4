@@ -44,6 +44,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                 </div>
 
                 <form
+                  id="publicEnrollForm"
                   class="enrollment-form"
                   data-aos="fade-up"
                   data-aos-delay="300">
@@ -200,6 +201,10 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                         <div id="paymentDetails">
                           Pilih kelas untuk melihat detail pembayaran.
                         </div>
+                        <input type="hidden" id="biaya_dibayar" name="biaya_dibayar" value="" />
+                        <input type="hidden" id="biaya_tagihan" name="biaya_tagihan" value="" />
+                        <input type="hidden" id="biaya_total" name="biaya_total" value="" />
+                        <input type="hidden" id="kode_unik" name="kode_unik" value="" />
                       </small>
                     </div>
                   </div>
@@ -357,6 +362,37 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                     </div>
                   </div>
 </form>
+<!-- Loading Modal -->
+<div id="loadingModal" class="modal" tabindex="-1" style="display:none; background: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Memproses Pendaftaran</h5>
+      </div>
+      <div class="modal-body">
+        <p>Mohon tunggu, data sedang disimpan...</p>
+      </div>
+    </div>
+  </div>
+  </div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal" tabindex="-1" style="display:none; background: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pendaftaran Berhasil</h5>
+      </div>
+      <div class="modal-body">
+        <p>Terima kasih. Pendaftaran Anda berhasil disimpan.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="successCloseBtn" class="btn btn-primary">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   (function () {
     const courseSelect = document.getElementById('course');
@@ -364,8 +400,13 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
     const scheduleSelect = document.getElementById('schedule');
     const paymentSelect = document.getElementById('Pembayaran');
     const paymentDetails = document.getElementById('paymentDetails');
-    // Kode unik pembayaran seperti admin (tetap selama sesi halaman)
-    const kodeUnik = Math.floor(100 + Math.random() * 900);
+    // Kode unik pembayaran: siapkan dua kode untuk DP dan Tagihan (berbeda)
+    let kodeUnikDP = Math.floor(100 + Math.random() * 900);
+    let kodeUnikTagihan = Math.floor(100 + Math.random() * 900);
+    if (kodeUnikTagihan === kodeUnikDP) {
+      kodeUnikTagihan = (kodeUnikTagihan % 999) + 1;
+      if (kodeUnikTagihan < 100) kodeUnikTagihan += 100;
+    }
 
     // Kota map injected from PHP
     const allCities = (function () {
@@ -614,17 +655,43 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
       const metode = paymentSelect ? (paymentSelect.value || '').trim() : '';
       const isDP = (metode.toLowerCase() === 'dp 50%');
       const nominal = isDP ? Math.round(subtotal * 0.5) : subtotal;
-      const totalBayar = Math.max(0, nominal + kodeUnik);
+      // Total akan dihitung spesifik sesuai metode
 
       paymentDetails.classList.remove('d-none');
-      paymentDetails.innerHTML = `
-        <div>Harga: Rp ${harga.toLocaleString('id-ID')}</div>
-        <div>Diskon: Rp ${diskon.toLocaleString('id-ID')} (${currentDiskonPersen}% voucher)</div>
-        <div>Subtotal: Rp ${subtotal.toLocaleString('id-ID')}</div>
-        <div>Metode: ${metode || 'Lunas'}</div>
-        <div>Kode unik: ${kodeUnik}</div>
-        <div><strong>Total Dibayar + kode unik: Rp ${totalBayar.toLocaleString('id-ID')}</strong></div>
-      `;
+      if (isDP) {
+        const dpAmount = Math.round(subtotal * 0.5);
+        const sisaAmount = subtotal - dpAmount;
+        const totalDPBayar = dpAmount + kodeUnikDP;
+        const totalTagihan = sisaAmount + kodeUnikTagihan;
+        // Set hidden fields untuk backend
+        document.getElementById('biaya_dibayar').value = String(totalDPBayar);
+        document.getElementById('biaya_tagihan').value = String(totalTagihan);
+        document.getElementById('biaya_total').value = String(totalDPBayar + totalTagihan);
+        // Untuk DP, gunakan kode tagihan sebagai kode_unik jika backend membutuhkannya
+        document.getElementById('kode_unik').value = String(kodeUnikTagihan);
+        paymentDetails.innerHTML = `
+          <div>Harga: Rp ${harga.toLocaleString('id-ID')}</div>
+          ${currentDiskonPersen > 0 ? `<div>Diskon: Rp ${diskon.toLocaleString('id-ID')} (${currentDiskonPersen}% voucher)</div><div>Harga Setelah Diskon: Rp ${subtotal.toLocaleString('id-ID')}</div>` : `<div>Subtotal: Rp ${subtotal.toLocaleString('id-ID')}</div>`}
+          <div>Metode: DP 50%</div>
+          <div>DP 50%: Rp ${dpAmount.toLocaleString('id-ID')}</div>
+          <div>Kode Unik: Rp ${kodeUnikDP.toLocaleString('id-ID')}</div>
+          <div><strong>Total DP Yang Harus Dibayar: Rp ${totalDPBayar.toLocaleString('id-ID')}</strong></div>
+        `;
+      } else {
+        // Full payment: tagihan = 0; dibayar = subtotal; total = subtotal + kode unik
+        const kodeUnikFull = Math.floor(100 + Math.random() * 900);
+        document.getElementById('biaya_dibayar').value = String(subtotal + kodeUnikFull);
+        document.getElementById('biaya_tagihan').value = String(0);
+        document.getElementById('biaya_total').value = String(subtotal + kodeUnikFull);
+        document.getElementById('kode_unik').value = String(kodeUnikFull);
+        paymentDetails.innerHTML = `
+          <div>Harga: Rp ${harga.toLocaleString('id-ID')}</div>
+          ${currentDiskonPersen > 0 ? `<div>Diskon: Rp ${diskon.toLocaleString('id-ID')} (${currentDiskonPersen}% voucher)</div><div>Harga Setelah Diskon: Rp ${subtotal.toLocaleString('id-ID')}</div>` : `<div>Subtotal: Rp ${subtotal.toLocaleString('id-ID')}</div>`}
+          <div>Metode: Pembayaran penuh</div>
+          <div>Kode unik: Rp ${kodeUnikFull.toLocaleString('id-ID')}</div>
+          <div><strong>Total Pembayaran Penuh: Rp ${(subtotal + kodeUnikFull).toLocaleString('id-ID')}</strong></div>
+        `;
+      }
     }
 
     function applyPreselection() {
@@ -674,6 +741,75 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
     }
     updatePaymentDetails();
     // Jadwal will be loaded when kota is chosen
+  })();
+</script>
+<script>
+  (function(){
+    const form = document.getElementById('publicEnrollForm');
+    const loadingModal = document.getElementById('loadingModal');
+    const successModal = document.getElementById('successModal');
+    const successCloseBtn = document.getElementById('successCloseBtn');
+
+    function show(el){ el.style.display = 'block'; }
+    function hide(el){ el.style.display = 'none'; }
+
+    if (form) {
+      form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        // Ensure hidden fields reflect latest calculation
+        try { updatePaymentDetails(); } catch (err) {}
+
+        // Build payload mapping to backend expected fields
+        const fd = new FormData(form);
+        const payload = new URLSearchParams();
+        payload.set('kode_kelas', fd.get('course') || '');
+        payload.set('course', fd.get('course') || ''); // keep original for redundancy
+        payload.set('location', fd.get('location') || '');
+        payload.set('schedule', fd.get('schedule') || '');
+        payload.set('Pembayaran', fd.get('Pembayaran') || '');
+        payload.set('status_pembayaran', fd.get('Pembayaran') || '');
+        payload.set('kode_voucher', fd.get('kode_voucher') || '');
+        payload.set('firstName', fd.get('firstName') || '');
+        payload.set('email', fd.get('email') || '');
+        payload.set('phone', fd.get('phone') || '');
+        payload.set('address', fd.get('address') || '');
+        payload.set('kecamatan', fd.get('kecamatan') || '');
+        payload.set('Kota', fd.get('Kota') || '');
+        payload.set('provinsi', fd.get('provinsi') || '');
+        payload.set('kodepos', fd.get('kodepos') || '');
+        // hidden payment fields
+        payload.set('biaya_dibayar', document.getElementById('biaya_dibayar').value || '');
+        payload.set('biaya_tagihan', document.getElementById('biaya_tagihan').value || '');
+        payload.set('biaya_total', document.getElementById('biaya_total').value || '');
+        payload.set('kode_unik', document.getElementById('kode_unik').value || '');
+
+        show(loadingModal);
+        try {
+          const res = await fetch('<?= base_url('daftar/submit') ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: payload.toString(),
+          });
+          const data = await res.json();
+          hide(loadingModal);
+          if (data && data.ok) {
+            show(successModal);
+          } else {
+            alert((data && data.error) ? data.error : 'Gagal menyimpan pendaftaran');
+          }
+        } catch(err) {
+          hide(loadingModal);
+          alert('Terjadi kesalahan jaringan. Coba lagi.');
+        }
+      });
+    }
+
+    if (successCloseBtn) {
+      successCloseBtn.addEventListener('click', function(){
+        hide(successModal);
+        window.location.href = '<?= base_url('/') ?>';
+      });
+    }
   })();
 </script>
                 

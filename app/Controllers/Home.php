@@ -479,6 +479,152 @@ class Home extends BaseController
         ]);
     }
 
+    /**
+     * Public submit: simpan data pendaftaran dari halaman daftar
+     * Expects form-data from daftar.php. Responds JSON.
+     */
+    public function daftarSubmit()
+    {
+        $resp = function ($ok, $payload = []) {
+            if ($ok) {
+                return $this->response->setJSON(array_merge(['ok' => true], $payload));
+            }
+            return $this->response->setJSON(array_merge(['ok' => false], $payload));
+        };
+
+        $model = new \App\Models\Registrasi();
+        $kelasModel = new \App\Models\Kelas();
+
+        // Map input from public form to registrasi fields
+        $kodeKelas = trim((string) ($this->request->getPost('course') ?? ''));
+        $lokasi = trim((string) ($this->request->getPost('location') ?? ''));
+        $jadwalIdStr = (string) ($this->request->getPost('schedule') ?? '');
+        $statusPembayaran = trim((string) ($this->request->getPost('Pembayaran') ?? ''));
+        $kodeVoucher = trim((string) ($this->request->getPost('kode_voucher') ?? ''));
+
+        $nama = trim((string) ($this->request->getPost('firstName') ?? ''));
+        $email = trim((string) ($this->request->getPost('email') ?? ''));
+        $noTelp = trim((string) ($this->request->getPost('phone') ?? ''));
+        $alamat = trim((string) ($this->request->getPost('address') ?? ''));
+        $kecamatan = trim((string) ($this->request->getPost('kecamatan') ?? ''));
+        $kabupaten = trim((string) ($this->request->getPost('Kota') ?? ''));
+        $provinsi = trim((string) ($this->request->getPost('provinsi') ?? ''));
+        $kodepos = trim((string) ($this->request->getPost('kodepos') ?? ''));
+
+        // Basic validation
+        if ($kodeKelas === '' || $nama === '' || $statusPembayaran === '') {
+            return $resp(false, ['error' => 'Data wajib tidak lengkap']);
+        }
+
+        // Determine private/online class to relax jadwal
+        $kelasRow = $kelasModel->where('kode_kelas', $kodeKelas)->first();
+        $isPrivate = false;
+        $isOnline = false;
+        if ($kelasRow) {
+            $nm = strtolower((string) ($kelasRow['nama_kelas'] ?? ''));
+            $kategori = strtolower((string) ($kelasRow['kategori'] ?? ''));
+            $isPrivate = (strpos($nm, 'private') !== false);
+            $isOnline = in_array($kategori, ['kelasonline', 'kursusonline', 'online'], true);
+        }
+
+        // jadwal_id required unless private/online
+        $jadwalId = null;
+        if ($jadwalIdStr !== '' && ctype_digit($jadwalIdStr)) {
+            $jadwalId = (int) $jadwalIdStr;
+        }
+        if (!$isPrivate && !$isOnline && !$jadwalId) {
+            return $resp(false, ['error' => 'Silakan pilih jadwal untuk kelas ini']);
+        }
+
+        // Price calculation server-side (trust but verify)
+        $hargaKelas = isset($kelasRow['harga']) && is_numeric($kelasRow['harga']) ? (float) $kelasRow['harga'] : 0.0;
+        $diskonPersen = 0;
+        if ($kodeVoucher !== '') {
+            $db = \Config\Database::connect();
+            $voucherRow = $db->table('voucher')->where('kode_voucher', $kodeVoucher)->get()->getRowArray();
+            if ($voucherRow) {
+                // Check class binding
+                $voucherKelasKode = null;
+                if (!empty($voucherRow['kelas_id'])) {
+                    $vk = $db->table('kelas')->select('kode_kelas')->where('id', (int) $voucherRow['kelas_id'])->get()->getRowArray();
+                    $voucherKelasKode = $vk['kode_kelas'] ?? null;
+                }
+                if ($voucherKelasKode !== null && $voucherKelasKode !== $kodeKelas) {
+                    // Not valid for selected class: ignore discount
+                    $diskonPersen = 0;
+                } else {
+                    // Date validity
+                    $diskonPersen = (int) ($voucherRow['diskon_persen'] ?? 0);
+                    $mulai = $voucherRow['tanggal_berlaku_mulai'] ?? null;
+                    $sampai = $voucherRow['tanggal_berlaku_sampai'] ?? null;
+                    $today = date('Y-m-d');
+                    $validDate = true;
+                    if ($mulai && $today < $mulai) { $validDate = false; }
+                    if ($sampai && $today > $sampai) { $validDate = false; }
+                    if (!$validDate) { $diskonPersen = 0; }
+                }
+            }
+        }
+
+        $biayaSetelahDiskon = max(0.0, $hargaKelas - ($hargaKelas * ($diskonPersen / 100)));
+
+        // Kode unik: gunakan dua kode berbeda untuk DP/tagihan jika DP
+        $postedKodeUnik = (int) ($this->request->getPost('kode_unik') ?? 0);
+        $kodeUnikDP = random_int(100, 999);
+        $kodeUnikTagihan = random_int(100, 999);
+        if ($postedKodeUnik >= 100 && $postedKodeUnik <= 999) {
+            $kodeUnikTagihan = $postedKodeUnik;
+        }
+        if ($kodeUnikTagihan === $kodeUnikDP) {
+            $kodeUnikTagihan = ($kodeUnikTagihan % 999) + 1;
+            if ($kodeUnikTagihan < 100) { $kodeUnikTagihan += 100; }
+        }
+
+        $isDP = strtolower($statusPembayaran) === 'dp 50%';
+        $biayaDibayar = 0.0;
+        $biayaTagihan = 0.0;
+        $biayaTotal = 0.0;
+        if ($isDP) {
+            $dpAmount = round($biayaSetelahDiskon * 0.5, 2);
+            $sisa = round($biayaSetelahDiskon - $dpAmount, 2);
+            $biayaDibayar = round($dpAmount + $kodeUnikDP, 2);
+            $biayaTagihan = round($sisa + $kodeUnikTagihan, 2);
+            $biayaTotal = round($biayaDibayar + $biayaTagihan, 2);
+        } else {
+            $kodeUnikFull = random_int(100, 999);
+            $biayaDibayar = round($biayaSetelahDiskon + $kodeUnikFull, 2);
+            $biayaTagihan = 0.0;
+            $biayaTotal = $biayaDibayar;
+        }
+
+        $data = [
+            'nama' => $nama,
+            'email' => $email,
+            'no_telp' => $noTelp,
+            'alamat' => $alamat,
+            'kecamatan' => $kecamatan,
+            'kabupaten' => $kabupaten,
+            'provinsi' => $provinsi,
+            'kodepos' => $kodepos,
+            'kode_kelas' => $kodeKelas,
+            'lokasi' => $lokasi,
+            'jadwal_id' => $jadwalId,
+            'status_pembayaran' => $isDP ? 'DP 50%' : 'lunas',
+            'biaya_total' => $biayaTotal,
+            'biaya_dibayar' => $biayaDibayar,
+            'biaya_tagihan' => $biayaTagihan,
+            'akses_aktif' => 0,
+            'kode_voucher' => $kodeVoucher,
+            'tanggal_daftar' => date('Y-m-d H:i:s'),
+        ];
+
+        if (!$model->save($data)) {
+            return $resp(false, ['error' => 'Gagal menyimpan data', 'detail' => $model->errors()]);
+        }
+
+        return $resp(true, ['message' => 'Pendaftaran berhasil', 'id' => $model->getInsertID()]);
+    }
+
     public function sertifikat()
     {
         $data = [];
@@ -1077,28 +1223,32 @@ class Home extends BaseController
             ->findAll();
 
         // Ambil semua file modul untuk course_id yang relevan
-        $courseIds = array_values(array_filter(array_map(static function($m){
-            return (int)($m['id'] ?? 0);
-        }, $modules), static function($v){ return $v > 0; }));
+        $courseIds = array_values(array_filter(array_map(static function ($m) {
+            return (int) ($m['id'] ?? 0);
+        }, $modules), static function ($v) {
+            return $v > 0;
+        }));
 
         $filesByCourse = [];
         if (!empty($courseIds)) {
             $db = \Config\Database::connect();
-            $rows = $db->table('modul_file')
+            $rows = $db
+                ->table('modul_file')
                 ->whereIn('course_id', $courseIds)
                 ->orderBy('urutan', 'ASC')
                 ->orderBy('id', 'ASC')
                 ->get()
                 ->getResultArray();
             foreach ($rows as $r) {
-                $cid = (int)($r['course_id'] ?? 0);
-                if (!isset($filesByCourse[$cid])) $filesByCourse[$cid] = [];
+                $cid = (int) ($r['course_id'] ?? 0);
+                if (!isset($filesByCourse[$cid]))
+                    $filesByCourse[$cid] = [];
                 $filesByCourse[$cid][] = [
-                    'id' => (int)($r['id'] ?? 0),
-                    'tipe' => (string)($r['tipe'] ?? ''),
-                    'judul_file' => (string)($r['judul_file'] ?? ''),
-                    'file_url' => (string)($r['file_url'] ?? ''),
-                    'urutan' => is_numeric($r['urutan'] ?? null) ? (int)$r['urutan'] : null,
+                    'id' => (int) ($r['id'] ?? 0),
+                    'tipe' => (string) ($r['tipe'] ?? ''),
+                    'judul_file' => (string) ($r['judul_file'] ?? ''),
+                    'file_url' => (string) ($r['file_url'] ?? ''),
+                    'urutan' => is_numeric($r['urutan'] ?? null) ? (int) $r['urutan'] : null,
                 ];
             }
         }
@@ -1111,7 +1261,7 @@ class Home extends BaseController
                 'kode_kelas' => (string) ($auth['kode_kelas'] ?? ''),
             ],
             'modules' => array_map(static function (array $m) use ($filesByCourse) {
-                $cid = (int)($m['id'] ?? 0);
+                $cid = (int) ($m['id'] ?? 0);
                 return [
                     'id' => $cid,
                     'judul_modul' => (string) ($m['judul_modul'] ?? ''),

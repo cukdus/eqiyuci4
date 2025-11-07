@@ -23,6 +23,79 @@
               </div>
             <?php endif; ?>
 
+            <?php
+              // Tentukan nama kelas dari daftar kelas
+              $namaKelas = '';
+              if (!empty($kelasList) && !empty($registrasi['kode_kelas'])) {
+                foreach ($kelasList as $k) {
+                  if (($k['kode_kelas'] ?? '') === ($registrasi['kode_kelas'] ?? '')) {
+                    $namaKelas = $k['nama_kelas'] ?? '';
+                    break;
+                  }
+                }
+              }
+              $statusPembayaran = $registrasi['status_pembayaran'] ?? '';
+              $biayaTotal = (float)($registrasi['biaya_total'] ?? 0);
+              $biayaDP = (float)($registrasi['biaya_dibayar'] ?? 0);
+              $biayaTagihan = (float)($registrasi['biaya_tagihan'] ?? 0);
+              $kotaKelas = $registrasi['lokasi'] ?? '';
+              // Map kode -> nama kota menggunakan kotaOptions dari controller
+              $kotaName = $kotaKelas;
+              $code = strtolower(trim((string) $kotaKelas));
+              if (!empty($kotaOptions)) {
+                foreach ($kotaOptions as $ko) {
+                  $koCode = strtolower((string) ($ko['kode'] ?? ''));
+                  $koName = (string) ($ko['nama'] ?? '');
+                  if ($koCode !== '' && $koCode === $code) {
+                    $kotaName = $koName;
+                    break;
+                  }
+                  // fallback jika lokasi tersimpan sebagai nama langsung
+                  if ($koName !== '' && strtolower($koName) === strtolower((string) $kotaKelas)) {
+                    $kotaName = $koName;
+                    break;
+                  }
+                }
+              }
+              if ($code === 'se-dunia') {
+                $kotaName = 'Se-Dunia';
+              }
+            ?>
+
+            <div class="mb-3">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label">Kelas yang Diikuti</label>
+                  <input type="text" class="form-control" value="<?= esc($namaKelas ?: ($registrasi['kode_kelas'] ?? '')) ?>" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Kota Kelas</label>
+                  <input type="text" class="form-control" value="<?= esc($kotaName) ?>" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Metode Pembayaran</label>
+                  <input type="text" class="form-control" value="<?= esc($statusPembayaran) ?>" disabled>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label">Biaya Total</label>
+                  <input type="text" class="form-control" value="<?= 'Rp ' . number_format($biayaTotal, 0, ',', '.') ?>" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Biaya DP</label>
+                  <input type="text" class="form-control" value="<?= 'Rp ' . number_format($biayaDP, 0, ',', '.') ?>" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Biaya Tagihan</label>
+                  <input type="text" class="form-control" value="<?= 'Rp ' . number_format($biayaTagihan, 0, ',', '.') ?>" disabled>
+                </div>
+              </div>
+            </div>
+
             <form action="<?= base_url('admin/registrasi/' . ($registrasi['id'] ?? 0) . '/update') ?>" method="post">
               <?= csrf_field() ?>
 

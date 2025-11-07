@@ -6,13 +6,14 @@ use CodeIgniter\Model;
 
 class Registrasi extends Model
 {
-    protected $table            = 'registrasi';
-    protected $primaryKey       = 'id';
+    protected $table = 'registrasi';
+    protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = true;
-    protected $protectFields    = true;
-    protected $allowedFields    = [
+    protected $returnType = 'array';
+    protected $useSoftDeletes = true;
+    protected $protectFields = true;
+
+    protected $allowedFields = [
         'kode_kelas',
         'kode_voucher',
         'nama',
@@ -26,6 +27,7 @@ class Registrasi extends Model
         'lokasi',
         'biaya_total',
         'biaya_dibayar',
+        'biaya_tagihan',
         'status_pembayaran',
         'tanggal_daftar',
         'tanggal_update',
@@ -39,27 +41,29 @@ class Registrasi extends Model
     protected array $casts = [
         // Use float to avoid invalid cast handler errors for decimals
         'biaya_total' => 'float',
-        'biaya_dibayar' => 'float',
+        'biaya_dibayar' => '?float',
+        'biaya_tagihan' => '?float',
         'akses_aktif' => 'boolean',
     ];
-    protected array $castHandlers = [];
 
+    protected array $castHandlers = [];
     // Dates
     protected $useTimestamps = false;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
-    protected $deletedField  = 'deleted_at';
+    protected $dateFormat = 'datetime';
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
+    protected $deletedField = 'deleted_at';
 
     // Validation
-    protected $validationRules      = [
+    protected $validationRules = [
         'nama' => 'required|min_length[3]|max_length[100]',
         'email' => 'permit_empty|valid_email|max_length[100]',
         'kode_kelas' => 'required|max_length[20]',
         'biaya_total' => 'required|decimal',
         'status_pembayaran' => 'required|in_list[DP 50%,lunas]',
     ];
-    protected $validationMessages   = [
+
+    protected $validationMessages = [
         'nama' => [
             'required' => 'Nama harus diisi',
             'min_length' => 'Nama minimal 3 karakter',
@@ -82,29 +86,30 @@ class Registrasi extends Model
             'in_list' => 'Status pembayaran harus DP 50% atau lunas',
         ],
     ];
-    protected $skipValidation       = false;
-    protected $cleanValidationRules = true;
 
+    protected $skipValidation = false;
+    protected $cleanValidationRules = true;
     // Callbacks
     protected $allowCallbacks = true;
-    protected $beforeInsert   = [];
-    protected $afterInsert    = [];
-    protected $beforeUpdate   = [];
-    protected $afterUpdate    = [];
-    protected $beforeFind     = [];
-    protected $afterFind      = [];
-    protected $beforeDelete   = [];
-    protected $afterDelete    = [];
+    protected $beforeInsert = [];
+    protected $afterInsert = [];
+    protected $beforeUpdate = [];
+    protected $afterUpdate = [];
+    protected $beforeFind = [];
+    protected $afterFind = [];
+    protected $beforeDelete = [];
+    protected $afterDelete = [];
 
     /**
      * Get registrations with class information
      */
     public function getRegistrationsWithClass()
     {
-        return $this->select('registrasi.*, kelas.nama_kelas')
-                    ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
-                    ->orderBy('registrasi.tanggal_daftar', 'DESC')
-                    ->findAll();
+        return $this
+            ->select('registrasi.*, kelas.nama_kelas')
+            ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
+            ->orderBy('registrasi.tanggal_daftar', 'DESC')
+            ->findAll();
     }
 
     /**
@@ -112,10 +117,11 @@ class Registrasi extends Model
      */
     public function getPaginatedRegistrationsWithClass($perPage = 10)
     {
-        return $this->select('registrasi.*, kelas.nama_kelas')
-                    ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
-                    ->orderBy('registrasi.tanggal_daftar', 'DESC')
-                    ->paginate($perPage);
+        return $this
+            ->select('registrasi.*, kelas.nama_kelas')
+            ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
+            ->orderBy('registrasi.tanggal_daftar', 'DESC')
+            ->paginate($perPage);
     }
 
     /**
@@ -123,14 +129,15 @@ class Registrasi extends Model
      */
     public function searchRegistrations($search)
     {
-        return $this->select('registrasi.*, kelas.nama_kelas')
-                    ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
-                    ->groupStart()
-                    ->like('registrasi.nama', $search)
-                    ->orLike('registrasi.email', $search)
-                    ->orLike('registrasi.no_telp', $search)
-                    ->orLike('kelas.nama_kelas', $search)
-                    ->groupEnd()
-                    ->orderBy('registrasi.tanggal_daftar', 'DESC');
+        return $this
+            ->select('registrasi.*, kelas.nama_kelas')
+            ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
+            ->groupStart()
+            ->like('registrasi.nama', $search)
+            ->orLike('registrasi.email', $search)
+            ->orLike('registrasi.no_telp', $search)
+            ->orLike('kelas.nama_kelas', $search)
+            ->groupEnd()
+            ->orderBy('registrasi.tanggal_daftar', 'DESC');
     }
 }

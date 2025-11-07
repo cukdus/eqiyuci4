@@ -3,8 +3,8 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\Registrasi as RegistrasiModel;
 use App\Models\Kelas as KelasModel;
+use App\Models\Registrasi as RegistrasiModel;
 
 class Registrasi extends BaseController
 {
@@ -15,12 +15,16 @@ class Registrasi extends BaseController
         $request = $this->request;
         $page = max(1, (int) ($request->getGet('page') ?? 1));
         $perPage = (int) ($request->getGet('per_page') ?? 10);
-        if ($perPage < 1) { $perPage = 10; }
-        if ($perPage > 100) { $perPage = 100; }
+        if ($perPage < 1) {
+            $perPage = 10;
+        }
+        if ($perPage > 100) {
+            $perPage = 100;
+        }
         $search = trim((string) ($request->getGet('search') ?? ''));
         $sort = strtolower(trim((string) ($request->getGet('sort') ?? 'tanggal_daftar')));
         $order = strtolower(trim((string) ($request->getGet('order') ?? 'desc')));
-        $order = in_array($order, ['asc','desc'], true) ? $order : 'desc';
+        $order = in_array($order, ['asc', 'desc'], true) ? $order : 'desc';
 
         $allowedSorts = [
             'id' => 'registrasi.id',
@@ -36,18 +40,20 @@ class Registrasi extends BaseController
 
         // Gunakan Query Builder langsung untuk stabilitas
         $db = \Config\Database::connect();
-        $qb = $db->table('registrasi')
-                 ->select('registrasi.id, registrasi.nama, registrasi.email, registrasi.no_telp, registrasi.lokasi, registrasi.status_pembayaran, registrasi.akses_aktif, registrasi.tanggal_daftar, kelas.nama_kelas')
-                 ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
-                 ->where('registrasi.deleted_at', null);
+        $qb = $db
+            ->table('registrasi')
+            ->select('registrasi.id, registrasi.nama, registrasi.email, registrasi.no_telp, registrasi.lokasi, registrasi.status_pembayaran, registrasi.akses_aktif, registrasi.tanggal_daftar, kelas.nama_kelas')
+            ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
+            ->where('registrasi.deleted_at', null);
 
         if ($search !== '') {
-            $qb->groupStart()
-               ->like('registrasi.nama', $search)
-               ->orLike('registrasi.email', $search)
-               ->orLike('registrasi.no_telp', $search)
-               ->orLike('kelas.nama_kelas', $search)
-               ->groupEnd();
+            $qb
+                ->groupStart()
+                ->like('registrasi.nama', $search)
+                ->orLike('registrasi.email', $search)
+                ->orLike('registrasi.no_telp', $search)
+                ->orLike('kelas.nama_kelas', $search)
+                ->groupEnd();
         }
 
         // Hitung total tanpa mereset builder utama
@@ -55,13 +61,14 @@ class Registrasi extends BaseController
         $total = (int) $countQB->countAllResults();
 
         $offset = ($page - 1) * $perPage;
-        $rows = $qb->orderBy($sortColumn, $order)
-                   ->limit($perPage, $offset)
-                   ->get()
-                   ->getResultArray();
+        $rows = $qb
+            ->orderBy($sortColumn, $order)
+            ->limit($perPage, $offset)
+            ->get()
+            ->getResultArray();
 
         // Batasi kolom yang dikirim ke client
-        $data = array_map(static function(array $r): array {
+        $data = array_map(static function (array $r): array {
             return [
                 'id' => (int) ($r['id'] ?? 0),
                 'nama' => (string) ($r['nama'] ?? ''),
@@ -92,6 +99,7 @@ class Registrasi extends BaseController
             ],
         ]);
     }
+
     public function index()
     {
         $model = model(RegistrasiModel::class);
@@ -103,7 +111,7 @@ class Registrasi extends BaseController
         } else {
             $registrations = $model->getPaginatedRegistrationsWithClass(10);
         }
-        
+
         $pager = $model->pager;
 
         // Ambil daftar kota pusat untuk pemetaan kode->nama pada tampilan
@@ -127,10 +135,11 @@ class Registrasi extends BaseController
     public function tambah()
     {
         $kelasModel = model(KelasModel::class);
-        $kelasList = $kelasModel->select('kode_kelas, nama_kelas, kota_tersedia, harga, kategori')
-                                ->where('status_kelas', 'aktif')
-                                ->orderBy('kode_kelas', 'ASC')
-                                ->findAll();
+        $kelasList = $kelasModel
+            ->select('kode_kelas, nama_kelas, kota_tersedia, harga, kategori')
+            ->where('status_kelas', 'aktif')
+            ->orderBy('kode_kelas', 'ASC')
+            ->findAll();
 
         // Ambil daftar kota dari tabel pusat kota_kelas
         $kotaOptions = model(\App\Models\KotaKelas::class)
@@ -158,7 +167,7 @@ class Registrasi extends BaseController
             : null;
         $isPrivate = false;
         if ($kelasForRule) {
-            $nm  = strtolower((string) ($kelasForRule['nama_kelas'] ?? ''));
+            $nm = strtolower((string) ($kelasForRule['nama_kelas'] ?? ''));
             $isPrivate = (strpos($nm, 'private') !== false);
         }
 
@@ -207,11 +216,16 @@ class Registrasi extends BaseController
             'tanggal_update' => date('Y-m-d H:i:s'),
         ];
 
-        // Validasi server-side: jika ada kode_voucher, pastikan voucher cocok dengan kelas yang dipilih
+        // Validasi server-side voucher & siapkan harga setelah diskon
         $submittedKodeKelas = (string) ($data['kode_kelas'] ?? '');
         $submittedVoucher = trim((string) ($data['kode_voucher'] ?? ''));
+        $db = \Config\Database::connect();
+
+        $kelas = $kelasModel->where('kode_kelas', $data['kode_kelas'])->first();
+        $hargaKelas = isset($kelas['harga']) && is_numeric($kelas['harga']) ? (float) $kelas['harga'] : 0.0;
+
+        $diskonPersen = 0;
         if ($submittedVoucher !== '') {
-            $db = \Config\Database::connect();
             $voucherRow = $db->table('voucher')->where('kode_voucher', $submittedVoucher)->get()->getRowArray();
             if (!$voucherRow) {
                 return redirect()->back()->withInput()->with('errors', ['Kode voucher tidak ditemukan']);
@@ -228,23 +242,66 @@ class Registrasi extends BaseController
                     'Voucher tidak berlaku untuk kelas yang dipilih (' . esc($submittedKodeKelas) . ').'
                 ]);
             }
+
+            // Validasi masa berlaku dan ambil diskon_persen
+            $diskonPersen = (int) ($voucherRow['diskon_persen'] ?? 0);
+            $mulai = $voucherRow['tanggal_berlaku_mulai'] ?? null;
+            $sampai = $voucherRow['tanggal_berlaku_sampai'] ?? null;
+            $today = date('Y-m-d');
+            $validDate = true;
+            if ($mulai && $today < $mulai) { $validDate = false; }
+            if ($sampai && $today > $sampai) { $validDate = false; }
+            if (!$validDate) {
+                // Jika di luar masa berlaku, anggap tanpa diskon
+                $diskonPersen = 0;
+            }
         }
 
-        // Isi biaya_total dari harga kelas yang dipilih
-        $kelas = $kelasModel->where('kode_kelas', $data['kode_kelas'])->first();
-        $data['biaya_total'] = isset($kelas['harga']) ? (float) $kelas['harga'] : 0.0;
+        $biayaSetelahDiskon = max(0.0, $hargaKelas - ($hargaKelas * ($diskonPersen / 100)));
 
+        // Kode unik: siapkan kode unik untuk DP dan Tagihan (berbeda)
+        $postedKodeUnik = (int) ($this->request->getPost('kode_unik') ?? 0);
+        $kodeUnikDP = random_int(100, 999);
+        $kodeUnikTagihan = random_int(100, 999);
+        // Gunakan posted untuk tagihan jika valid, namun pastikan berbeda dengan DP
+        if ($postedKodeUnik >= 100 && $postedKodeUnik <= 999) {
+            $kodeUnikTagihan = $postedKodeUnik;
+        }
+        if ($kodeUnikTagihan === $kodeUnikDP) {
+            // paksa berbeda
+            $kodeUnikTagihan = ($kodeUnikTagihan % 999) + 1;
+            if ($kodeUnikTagihan < 100) { $kodeUnikTagihan += 100; }
+        }
+
+        // Hitung pembayaran sesuai status
+        $isDP = strtolower((string) $data['status_pembayaran']) === 'dp 50%';
+        if ($isDP) {
+            $dpAmount = round($biayaSetelahDiskon * 0.5, 2);
+            $sisa = round($biayaSetelahDiskon - $dpAmount, 2); // sama dengan 0.5 * biayaSetelahDiskon
+            $data['biaya_dibayar'] = round($dpAmount + $kodeUnikDP, 2); // Total DP yang harus dibayar (DP + kode unik DP)
+            $data['biaya_tagihan'] = round($sisa + $kodeUnikTagihan, 2); // Biaya Tagihan (sisa + kode unik Tagihan)
+            $data['biaya_total'] = round($data['biaya_dibayar'] + $data['biaya_tagihan'], 2); // subtotal + kedua kode unik
+        } else {
+            // Pembayaran penuh: tagihan 0, dibayar = subtotal + satu kode unik
+            $kodeUnikFull = random_int(100, 999);
+            $data['biaya_tagihan'] = 0.0;
+            $data['biaya_dibayar'] = round($biayaSetelahDiskon + $kodeUnikFull, 2);
+            $data['biaya_total'] = $data['biaya_dibayar'];
+        }
+
+        // Validasi jadwal: hanya lakukan jika jadwal dipilih atau kelas bukan private
         // Validasi jadwal: hanya lakukan jika jadwal dipilih atau kelas bukan private
         $db = \Config\Database::connect();
         $selectedJadwalId = (int) ($data['jadwal_id'] ?? 0);
         $isPrivateNow = false;
         if ($kelas) {
-            $nm2  = strtolower((string) ($kelas['nama_kelas'] ?? ''));
+            $nm2 = strtolower((string) ($kelas['nama_kelas'] ?? ''));
             $isPrivateNow = (strpos($nm2, 'private') !== false);
         }
         if ($selectedJadwalId > 0) {
             // Jika ada jadwal dipilih, wajib validasi keterkaitan dan lokasi
-            $jadwalRow = $db->table('jadwal_kelas')
+            $jadwalRow = $db
+                ->table('jadwal_kelas')
                 ->select('id, kelas_id, lokasi')
                 ->where('id', $selectedJadwalId)
                 ->get()
@@ -268,7 +325,9 @@ class Registrasi extends BaseController
                 foreach ($rows as $r) {
                     $code = strtolower((string) ($r['kode'] ?? ''));
                     $name = strtolower((string) ($r['nama'] ?? ''));
-                    if ($code !== '') { $kotaMap[$code] = $name ?: $code; }
+                    if ($code !== '') {
+                        $kotaMap[$code] = $name ?: $code;
+                    }
                 }
             } catch (\Throwable $e) {
                 // Jika gagal memuat, lanjutkan tanpa peta
@@ -296,22 +355,31 @@ class Registrasi extends BaseController
     {
         $model = model(RegistrasiModel::class);
         $registrasi = $model->find($id);
-        
+
         if (!$registrasi) {
             return redirect()->to(base_url('admin/registrasi'))->with('error', 'Data registrasi tidak ditemukan');
         }
 
         $kelasModel = model(KelasModel::class);
-        $kelasList = $kelasModel->select('kode_kelas, nama_kelas')
-                                ->where('status_kelas', 'aktif')
-                                ->orderBy('nama_kelas', 'ASC')
-                                ->findAll();
+        $kelasList = $kelasModel
+            ->select('kode_kelas, nama_kelas')
+            ->where('status_kelas', 'aktif')
+            ->orderBy('nama_kelas', 'ASC')
+            ->findAll();
+
+        // Ambil daftar kota aktif untuk mapping kode -> nama
+        $kotaOptions = model(\App\Models\KotaKelas::class)
+            ->select('kode, nama')
+            ->where('status', 'aktif')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
 
         return view('layout/admin_layout', [
             'title' => 'Edit Registrasi',
             'content' => view('admin/registrasi/editregistrasi', [
                 'registrasi' => $registrasi,
                 'kelasList' => $kelasList,
+                'kotaOptions' => $kotaOptions,
             ]),
         ]);
     }
@@ -320,7 +388,7 @@ class Registrasi extends BaseController
     {
         $model = model(RegistrasiModel::class);
         $existing = $model->find($id);
-        
+
         if (!$existing) {
             return redirect()->to(base_url('admin/registrasi'))->with('error', 'Data registrasi tidak ditemukan');
         }
@@ -363,7 +431,7 @@ class Registrasi extends BaseController
     public function delete($id)
     {
         $model = model(RegistrasiModel::class);
-        
+
         if (!$model->find($id)) {
             return redirect()->to(base_url('admin/registrasi'))->with('error', 'Data registrasi tidak ditemukan');
         }
@@ -379,16 +447,16 @@ class Registrasi extends BaseController
     {
         $model = model(RegistrasiModel::class);
         $registrasi = $model->find($id);
-        
+
         if (!$registrasi) {
             return $this->response->setJSON(['success' => false, 'message' => 'Data tidak ditemukan']);
         }
 
         $newStatus = $registrasi['akses_aktif'] ? 0 : 1;
-        
+
         if ($model->update($id, ['akses_aktif' => $newStatus, 'tanggal_update' => date('Y-m-d H:i:s')])) {
             return $this->response->setJSON([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Status akses berhasil diubah',
                 'newStatus' => $newStatus
             ]);
@@ -419,18 +487,23 @@ class Registrasi extends BaseController
         $db = \Config\Database::connect();
 
         // Ambil info kelas dari registrasi (by kode_kelas)
-        $kelas = $db->table('kelas')->select('id, nama_kelas')
+        $kelas = $db
+            ->table('kelas')
+            ->select('id, nama_kelas')
             ->where('kode_kelas', (string) $row['kode_kelas'])
-            ->get()->getRowArray();
+            ->get()
+            ->getRowArray();
         if (!$kelas) {
             return $this->response->setJSON(['success' => false, 'message' => 'Kelas registrasi tidak valid']);
         }
 
         // Ambil jadwal baru dan cek kapasitas
-        $jadwalBaru = $db->table('jadwal_kelas')
+        $jadwalBaru = $db
+            ->table('jadwal_kelas')
             ->select('id, kelas_id, lokasi, kapasitas, tanggal_mulai, tanggal_selesai')
             ->where('id', $newJadwalId)
-            ->get()->getRowArray();
+            ->get()
+            ->getRowArray();
         if (!$jadwalBaru) {
             return $this->response->setJSON(['success' => false, 'message' => 'Jadwal baru tidak ditemukan']);
         }
@@ -441,10 +514,12 @@ class Registrasi extends BaseController
         }
 
         // Hitung peserta pada jadwal baru
-        $jumlahPeserta = (int) $db->table('registrasi')
+        $jumlahPeserta = (int) $db
+            ->table('registrasi')
             ->selectCount('id', 'cnt')
             ->where('jadwal_id', $newJadwalId)
-            ->get()->getRow('cnt');
+            ->get()
+            ->getRow('cnt');
 
         $kapasitas = (int) ($jadwalBaru['kapasitas'] ?? 0);
         if ($kapasitas <= 0 || $jumlahPeserta >= $kapasitas) {
@@ -530,7 +605,7 @@ class Registrasi extends BaseController
         // Dapatkan informasi kelas dari voucher (kelas_id) untuk validasi dengan kode_kelas yang dipilih
         $voucherKelasKode = null;
         $voucherKelasNama = null;
-        $validForClass = null; // null jika kode_kelas tidak dikirim, boolean jika tersedia
+        $validForClass = null;  // null jika kode_kelas tidak dikirim, boolean jika tersedia
         if (!empty($row['kelas_id'])) {
             $kelasRow = $db->table('kelas')->select('id, kode_kelas, nama_kelas')->where('id', (int) $row['kelas_id'])->get()->getRowArray();
             if ($kelasRow) {

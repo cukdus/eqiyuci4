@@ -67,11 +67,76 @@
     </div>
   </div>
 
+  <!-- Modal: Generate Sertifikat (tanggal terbit) -->
+  <div class="modal fade" id="modalGenerate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Generate Sertifikat</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formGenerate">
+            <input type="hidden" name="registrasi_id" id="genRegistrasiId">
+            <div class="mb-3">
+              <label class="form-label">Tanggal Terbit</label>
+              <input type="date" class="form-control" name="tanggal_terbit" id="genTanggalTerbit" required>
+              <div class="form-text">Format: YYYY-MM-DD</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary" id="btnConfirmGenerate"><i class="fas fa-award me-1"></i> Generate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Sertifikat -->
+  <div class="modal fade" id="modalEditCert" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Sertifikat</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formEditCert">
+            <input type="hidden" name="id" id="editCertId">
+            <div class="mb-3">
+              <label class="form-label">Status Sertifikat</label>
+              <select class="form-select" name="status" id="editStatus">
+                <option value="">-- Pilih Status --</option>
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+                <option value="dicabut">Dicabut</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tanggal Terbit</label>
+              <input type="date" class="form-control" name="tanggal_terbit" id="editTanggalTerbit">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nama Kelas</label>
+              <input type="text" class="form-control" name="nama_kelas" id="editNamaKelas" placeholder="contoh: English Conversation">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-success" id="btnConfirmEdit"><i class="fas fa-save me-1"></i> Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function(){
       const endpointReg = '<?= base_url('admin/sertifikat/registrasi.json') ?>';
       const endpointCert = '<?= base_url('admin/sertifikat.json') ?>';
       const endpointGenerate = '<?= base_url('admin/sertifikat/generate') ?>';
+      const endpointUpdate = '<?= base_url('admin/sertifikat/update') ?>';
       const endpointDelete = (id) => '<?= base_url('admin/sertifikat') ?>/' + id + '/delete';
       const csrfToken = '<?= csrf_token() ?>';
       const csrfHash = '<?= csrf_hash() ?>';
@@ -86,6 +151,41 @@
       const certBody = document.getElementById('sertifikatTbody');
       const certEmpty = document.getElementById('sertifikatEmpty');
       const certPager = document.getElementById('sertifikatPager');
+
+      // Modal refs
+      const modalGenerateEl = document.getElementById('modalGenerate');
+      const genRegistrasiId = document.getElementById('genRegistrasiId');
+      const genTanggalTerbit = document.getElementById('genTanggalTerbit');
+      const btnConfirmGenerate = document.getElementById('btnConfirmGenerate');
+
+      const modalEditEl = document.getElementById('modalEditCert');
+      const editCertId = document.getElementById('editCertId');
+      const editStatus = document.getElementById('editStatus');
+      const editTanggalTerbit = document.getElementById('editTanggalTerbit');
+      const editNamaKelas = document.getElementById('editNamaKelas');
+      const btnConfirmEdit = document.getElementById('btnConfirmEdit');
+
+      // Bootstrap modal helper (fallback to simple show)
+      function showModal(el){
+        try {
+          if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+            const m = window.bootstrap.Modal.getOrCreateInstance(el);
+            m.show();
+            return;
+          }
+        } catch(_){}
+        el.classList.add('show'); el.style.display = 'block'; el.removeAttribute('aria-hidden');
+      }
+      function hideModal(el){
+        try {
+          if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+            const m = window.bootstrap.Modal.getOrCreateInstance(el);
+            m.hide();
+            return;
+          }
+        } catch(_){}
+        el.classList.remove('show'); el.style.display = 'none'; el.setAttribute('aria-hidden','true');
+      }
 
       let regPage = 1, regPerPage = 10;
       let certPage = 1, certPerPage = 10;
@@ -128,12 +228,30 @@
         }).join('');
         regBody.innerHTML = html;
         regBody.querySelectorAll('[data-act="gen"]').forEach(function(btn){
-          btn.addEventListener('click', async function(){
+          btn.addEventListener('click', function(){
             const id = this.getAttribute('data-id');
-            const fd = new URLSearchParams(); fd.append(csrfToken, csrfHash); fd.append('registrasi_id', id);
-            const res = await fetch(endpointGenerate, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd.toString() });
-            const j = await res.json(); if (j.success) { loadSertifikat(); loadRegistrasi(); } else { alert(j.message || 'Gagal generate'); }
+            genRegistrasiId.value = id;
+            // default tanggal ke hari ini
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth()+1).padStart(2,'0');
+            const d = String(today.getDate()).padStart(2,'0');
+            genTanggalTerbit.value = `${y}-${m}-${d}`;
+            showModal(modalGenerateEl);
           });
+        });
+
+        btnConfirmGenerate.addEventListener('click', async function(){
+          const id = genRegistrasiId.value;
+          const tgl = (genTanggalTerbit.value || '').trim();
+          if (!tgl) { alert('Tanggal terbit wajib diisi'); return; }
+          const fd = new URLSearchParams(); fd.append(csrfToken, csrfHash); fd.append('registrasi_id', id); fd.append('tanggal_terbit', tgl);
+          try {
+            const res = await fetch(endpointGenerate, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd.toString() });
+            const j = await res.json();
+            if (j.success) { hideModal(modalGenerateEl); loadSertifikat(); loadRegistrasi(); }
+            else { alert(j.message || 'Gagal generate'); }
+          } catch(e){ alert('Gagal generate'); }
         });
       }
 
@@ -167,6 +285,7 @@
               <td>
                 <div class="btn-group">
                   <a class="btn btn-sm btn-info" href="<?= base_url('admin/sertifikat') ?>/${s.id}/view" target="_blank" title="Lihat Sertifikat"><i class="fas fa-eye"></i></a>
+                  <button class="btn btn-sm btn-warning" data-act="edit" data-id="${s.id}" title="Edit Sertifikat"><i class="fas fa-edit"></i></button>
                   <button class="btn btn-sm btn-outline-danger" data-act="del" data-id="${s.id}"><i class="fas fa-trash"></i></button>
                 </div>
               </td>
@@ -174,6 +293,19 @@
           `;
         }).join('');
         certBody.innerHTML = html;
+        certBody.querySelectorAll('[data-act="edit"]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            const id = this.getAttribute('data-id');
+            // Cari data baris dari array rows untuk prefilling
+            const item = rows.find(function(x){ return String(x.id) === String(id); }) || {};
+            editCertId.value = id;
+            editStatus.value = item.status || '';
+            // tanggal_terbit format dari server: YYYY-MM-DD
+            editTanggalTerbit.value = (item.tanggal_terbit || '').split(' ')[0];
+            editNamaKelas.value = item.nama_kelas || '';
+            showModal(modalEditEl);
+          });
+        });
         certBody.querySelectorAll('[data-act="del"]').forEach(function(btn){
           btn.addEventListener('click', async function(){
             if (!confirm('Hapus sertifikat ini?')) return;
@@ -182,6 +314,23 @@
             const res = await fetch(endpointDelete(id), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd.toString() });
             const j = await res.json(); if (j.success) { loadSertifikat(); } else { alert(j.message || 'Gagal menghapus'); }
           });
+        });
+
+        btnConfirmEdit.addEventListener('click', async function(){
+          const id = editCertId.value;
+          const status = (editStatus.value || '').trim();
+          const tgl = (editTanggalTerbit.value || '').trim();
+          const nama = (editNamaKelas.value || '').trim();
+          const fd = new URLSearchParams(); fd.append(csrfToken, csrfHash); fd.append('id', id);
+          if (status) fd.append('status', status);
+          if (tgl) fd.append('tanggal_terbit', tgl);
+          if (nama) fd.append('nama_kelas', nama);
+          try {
+            const res = await fetch(endpointUpdate, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd.toString() });
+            const j = await res.json();
+            if (j.success) { hideModal(modalEditEl); loadSertifikat(); }
+            else { alert(j.message || 'Gagal menyimpan'); }
+          } catch(e){ alert('Gagal menyimpan'); }
         });
       }
 

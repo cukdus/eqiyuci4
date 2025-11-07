@@ -89,6 +89,8 @@
                     <div id="paymentDetails">Pilih kelas dan opsi pembayaran untuk melihat detail.</div>
                   </small>
                 </div>
+                <input type="hidden" id="biaya_dibayar" name="biaya_dibayar" value="0">
+                <input type="hidden" id="biaya_tagihan" name="biaya_tagihan" value="0">
                 <input type="hidden" id="biaya_total" name="biaya_total" value="0">
                 <input type="hidden" id="kode_unik" name="kode_unik" value="">
               </div>
@@ -445,11 +447,19 @@
                 const kelasSelect = document.getElementById('kode_kelas');
                 const pembayaranSelect = document.getElementById('status_pembayaran');
                 const paymentDetailsDiv = document.getElementById('paymentDetails');
+                const biayaDibayarInput = document.getElementById('biaya_dibayar');
+                const biayaTagihanInput = document.getElementById('biaya_tagihan');
                 const biayaTotalInput = document.getElementById('biaya_total');
                 const kodeUnikInput = document.getElementById('kode_unik');
 
                 let originalBiayaKursus = 0;
-                let kodeUnik = Math.floor(100 + Math.random() * 900);
+                let kodeUnikDP = Math.floor(100 + Math.random() * 900);
+                let kodeUnikTagihan = Math.floor(100 + Math.random() * 900);
+                if (kodeUnikTagihan === kodeUnikDP) {
+                  // pastikan berbeda
+                  kodeUnikTagihan = (kodeUnikTagihan % 999) + 1;
+                  if (kodeUnikTagihan < 100) kodeUnikTagihan += 100;
+                }
                 let currentDiskonPersen = 0;
 
                 function formatNumber(number) {
@@ -503,24 +513,38 @@
                   if (currentDiskonPersen === 100 && biayaSetelahDiskon <= 0) {
                     const finalAmountToPay = 0;
                     displayText += `<strong>Total Pembayaran: Rp. ${formatNumber(finalAmountToPay)} (GRATIS)</strong>`;
+                    biayaDibayarInput && (biayaDibayarInput.value = '0');
+                    biayaTagihanInput && (biayaTagihanInput.value = '0');
                     biayaTotalInput && (biayaTotalInput.value = '0');
                     kodeUnikInput && (kodeUnikInput.value = '');
                   } else {
                     const bayarDP = pembayaranSelect && pembayaranSelect.value === 'DP 50%';
                     if (bayarDP) {
                       const dpAmount = biayaSetelahDiskon * 0.5;
-                      const finalAmountToPay = dpAmount + kodeUnik;
+                      const sisaAmount = biayaSetelahDiskon - dpAmount;
+                      const totalDPBayar = dpAmount + kodeUnikDP;
+                      const totalTagihan = sisaAmount + kodeUnikTagihan;
                       displayText += `DP 50%: Rp. ${formatNumber(dpAmount)}<br>`;
-                      displayText += `Kode Pembayaran: Rp. ${formatNumber(kodeUnik)}<br>`;
-                      displayText += `<strong>Total DP Yang Harus Dibayar: Rp. ${formatNumber(finalAmountToPay)}</strong><br>`;
-                      displayText += `<small class="text-muted">Sisa pembayaran (dilunasi saat kursus): Rp. ${formatNumber(dpAmount)}</small>`;
+                      displayText += `Kode Unik DP: Rp. ${formatNumber(kodeUnikDP)}<br>`;
+                      displayText += `<strong>Total DP Yang Harus Dibayar: Rp. ${formatNumber(totalDPBayar)}</strong><br>`;
+                      displayText += `<small class="text-muted">Biaya Tagihan (sisa + kode unik): Rp. ${formatNumber(totalTagihan)}</small><br>`;
+                      displayText += `<strong>Biaya Total (dibayar + tagihan): Rp. ${formatNumber(totalDPBayar + totalTagihan)}</strong>`;
+                      // set hidden inputs
+                      biayaDibayarInput && (biayaDibayarInput.value = String(Math.round(totalDPBayar)));
+                      biayaTagihanInput && (biayaTagihanInput.value = String(Math.round(totalTagihan)));
+                      biayaTotalInput && (biayaTotalInput.value = String(Math.round(totalDPBayar + totalTagihan)));
+                      // untuk DP, biarkan kode_unik kosong atau gunakan kode tagihan jika diperlukan oleh backend
+                      kodeUnikInput && (kodeUnikInput.value = String(kodeUnikTagihan));
                     } else {
-                      const finalAmountToPay = biayaSetelahDiskon + kodeUnik;
-                      displayText += `Kode Pembayaran: Rp. ${formatNumber(kodeUnik)}<br>`;
+                      const kodeUnikFull = Math.floor(100 + Math.random() * 900);
+                      const finalAmountToPay = biayaSetelahDiskon + kodeUnikFull;
+                      displayText += `Kode Pembayaran: Rp. ${formatNumber(kodeUnikFull)}<br>`;
                       displayText += `<strong>Total Pembayaran Penuh: Rp. ${formatNumber(finalAmountToPay)}</strong>`;
+                      biayaDibayarInput && (biayaDibayarInput.value = String(Math.round(finalAmountToPay)));
+                      biayaTagihanInput && (biayaTagihanInput.value = '0');
+                      biayaTotalInput && (biayaTotalInput.value = String(Math.round(finalAmountToPay)));
+                      kodeUnikInput && (kodeUnikInput.value = String(kodeUnikFull));
                     }
-                    biayaTotalInput && (biayaTotalInput.value = String(biayaSetelahDiskon));
-                    kodeUnikInput && (kodeUnikInput.value = String(kodeUnik));
                   }
 
                   paymentDetailsDiv.innerHTML = displayText;

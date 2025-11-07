@@ -163,6 +163,22 @@ class Sertifikat extends BaseController
     public function generate()
     {
         $registrasiId = (int) $this->request->getPost('registrasi_id');
+        // Optional: tanggal terbit dari modal (format YYYY-MM-DD)
+        $tanggalTerbitReq = trim((string) ($this->request->getPost('tanggal_terbit') ?? ''));
+        $tanggalTerbit = '';
+        if ($tanggalTerbitReq !== '') {
+            // Validasi sederhana format tanggal (YYYY-MM-DD)
+            $dt = \DateTime::createFromFormat('Y-m-d', $tanggalTerbitReq);
+            $isValidDate = $dt && $dt->format('Y-m-d') === $tanggalTerbitReq;
+            if ($isValidDate) {
+                $tanggalTerbit = $tanggalTerbitReq;
+            } else {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success' => false,
+                    'message' => 'Format tanggal terbit tidak valid (gunakan YYYY-MM-DD)'
+                ]);
+            }
+        }
         if ($registrasiId <= 0) {
             return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'registrasi_id tidak valid']);
         }
@@ -254,7 +270,7 @@ class Sertifikat extends BaseController
             'nama_pemilik' => (string) ($row['nama'] ?? ''),
             'nama_kelas' => $namaKelas,
             'kota_kelas' => $lokasi,
-            'tanggal_terbit' => date('Y-m-d'),
+            'tanggal_terbit' => $tanggalTerbit !== '' ? $tanggalTerbit : date('Y-m-d'),
         ];
 
         // Insert dan jika gagal karena duplikat, naikkan seq dan coba lagi beberapa kali
@@ -560,5 +576,54 @@ class Sertifikat extends BaseController
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->setBody($dompdf->output());
+    }
+
+    /**
+     * Update editable fields of a certificate: status, tanggal_terbit, nama_kelas
+     * POST: id, status?, tanggal_terbit?, nama_kelas?
+     */
+    public function update()
+    {
+        $id = (int) ($this->request->getPost('id') ?? 0);
+        if ($id <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'ID sertifikat tidak valid']);
+        }
+
+        $sertModel = model(SertifikatModel::class);
+        $current = $sertModel->find($id);
+        if (!$current) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Sertifikat tidak ditemukan']);
+        }
+
+        $status = trim((string) ($this->request->getPost('status') ?? ''));
+        $tanggalTerbitReq = trim((string) ($this->request->getPost('tanggal_terbit') ?? ''));
+        $namaKelas = trim((string) ($this->request->getPost('nama_kelas') ?? ''));
+
+        $data = [];
+        if ($status !== '') {
+            $data['status'] = $status;
+        }
+        if ($tanggalTerbitReq !== '') {
+            $dt = \DateTime::createFromFormat('Y-m-d', $tanggalTerbitReq);
+            $isValidDate = $dt && $dt->format('Y-m-d') === $tanggalTerbitReq;
+            if (!$isValidDate) {
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Format tanggal terbit tidak valid (gunakan YYYY-MM-DD)']);
+            }
+            $data['tanggal_terbit'] = $tanggalTerbitReq;
+        }
+        if ($namaKelas !== '') {
+            $data['nama_kelas'] = $namaKelas;
+        }
+
+        if (empty($data)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Tidak ada perubahan yang dikirim']);
+        }
+
+        if ($sertModel->update($id, $data) === false) {
+            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'Gagal mengupdate sertifikat']);
+        }
+
+        $updated = $sertModel->find($id);
+        return $this->response->setJSON(['success' => true, 'message' => 'Sertifikat berhasil diupdate', 'data' => $updated]);
     }
 }
