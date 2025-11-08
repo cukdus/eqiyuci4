@@ -624,6 +624,43 @@ class Sertifikat extends BaseController
         }
 
         $updated = $sertModel->find($id);
+        // WAHA trigger: jika status baru adalah Lulus dan sebelumnya bukan Lulus
+        try {
+            $newStatus = strtolower((string) ($updated['status'] ?? ''));
+            $oldStatus = strtolower((string) ($current['status'] ?? ''));
+            if ($newStatus === 'lulus' && $oldStatus !== 'lulus') {
+                $db = \Config\Database::connect();
+                $row = $db->table('sertifikat s')
+                    ->select('s.no_sertifikat, r.id AS registrasi_id, r.nama, r.no_telp, r.kode_kelas, k.nama_kelas')
+                    ->join('registrasi r', 'r.id = s.registrasi_id', 'left')
+                    ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+                    ->where('s.id', $id)
+                    ->get()
+                    ->getRowArray();
+                if ($row && !empty($row['registrasi_id'])) {
+                    $payload = [
+                        'nama' => (string) ($row['nama'] ?? ''),
+                        'nama_kelas' => (string) ($row['nama_kelas'] ?? ''),
+                        'no_sertifikat' => (string) ($row['no_sertifikat'] ?? ''),
+                    ];
+                    model(\App\Models\WahaQueue::class)->insert([
+                        'registrasi_id' => (int) ($row['registrasi_id'] ?? 0),
+                        'scenario' => 'graduation',
+                        'recipient' => 'user',
+                        'phone' => (string) ($row['no_telp'] ?? ''),
+                        'template_key' => 'graduation',
+                        'payload' => json_encode($payload),
+                        'status' => 'queued',
+                        'attempts' => 0,
+                        'next_attempt_at' => null,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'WAHA enqueue graduation gagal: ' . $e->getMessage());
+        }
         return $this->response->setJSON(['success' => true, 'message' => 'Sertifikat berhasil diupdate', 'data' => $updated]);
     }
 }

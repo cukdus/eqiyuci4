@@ -168,6 +168,19 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     // Sidebar: Setting
     $routes->get('setting', 'Admin\Setting::index');
     $routes->get('setting/waha', 'Admin\Setting::waha');
+    // WAHA management
+    $routes->get('setting/waha/templates-json', 'Admin\Setting::wahaTemplatesJson');
+    $routes->get('setting/waha/logs-json', 'Admin\Setting::wahaLogsJson');
+    $routes->post('setting/waha/template/store', 'Admin\Setting::wahaTemplateStore');
+    $routes->post('setting/waha/template/(:num)/update', 'Admin\Setting::wahaTemplateUpdate/$1');
+    $routes->post('setting/waha/template/(:num)/delete', 'Admin\Setting::wahaTemplateDelete/$1');
+    $routes->post('setting/waha/preview', 'Admin\Setting::wahaPreview');
+    $routes->post('setting/waha/test-send', 'Admin\Setting::wahaTestSend');
+    // Test recipients list (registrasi terbaru)
+    $routes->get('setting/waha/test-recipients-json', 'Admin\Setting::wahaTestRecipientsJson');
+    $routes->post('setting/waha/process-queue', 'Admin\Setting::processWahaQueue');
+    $routes->get('setting/waha/run-reminders', 'Admin\Setting::runReminders');
+    $routes->post('setting/waha/logs/clear', 'Admin\Setting::wahaLogsClear');
     $routes->get('setting/users/create', 'Admin\Setting::create');
     $routes->post('setting/users/store', 'Admin\Setting::store');
     $routes->get('setting/users/(:num)', 'Admin\Setting::show/$1');

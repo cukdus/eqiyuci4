@@ -3,14 +3,14 @@
 ?>
 <div class="container-fluid py-3">
   <?php
-$me = service('authentication')->user();
-$authz = service('authorization');
-$isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
-?>
+  $me = service('authentication')->user();
+  $authz = service('authorization');
+  $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
+  ?>
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0">Daftar Users</h5>
     <?php if ($isAdmin): ?>
-      <a href="<?= site_url('admin/setting/users/create') ?>" class="btn btn-primary btn-sm">
+      <a href="<?= site_url('admin/setting/users/create') ?>" class="btn btn-sm btn-primary">
         <i class="bi bi-plus-lg"></i> Tambah User
       </a>
     <?php endif; ?>
@@ -35,7 +35,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
         <?php
         $fullName = $u->full_name ?? $u->fullname ?? $u->nama_lengkap ?? $u->name ?? $u->nama ?? '';
         if ($fullName === '') {
-            $fullName = ($u->username ?? '') ?: ($u->email ?? '');
+          $fullName = ($u->username ?? '') ?: ($u->email ?? '');
         }
         $username = $u->username ?? '';
         $email = $u->email ?? '';
@@ -43,20 +43,20 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
         $active = (bool) ($u->active ?? false);
         $createdRaw = $u->created_at ?? null;
         if (is_object($createdRaw) && method_exists($createdRaw, 'format')) {
-            $joined = $createdRaw->format('Y-m-d');
+          $joined = $createdRaw->format('Y-m-d');
         } elseif (!empty($createdRaw)) {
-            $joined = date('Y-m-d', strtotime((string) $createdRaw));
+          $joined = date('Y-m-d', strtotime((string) $createdRaw));
         } else {
-            $joined = '-';
+          $joined = '-';
         }
         // Kelas badge pada nama sesuai role
         $isUserAdmin = $authz->inGroup('admin', $u->id);
         $isUserStaff = $authz->inGroup('staff', $u->id);
         $nameClass = 'fw-semibold';
         if ($isUserAdmin) {
-            $nameClass .= ' badge bg-success';
+          $nameClass .= ' badge bg-success';
         } elseif ($isUserStaff) {
-            $nameClass .= ' badge bg-warning text-dark';
+          $nameClass .= ' badge bg-warning text-dark';
         }
         ?>
         <div class="col-12 col-md-6 col-lg-4">

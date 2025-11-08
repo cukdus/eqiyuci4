@@ -159,6 +159,9 @@ class Jadwal extends BaseController
             ->join('jadwal_kelas jk', 'r.jadwal_id = jk.id', 'left')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left');
 
+        // Jangan tampilkan data registrasi yang sudah dihapus (soft delete)
+        $builder->where('r.deleted_at IS NULL', null, false);
+
         // Default: sembunyikan jadwal yang sudah berakhir, tapi tetap tampilkan peserta tanpa jadwal
         // Jika pengguna memang melakukan pencarian/filter eksplisit (filtered=true), tampilkan semuanya sesuai filter
         if (!$isFiltered) {

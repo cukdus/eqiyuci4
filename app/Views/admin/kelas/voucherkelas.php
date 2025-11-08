@@ -85,7 +85,7 @@
         <div class="card card-outline card-primary">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="card-title mb-0">Daftar Voucher</h6>
-            <small class="text-muted">Klik hapus untuk menghapus voucher</small>
+            <small class="text-muted ms-auto">Klik hapus untuk menghapus voucher</small>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -111,18 +111,18 @@
                         <td><?= number_format((float) ($v['diskon_persen'] ?? 0), 2) ?></td>
                         <td>
                           <?php
-                        $mulai = $v['tanggal_berlaku_mulai'] ?? null;
-                        $sampai = $v['tanggal_berlaku_sampai'] ?? null;
-                        if ($mulai && $sampai) {
+                          $mulai = $v['tanggal_berlaku_mulai'] ?? null;
+                          $sampai = $v['tanggal_berlaku_sampai'] ?? null;
+                          if ($mulai && $sampai) {
                             echo esc($mulai) . ' s/d ' . esc($sampai);
-                        } elseif ($mulai) {
+                          } elseif ($mulai) {
                             echo 'Mulai ' . esc($mulai);
-                        } elseif ($sampai) {
+                          } elseif ($sampai) {
                             echo 'Sampai ' . esc($sampai);
-                        } else {
+                          } else {
                             echo '<span class="text-muted">Tanpa batas tanggal</span>';
-                        }
-                        ?>
+                          }
+                          ?>
                         </td>
                         <td>
                           <form action="<?= base_url('admin/kelas/voucher/' . (int) ($v['id'] ?? 0) . '/delete') ?>" method="post" onsubmit="return confirm('Hapus voucher ini?');">

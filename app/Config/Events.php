@@ -5,6 +5,7 @@ namespace Config;
 use CodeIgniter\Events\Events;
 use CodeIgniter\Exceptions\FrameworkException;
 use CodeIgniter\HotReloader\HotReloader;
+use App\Libraries\WahaService;
 
 /*
  * --------------------------------------------------------------------
@@ -51,5 +52,15 @@ Events::on('pre_system', static function (): void {
                 (new HotReloader())->run();
             });
         }
+    }
+
+    // WAHA: Validasi koneksi saat startup (non-fatal)
+    try {
+        $waha = new WahaService();
+        if ($waha->isConfigured()) {
+            $waha->validateConnection();
+        }
+    } catch (\Throwable $e) {
+        log_message('error', 'WAHA startup validation error: ' . $e->getMessage());
     }
 });

@@ -33,6 +33,7 @@ class Registrasi extends Model
         'tanggal_update',
         'jadwal_id',
         'akses_aktif',
+        'whatsapp_sent',
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -249,8 +249,12 @@ class Registrasi extends BaseController
             $sampai = $voucherRow['tanggal_berlaku_sampai'] ?? null;
             $today = date('Y-m-d');
             $validDate = true;
-            if ($mulai && $today < $mulai) { $validDate = false; }
-            if ($sampai && $today > $sampai) { $validDate = false; }
+            if ($mulai && $today < $mulai) {
+                $validDate = false;
+            }
+            if ($sampai && $today > $sampai) {
+                $validDate = false;
+            }
             if (!$validDate) {
                 // Jika di luar masa berlaku, anggap tanpa diskon
                 $diskonPersen = 0;
@@ -270,17 +274,19 @@ class Registrasi extends BaseController
         if ($kodeUnikTagihan === $kodeUnikDP) {
             // paksa berbeda
             $kodeUnikTagihan = ($kodeUnikTagihan % 999) + 1;
-            if ($kodeUnikTagihan < 100) { $kodeUnikTagihan += 100; }
+            if ($kodeUnikTagihan < 100) {
+                $kodeUnikTagihan += 100;
+            }
         }
 
         // Hitung pembayaran sesuai status
         $isDP = strtolower((string) $data['status_pembayaran']) === 'dp 50%';
         if ($isDP) {
             $dpAmount = round($biayaSetelahDiskon * 0.5, 2);
-            $sisa = round($biayaSetelahDiskon - $dpAmount, 2); // sama dengan 0.5 * biayaSetelahDiskon
-            $data['biaya_dibayar'] = round($dpAmount + $kodeUnikDP, 2); // Total DP yang harus dibayar (DP + kode unik DP)
-            $data['biaya_tagihan'] = round($sisa + $kodeUnikTagihan, 2); // Biaya Tagihan (sisa + kode unik Tagihan)
-            $data['biaya_total'] = round($data['biaya_dibayar'] + $data['biaya_tagihan'], 2); // subtotal + kedua kode unik
+            $sisa = round($biayaSetelahDiskon - $dpAmount, 2);  // sama dengan 0.5 * biayaSetelahDiskon
+            $data['biaya_dibayar'] = round($dpAmount + $kodeUnikDP, 2);  // Total DP yang harus dibayar (DP + kode unik DP)
+            $data['biaya_tagihan'] = round($sisa + $kodeUnikTagihan, 2);  // Biaya Tagihan (sisa + kode unik Tagihan)
+            $data['biaya_total'] = round($data['biaya_dibayar'] + $data['biaya_tagihan'], 2);  // subtotal + kedua kode unik
         } else {
             // Pembayaran penuh: tagihan 0, dibayar = subtotal + satu kode unik
             $kodeUnikFull = random_int(100, 999);
@@ -344,10 +350,199 @@ class Registrasi extends BaseController
             }
         }
 
+        $db = \Config\Database::connect();
+        $db->transStart();
         if (!$model->save($data)) {
+            $db->transRollback();
             return redirect()->back()->withInput()->with('errors', $model->errors() ?? ['Gagal menyimpan data registrasi']);
         }
+        $newId = (int) ($model->getInsertID() ?? 0);
 
+        try {
+            // Queue pesan: sukses registrasi
+            $kelasNama = (string) ($kelas['nama_kelas'] ?? '');
+            // Tampilkan nama kota dari kode lokasi
+            $dbKota = \Config\Database::connect();
+            $kotaName = '';
+            $lokasiCode = (string) ($data['lokasi'] ?? '');
+            if ($lokasiCode !== '') {
+                $kk = $dbKota->table('kota_kelas')->select('nama')->where('kode', $lokasiCode)->get()->getRowArray();
+                $kotaName = (string) ($kk['nama'] ?? '');
+            }
+            if ($kotaName === '') { $kotaName = ucfirst($lokasiCode); }
+            // Bangun label jadwal: "dd MMMM yy - dd MMMM yy"
+            $jadwalLabel = '';
+            if (!empty($data['jadwal_id'])) {
+                $jr = $db->table('jadwal_kelas')
+                    ->select('tanggal_mulai, tanggal_selesai')
+                    ->where('id', (int) $data['jadwal_id'])
+                    ->get()->getRowArray();
+                $mulai = $jr['tanggal_mulai'] ?? null;
+                $selesai = $jr['tanggal_selesai'] ?? null;
+                $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+                $fmt = function($d) use($bulanMap){
+                    $ts = strtotime((string)$d);
+                    if (!$ts) return '';
+                    $day = date('j', $ts);
+                    $m = (int) date('n', $ts);
+                    $yy = date('y', $ts);
+                    $bulan = $bulanMap[$m] ?? date('F', $ts);
+                    return $day . ' ' . $bulan . ' ' . $yy;
+                };
+                if (!empty($mulai)) {
+                    $jadwalLabel = $fmt($mulai);
+                    if (!empty($selesai)) {
+                        $jadwalLabel .= ' - ' . $fmt($selesai);
+                    }
+                }
+            }
+            // Format rupiah: 3.200.696 (tanpa desimal)
+            $fmtRp = function($v){
+                $n = (float) ($v ?? 0);
+                return number_format($n, 0, ',', '.');
+            };
+            $payload = [
+                'nama' => (string) ($data['nama'] ?? ''),
+                'nama_kelas' => $kelasNama,
+                'jadwal' => (string) ($jadwalLabel ?? ''),
+                'kota' => (string) $kotaName,
+                'kabupaten' => (string) ($data['kabupaten'] ?? ''),
+                'provinsi' => (string) ($data['provinsi'] ?? ''),
+                'no_tlp' => (string) ($data['no_telp'] ?? ''),
+                'email' => (string) ($data['email'] ?? ''),
+                'status_pembayaran' => (string) ($data['status_pembayaran'] ?? ''),
+                'jumlah_tagihan' => (string) $fmtRp(($data['biaya_tagihan'] ?? '')),
+                'jumlah_dibayar' => (string) $fmtRp(($data['biaya_dibayar'] ?? '')),
+            ];
+            // Peserta
+            model(\App\Models\WahaQueue::class)->insert([
+                'registrasi_id' => $newId,
+                'scenario' => 'registrasi_peserta',
+                'recipient' => 'user',
+                'phone' => (string) ($data['no_telp'] ?? ''),
+                'template_key' => 'registrasi_peserta',
+                'payload' => json_encode($payload),
+                'status' => 'queued',
+                'attempts' => 0,
+                'next_attempt_at' => null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+            // Admin (opsional)
+            $adminPhone = (string) (env('WAHA_ADMIN_PHONE') ?? '');
+            if ($adminPhone !== '') {
+                $payloadAdmin = [
+                    'nama' => (string) ($data['nama'] ?? ''),
+                    'nama_kelas' => $kelasNama,
+                    'jadwal' => (string) ($jadwalLabel ?? ''),
+                    'kota' => (string) $kotaName,
+                    'kabupaten' => (string) ($data['kabupaten'] ?? ''),
+                    'provinsi' => (string) ($data['provinsi'] ?? ''),
+                    'no_tlp' => (string) ($data['no_telp'] ?? ''),
+                    'email' => (string) ($data['email'] ?? ''),
+                    'status_pembayaran' => (string) ($data['status_pembayaran'] ?? ''),
+                    'jumlah_tagihan' => (string) $fmtRp(($data['biaya_tagihan'] ?? '')),
+                    'jumlah_dibayar' => (string) $fmtRp(($data['biaya_dibayar'] ?? '')),
+                ];
+                model(\App\Models\WahaQueue::class)->insert([
+                    'registrasi_id' => $newId,
+                    'scenario' => 'registrasi_admin',
+                    'recipient' => 'admin',
+                    'phone' => $adminPhone,
+                    'template_key' => 'registrasi_admin',
+                    'payload' => json_encode($payloadAdmin),
+                    'status' => 'queued',
+                    'attempts' => 0,
+                    'next_attempt_at' => null,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            // Coba kirim langsung agar peserta menerima notifikasi segera
+            try {
+                $ws = new \App\Libraries\WahaService();
+                $tpl = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_peserta')->first();
+                $message = '';
+                if ($tpl) {
+                    $message = $ws->renderTemplate((string) ($tpl['template'] ?? ''), $payload);
+                } else {
+                    $message = $ws->renderTemplate('${registrasi_peserta}: {{nama}} mendaftar {{nama_kelas}} di {{kota}}. Status {{status_pembayaran}}. Tagihan {{jumlah_tagihan}}. Dibayar {{jumlah_dibayar}}. Jadwal {{jadwal}}', $payload);
+                }
+                $res = $ws->sendMessage((string) ($data['no_telp'] ?? ''), $message);
+                model(\App\Models\WahaLog::class)->insert([
+                    'registrasi_id' => $newId,
+                    'scenario' => 'registrasi_peserta',
+                    'recipient' => 'user',
+                    'phone' => (string) ($data['no_telp'] ?? ''),
+                    'message' => $message,
+                    'status' => $res['success'] ? 'success' : 'failed',
+                    'error' => $res['success'] ? null : ($res['message'] ?? ''),
+                    'created_at' => date('Y-m-d H:i:s'),
+                ]);
+                if (!empty($res['success'])) {
+                    $qm = model(\App\Models\WahaQueue::class);
+                    $qi = $qm->where('registrasi_id', $newId)->where('scenario', 'registrasi_peserta')->orderBy('id', 'DESC')->first();
+                    if ($qi && isset($qi['id'])) {
+                        $qm->update($qi['id'], ['status' => 'done', 'attempts' => ((int) ($qi['attempts'] ?? 0)) + 1]);
+                    }
+                }
+                // Kirim admin segera bila tersedia
+                if ($adminPhone !== '') {
+                    $tplA = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_admin')->first();
+                    $messageA = '';
+                    // Gunakan label jadwal terformat dan nama kota, serta format rupiah
+                    $payloadAdmin2 = [
+                        'nama' => (string) ($data['nama'] ?? ''),
+                        'nama_kelas' => $kelasNama,
+                        'jadwal' => (string) ($jadwalLabel ?? ''),
+                        'kota' => (string) $kotaName,
+                        'kabupaten' => (string) ($data['kabupaten'] ?? ''),
+                        'provinsi' => (string) ($data['provinsi'] ?? ''),
+                        'no_tlp' => (string) ($data['no_telp'] ?? ''),
+                        'email' => (string) ($data['email'] ?? ''),
+                        'status_pembayaran' => (string) ($data['status_pembayaran'] ?? ''),
+                        'jumlah_tagihan' => (string) $fmtRp(($data['biaya_tagihan'] ?? '')),
+                        'jumlah_dibayar' => (string) $fmtRp(($data['biaya_dibayar'] ?? '')),
+                    ];
+                    if ($tplA && !empty($tplA['template'])) {
+                        $messageA = $ws->renderTemplate((string) $tplA['template'], $payloadAdmin2);
+                    } else {
+                        // Tambahkan placeholder dibayar pada fallback agar konsisten
+                        $messageA = $ws->renderTemplate('${registrasi_admin}: pendaftaran baru {{nama}} untuk {{nama_kelas}} {{kota}} jadwal {{jadwal}}. Status {{status_pembayaran}}, tagihan {{jumlah_tagihan}}, dibayar {{jumlah_dibayar}}', $payloadAdmin2);
+                    }
+                    $resA = $ws->sendMessage($adminPhone, $messageA);
+                    model(\App\Models\WahaLog::class)->insert([
+                        'registrasi_id' => $newId,
+                        'scenario' => 'registrasi_admin',
+                        'recipient' => 'admin',
+                        'phone' => $adminPhone,
+                        'message' => $messageA,
+                        'status' => $resA['success'] ? 'success' : 'failed',
+                        'error' => $resA['success'] ? null : ($resA['message'] ?? ''),
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ]);
+                    if (!empty($resA['success'])) {
+                        $qmA = model(\App\Models\WahaQueue::class);
+                        $qiA = $qmA->where('registrasi_id', $newId)->where('scenario', 'registrasi_admin')->orderBy('id', 'DESC')->first();
+                        if ($qiA && isset($qiA['id'])) {
+                            $qmA->update($qiA['id'], ['status' => 'done', 'attempts' => ((int) ($qiA['attempts'] ?? 0)) + 1]);
+                        }
+                    }
+                }
+            } catch (\Throwable $we) {
+                log_message('error', 'WAHA immediate send (admin) gagal: ' . $we->getMessage());
+            }
+
+            // Tandai whatsapp_sent untuk mencegah duplikasi enqueue
+            $model->update($newId, ['whatsapp_sent' => 1, 'tanggal_update' => date('Y-m-d H:i:s')]);
+        } catch (\Throwable $e) {
+            // Abaikan error duplicate unique, rollback jika gagal simpan
+            // Catat log non-fatal
+            log_message('error', 'WAHA enqueue registration_success gagal: ' . $e->getMessage());
+        }
+
+        $db->transComplete();
         return redirect()->to(base_url('admin/registrasi'))->with('message', 'Data registrasi berhasil ditambahkan');
     }
 
@@ -455,6 +650,73 @@ class Registrasi extends BaseController
         $newStatus = $registrasi['akses_aktif'] ? 0 : 1;
 
         if ($model->update($id, ['akses_aktif' => $newStatus, 'tanggal_update' => date('Y-m-d H:i:s')])) {
+            // Jika akses diaktifkan, kirim notifikasi akses online
+            if ($newStatus === 1) {
+                try {
+                    $db = \Config\Database::connect();
+                    $kelasNama = '';
+                    if (!empty($registrasi['kode_kelas'])) {
+                        $k = $db->table('kelas')->select('nama_kelas')->where('kode_kelas', $registrasi['kode_kelas'])->get()->getRowArray();
+                        $kelasNama = (string) ($k['nama_kelas'] ?? '');
+                    }
+                    $payload = [
+                        'nama' => (string) ($registrasi['nama'] ?? ''),
+                        'nama_kelas' => $kelasNama,
+                    ];
+                    model(\App\Models\WahaQueue::class)->insert([
+                        'registrasi_id' => (int) $registrasi['id'],
+                        'scenario' => 'akses_kelas',
+                        'recipient' => 'user',
+                        'phone' => (string) ($registrasi['no_telp'] ?? ''),
+                        'template_key' => 'akses_kelas',
+                        'payload' => json_encode($payload),
+                        'status' => 'queued',
+                        'attempts' => 0,
+                        'next_attempt_at' => null,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+
+                    // Kirim langsung agar peserta menerima akses segera
+                    try {
+                        $ws = new \App\Libraries\WahaService();
+                        $tpl = model(\App\Models\WahaTemplate::class)->where('key', 'akses_kelas')->first();
+                        $message = '';
+                        if ($tpl && !empty($tpl['template'])) {
+                            $message = $ws->renderTemplate((string) $tpl['template'], $payload);
+                        } else {
+                            // Fallback sederhana bila template belum dibuat
+                            $message = $ws->renderTemplate('${akses_kelas}: Hai {{nama}}, akses Kelas {{nama_kelas}} telah diaktifkan.', $payload);
+                        }
+                        $res = $ws->sendMessage((string) ($registrasi['no_telp'] ?? ''), $message);
+                        model(\App\Models\WahaLog::class)->insert([
+                            'registrasi_id' => (int) $registrasi['id'],
+                            'scenario' => 'akses_kelas',
+                            'recipient' => 'user',
+                            'phone' => (string) ($registrasi['no_telp'] ?? ''),
+                            'message' => $message,
+                            'status' => !empty($res['success']) ? 'success' : 'failed',
+                            'error' => !empty($res['success']) ? null : ($res['message'] ?? ''),
+                            'created_at' => date('Y-m-d H:i:s'),
+                        ]);
+                        if (!empty($res['success'])) {
+                            // Tandai item queue terakhir untuk skenario ini sebagai selesai
+                            $qm = model(\App\Models\WahaQueue::class);
+                            $qi = $qm->where('registrasi_id', (int) $registrasi['id'])
+                                     ->where('scenario', 'akses_kelas')
+                                     ->orderBy('id', 'DESC')
+                                     ->first();
+                            if ($qi && isset($qi['id'])) {
+                                $qm->update($qi['id'], ['status' => 'done', 'attempts' => ((int) ($qi['attempts'] ?? 0)) + 1]);
+                            }
+                        }
+                    } catch (\Throwable $we) {
+                        log_message('error', 'WAHA immediate send (akses_kelas) gagal: ' . $we->getMessage());
+                    }
+                } catch (\Throwable $e) {
+                    log_message('error', 'WAHA enqueue online_access gagal: ' . $e->getMessage());
+                }
+            }
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Status akses berhasil diubah',
