@@ -3,11 +3,11 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\WahaService;
 use App\Models\UserModel;
-use App\Models\WahaTemplate;
 use App\Models\WahaLog;
 use App\Models\WahaQueue;
-use App\Libraries\WahaService;
+use App\Models\WahaTemplate;
 use Myth\Auth\Authorization\Authorization;  // if used elsewhere
 use Myth\Auth\Models\GroupModel;
 
@@ -486,21 +486,25 @@ class Setting extends BaseController
         // Ambil registrasi terakhir (non-deleted) jika tidak spesifik
         $r = null;
         if ($registrasiId) {
-            $r = $db->table('registrasi r')
+            $r = $db
+                ->table('registrasi r')
                 ->select('r.*, k.nama_kelas, jk.tanggal_mulai, jk.tanggal_selesai, jk.id as jadwal_id')
                 ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
                 ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
                 ->where('r.id', (int) $registrasiId)
                 ->where('r.deleted_at IS NULL')
-                ->get()->getRowArray();
+                ->get()
+                ->getRowArray();
         } else {
-            $r = $db->table('registrasi r')
+            $r = $db
+                ->table('registrasi r')
                 ->select('r.*, k.nama_kelas, jk.tanggal_mulai, jk.tanggal_selesai, jk.id as jadwal_id')
                 ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
                 ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
                 ->where('r.deleted_at IS NULL')
                 ->orderBy('r.tanggal_daftar', 'DESC')
-                ->get()->getRowArray();
+                ->get()
+                ->getRowArray();
         }
         if (!$r) {
             return $this->response->setJSON(['success' => false, 'message' => 'Tidak ada data registrasi aktif untuk preview'])->setStatusCode(404);
@@ -541,13 +545,15 @@ class Setting extends BaseController
         $recipientType = 'manual';
         // Jika registrasi & key diberikan, render dari DB
         if ($registrasiId && $key !== '') {
-            $r = $db->table('registrasi r')
+            $r = $db
+                ->table('registrasi r')
                 ->select('r.*, k.nama_kelas, jk.tanggal_mulai, jk.tanggal_selesai, jk.id as jadwal_id')
                 ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
                 ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
                 ->where('r.id', (int) $registrasiId)
                 ->where('r.deleted_at IS NULL')
-                ->get()->getRowArray();
+                ->get()
+                ->getRowArray();
             if (!$r) {
                 return $this->response->setJSON(['success' => false, 'message' => 'Registrasi tidak ditemukan'])->setStatusCode(404);
             }
@@ -606,13 +612,15 @@ class Setting extends BaseController
     public function wahaTestRecipientsJson()
     {
         $db = \Config\Database::connect();
-        $rows = $db->table('registrasi r')
+        $rows = $db
+            ->table('registrasi r')
             ->select('r.id, r.nama, r.no_telp, r.email, k.nama_kelas')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
             ->where('r.deleted_at IS NULL')
             ->orderBy('r.tanggal_daftar', 'DESC')
             ->limit(20)
-            ->get()->getResultArray();
+            ->get()
+            ->getResultArray();
         return $this->response->setJSON(['success' => true, 'data' => $rows]);
     }
 
@@ -622,10 +630,11 @@ class Setting extends BaseController
     protected function buildTemplateDataFromRegistrasi(array $r, $db): array
     {
         // Format tanggal dalam bahasa Indonesia H-3 logic reusable
-        $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
-        $fmtTgl = function($d) use($bulanMap) {
+        $bulanMap = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+        $fmtTgl = function ($d) use ($bulanMap) {
             $ts = strtotime((string) $d);
-            if (!$ts) return '';
+            if (!$ts)
+                return '';
             $day = date('j', $ts);
             $m = (int) date('n', $ts);
             $yy = date('y', $ts);
@@ -639,7 +648,7 @@ class Setting extends BaseController
                 $jadwalLabel .= ' - ' . $fmtTgl($r['tanggal_selesai']);
             }
         }
-        $fmtRp = function($v) {
+        $fmtRp = function ($v) {
             $n = (float) ($v ?? 0);
             return 'Rp ' . number_format($n, 0, ',', '.');
         };
@@ -650,15 +659,32 @@ class Setting extends BaseController
             $kk = $db->table('kota_kelas')->select('nama')->where('kode', $lokasiCode)->get()->getRowArray();
             $kotaName = (string) ($kk['nama'] ?? '');
         }
-        if ($kotaName === '') { $kotaName = ucfirst($lokasiCode); }
+        if ($kotaName === '') {
+            $kotaName = ucfirst($lokasiCode);
+        }
 
         // Sertifikat (opsional)
         $noSertifikat = '';
         if (!empty($r['id'])) {
-            $cert = $db->table('sertifikat')->select('nomor_sertifikat')
+            $cert = $db
+                ->table('sertifikat')
+                ->select('nomor_sertifikat')
                 ->where('registrasi_id', (int) $r['id'])
-                ->orderBy('created_at', 'DESC')->get()->getRowArray();
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getRowArray();
             $noSertifikat = (string) ($cert['nomor_sertifikat'] ?? '');
+        }
+
+        // Voucher (opsional): gabungkan kode dan diskon persen jika ada
+        $voucherLabel = '';
+        $diskonPersen = null;
+        $kodeVoucher = trim((string) ($r['kode_voucher'] ?? ''));
+        if ($kodeVoucher !== '') {
+            $vRow = $db->table('voucher')->select('diskon_persen')->where('kode_voucher', $kodeVoucher)->get()->getRowArray();
+            $dp = isset($vRow['diskon_persen']) ? (float) $vRow['diskon_persen'] : 0.0;
+            $diskonPersen = (int) $dp;
+            $voucherLabel = 'diskon ' . $diskonPersen . '%';
         }
 
         return [
@@ -674,6 +700,8 @@ class Setting extends BaseController
             'jumlah_tagihan' => $fmtRp($r['biaya_tagihan'] ?? 0),
             'jumlah_dibayar' => $fmtRp($r['biaya_dibayar'] ?? 0),
             'no_sertifikat' => $noSertifikat,
+            'diskon_persen' => $diskonPersen ?? 0,
+            'voucher' => $voucherLabel,
         ];
     }
 
@@ -686,10 +714,15 @@ class Setting extends BaseController
         $cfg = model(\App\Models\WahaConfig::class);
         // Ubah strategi retry: default 6 kali, interval 5 menit
         $maxRetry = (int) ($cfg->getValue('max_retry', env('WAHA_MAX_RETRY') ?? 6));
-        $retryInterval = (int) ($cfg->getValue('retry_interval', env('WAHA_RETRY_INTERVAL') ?? 5)); // menit
-        $items = $qm->where('status', 'queued')
-            ->groupStart()->where('next_attempt_at IS NULL')->orWhere('next_attempt_at <=', $now)->groupEnd()
-            ->orderBy('id', 'ASC')->findAll(50);
+        $retryInterval = (int) ($cfg->getValue('retry_interval', env('WAHA_RETRY_INTERVAL') ?? 5));  // menit
+        $items = $qm
+            ->where('status', 'queued')
+            ->groupStart()
+            ->where('next_attempt_at IS NULL')
+            ->orWhere('next_attempt_at <=', $now)
+            ->groupEnd()
+            ->orderBy('id', 'ASC')
+            ->findAll(50);
         $processed = 0;
         foreach ($items as $item) {
             $processed++;
@@ -761,21 +794,24 @@ class Setting extends BaseController
         $db = \Config\Database::connect();
         $qm = model(WahaQueue::class);
         $targetDate = date('Y-m-d', strtotime('+3 days'));
-        $rows = $db->table('registrasi r')
+        $rows = $db
+            ->table('registrasi r')
             ->select('r.id, r.nama, r.no_telp, r.status_pembayaran, r.kode_kelas, r.lokasi, r.biaya_tagihan, jk.tanggal_mulai, jk.tanggal_selesai, jk.id as jadwal_id, k.nama_kelas')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
             ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
             ->where('DATE(jk.tanggal_mulai)', $targetDate)
             ->where('r.deleted_at IS NULL')
-            ->get()->getResultArray();
+            ->get()
+            ->getResultArray();
         $count = 0;
         foreach ($rows as $r) {
             $isDP = (strtolower($r['status_pembayaran'] ?? '') === 'dp 50%');
             // Format jadwal: "dd Bulan yy - dd Bulan yy"
-            $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
-            $fmtTgl = function($d) use($bulanMap) {
+            $bulanMap = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+            $fmtTgl = function ($d) use ($bulanMap) {
                 $ts = strtotime((string) $d);
-                if (!$ts) return '';
+                if (!$ts)
+                    return '';
                 $day = date('j', $ts);
                 $m = (int) date('n', $ts);
                 $yy = date('y', $ts);
@@ -790,7 +826,7 @@ class Setting extends BaseController
                 }
             }
             // Format rupiah dengan prefix Rp
-            $fmtRp = function($v) {
+            $fmtRp = function ($v) {
                 $n = (float) ($v ?? 0);
                 return 'Rp ' . number_format($n, 0, ',', '.');
             };
@@ -801,7 +837,9 @@ class Setting extends BaseController
                 $kk = $db->table('kota_kelas')->select('nama')->where('kode', $lokasiCode)->get()->getRowArray();
                 $kotaName = (string) ($kk['nama'] ?? '');
             }
-            if ($kotaName === '') { $kotaName = ucfirst($lokasiCode); }
+            if ($kotaName === '') {
+                $kotaName = ucfirst($lokasiCode);
+            }
 
             $payload = [
                 'nama' => $r['nama'] ?? '',

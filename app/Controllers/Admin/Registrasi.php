@@ -369,20 +369,25 @@ class Registrasi extends BaseController
                 $kk = $dbKota->table('kota_kelas')->select('nama')->where('kode', $lokasiCode)->get()->getRowArray();
                 $kotaName = (string) ($kk['nama'] ?? '');
             }
-            if ($kotaName === '') { $kotaName = ucfirst($lokasiCode); }
+            if ($kotaName === '') {
+                $kotaName = ucfirst($lokasiCode);
+            }
             // Bangun label jadwal: "dd MMMM yy - dd MMMM yy"
             $jadwalLabel = '';
             if (!empty($data['jadwal_id'])) {
-                $jr = $db->table('jadwal_kelas')
+                $jr = $db
+                    ->table('jadwal_kelas')
                     ->select('tanggal_mulai, tanggal_selesai')
                     ->where('id', (int) $data['jadwal_id'])
-                    ->get()->getRowArray();
+                    ->get()
+                    ->getRowArray();
                 $mulai = $jr['tanggal_mulai'] ?? null;
                 $selesai = $jr['tanggal_selesai'] ?? null;
-                $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
-                $fmt = function($d) use($bulanMap){
-                    $ts = strtotime((string)$d);
-                    if (!$ts) return '';
+                $bulanMap = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+                $fmt = function ($d) use ($bulanMap) {
+                    $ts = strtotime((string) $d);
+                    if (!$ts)
+                        return '';
                     $day = date('j', $ts);
                     $m = (int) date('n', $ts);
                     $yy = date('y', $ts);
@@ -397,10 +402,16 @@ class Registrasi extends BaseController
                 }
             }
             // Format rupiah: 3.200.696 (tanpa desimal)
-            $fmtRp = function($v){
+            $fmtRp = function ($v) {
                 $n = (float) ($v ?? 0);
                 return number_format($n, 0, ',', '.');
             };
+            // Label voucher untuk pesan WAHA: (diskon N%) jika voucher digunakan
+            $voucherLabel = '';
+            if ($submittedVoucher !== '') {
+                $voucherLabel = 'diskon ' . (int) $diskonPersen . '%';
+            }
+
             $payload = [
                 'nama' => (string) ($data['nama'] ?? ''),
                 'nama_kelas' => $kelasNama,
@@ -413,6 +424,8 @@ class Registrasi extends BaseController
                 'status_pembayaran' => (string) ($data['status_pembayaran'] ?? ''),
                 'jumlah_tagihan' => (string) $fmtRp(($data['biaya_tagihan'] ?? '')),
                 'jumlah_dibayar' => (string) $fmtRp(($data['biaya_dibayar'] ?? '')),
+                'diskon_persen' => (int) $diskonPersen,
+                'voucher' => (string) $voucherLabel,
             ];
             // Peserta
             model(\App\Models\WahaQueue::class)->insert([
@@ -443,6 +456,8 @@ class Registrasi extends BaseController
                     'status_pembayaran' => (string) ($data['status_pembayaran'] ?? ''),
                     'jumlah_tagihan' => (string) $fmtRp(($data['biaya_tagihan'] ?? '')),
                     'jumlah_dibayar' => (string) $fmtRp(($data['biaya_dibayar'] ?? '')),
+                    'diskon_persen' => (int) $diskonPersen,
+                    'voucher' => (string) $voucherLabel,
                 ];
                 model(\App\Models\WahaQueue::class)->insert([
                     'registrasi_id' => $newId,
@@ -467,7 +482,7 @@ class Registrasi extends BaseController
                 if ($tpl) {
                     $message = $ws->renderTemplate((string) ($tpl['template'] ?? ''), $payload);
                 } else {
-                    $message = $ws->renderTemplate('${registrasi_peserta}: {{nama}} mendaftar {{nama_kelas}} di {{kota}}. Status {{status_pembayaran}}. Tagihan {{jumlah_tagihan}}. Dibayar {{jumlah_dibayar}}. Jadwal {{jadwal}}', $payload);
+                    $message = $ws->renderTemplate('${registrasi_peserta}: {{nama}} mendaftar {{nama_kelas}} di {{kota}}. Status {{status_pembayaran}}. Tagihan {{jumlah_tagihan}}. Dibayar {{jumlah_dibayar}}. Jadwal {{jadwal}}. Voucher {{voucher}}', $payload);
                 }
                 $res = $ws->sendMessage((string) ($data['no_telp'] ?? ''), $message);
                 model(\App\Models\WahaLog::class)->insert([
@@ -504,12 +519,14 @@ class Registrasi extends BaseController
                         'status_pembayaran' => (string) ($data['status_pembayaran'] ?? ''),
                         'jumlah_tagihan' => (string) $fmtRp(($data['biaya_tagihan'] ?? '')),
                         'jumlah_dibayar' => (string) $fmtRp(($data['biaya_dibayar'] ?? '')),
+                        'diskon_persen' => (int) $diskonPersen,
+                        'voucher' => (string) $voucherLabel,
                     ];
                     if ($tplA && !empty($tplA['template'])) {
                         $messageA = $ws->renderTemplate((string) $tplA['template'], $payloadAdmin2);
                     } else {
-                        // Tambahkan placeholder dibayar pada fallback agar konsisten
-                        $messageA = $ws->renderTemplate('${registrasi_admin}: pendaftaran baru {{nama}} untuk {{nama_kelas}} {{kota}} jadwal {{jadwal}}. Status {{status_pembayaran}}, tagihan {{jumlah_tagihan}}, dibayar {{jumlah_dibayar}}', $payloadAdmin2);
+                        // Tambahkan placeholder dibayar pada fallback agar konsisten dan voucher
+                        $messageA = $ws->renderTemplate('${registrasi_admin}: pendaftaran baru {{nama}} untuk {{nama_kelas}} {{kota}} jadwal {{jadwal}}. Status {{status_pembayaran}}, tagihan {{jumlah_tagihan}}, dibayar {{jumlah_dibayar}}, voucher {{voucher}}', $payloadAdmin2);
                     }
                     $resA = $ws->sendMessage($adminPhone, $messageA);
                     model(\App\Models\WahaLog::class)->insert([
@@ -702,10 +719,11 @@ class Registrasi extends BaseController
                         if (!empty($res['success'])) {
                             // Tandai item queue terakhir untuk skenario ini sebagai selesai
                             $qm = model(\App\Models\WahaQueue::class);
-                            $qi = $qm->where('registrasi_id', (int) $registrasi['id'])
-                                     ->where('scenario', 'akses_kelas')
-                                     ->orderBy('id', 'DESC')
-                                     ->first();
+                            $qi = $qm
+                                ->where('registrasi_id', (int) $registrasi['id'])
+                                ->where('scenario', 'akses_kelas')
+                                ->orderBy('id', 'DESC')
+                                ->first();
                             if ($qi && isset($qi['id'])) {
                                 $qm->update($qi['id'], ['status' => 'done', 'attempts' => ((int) ($qi['attempts'] ?? 0)) + 1]);
                             }
