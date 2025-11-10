@@ -12,7 +12,7 @@
             width: 100%;
             height: 100vh; /* Dompdf maps to page height */
             position: relative;
-            background-image: url('<?= base_url('assets/images/certificate-bg.png') ?>');
+            background-image: url('assets/images/certificate-bg.png');
             background-size: cover;
             background-position: center;
         }
