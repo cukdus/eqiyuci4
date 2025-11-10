@@ -54,8 +54,8 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               </div>
 
               <div class="hero-buttons">
-                <a href="<?= base_url('kursus') ?>" class="btn btn-primary">Lihat Semua Kursus</a>
-                <a href="<?= base_url('jadwal') ?>" class="btn btn-outline">Lihat Jadwal</a>
+                <a href="kursus" class="btn btn-primary">Lihat Semua Kursus</a>
+                <a href="jadwal" class="btn btn-outline">Lihat Jadwal</a>
               </div>
 
               <div class="hero-features">
@@ -81,7 +81,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                 <img
                   src="assets/img/education/courses-13.webp"
                   alt="Online Learning"
-                  class="img-fluid" />
+                  class="img-fluid" loading="lazy" />
               </div>
 
               <div class="floating-cards">
@@ -153,15 +153,15 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               <img
                 src="assets/img/education/1.jpg"
                 alt="Jadwal kelas pelatihan Eqiyu Indonesia"
-                class="img-fluid" />
+                class="img-fluid" loading="lazy" />
             </div>
             <div class="course-content">
-              <h3><a href="<?= base_url('jadwal') ?>">Jadwal Kelas</a></h3>
+              <h3><a href="jadwal">Jadwal Kelas</a></h3>
               <p>
                 Temukan jadwal pelatihan terbaru dari EQIYU INDONESIA.
                 Wujudkan karier dan bisnis kulinermu dengan langkah pasti!
               </p>
-              <a href="<?= base_url('jadwal') ?>" class="btn-course">Lihat</a>
+              <a href="jadwal" class="btn-course">Lihat</a>
             </div>
           </div>
         </div>
@@ -176,16 +176,16 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               <img
                 src="assets/img/education/2.jpg"
                 alt="Informasi dan artikel terbaru Eqiyu Indonesia"
-                class="img-fluid" />
+                class="img-fluid" loading="lazy" />
             </div>
             <div class="course-content">
-              <h3><a href="<?= base_url('info') ?>">Informasi & Artikel</a></h3>
+              <h3><a href="info">Informasi & Artikel</a></h3>
               <p>
                 Ikuti informasi terkini seputar dunia kopi, bisnis kuliner,
                 tips usaha, hingga cerita inspiratif alumni hanya di Info &
                 Artikel EQIYU INDONESIA.
               </p>
-              <a href="<?= base_url('info') ?>" class="btn-course">Lihat</a>
+              <a href="info" class="btn-course">Lihat</a>
             </div>
           </div>
         </div>
@@ -200,16 +200,16 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               <img
                 src="assets/img/education/3.jpg"
                 alt="Cek sertifikat peserta Eqiyu Indonesia"
-                class="img-fluid" />
+                class="img-fluid" loading="lazy" />
             </div>
             <div class="course-content">
-              <h3><a href="<?= base_url('sertifikat') ?>">Check Sertifikat</a></h3>
+              <h3><a href="sertifikat">Check Sertifikat</a></h3>
               <p>
                 Sudah mengikuti kelas di EQIYU INDONESIA? Verifikasi
                 keikutsertaan dan validasi sertifikatmu dengan mudah melalui
                 fitur ini.
               </p>
-              <a href="<?= base_url('sertifikat') ?>" class="btn-course">Lihat</a>
+              <a href="sertifikat" class="btn-course">Lihat</a>
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             </div>
 
             <div class="pricing-cta">
-              <a href="<?= base_url('kursus/private-class-beverage---business-culinary') ?>" class="btn btn-primary w-100">Lihat Detail</a>
+              <a href="kursus/private-class-beverage---business-culinary" class="btn btn-primary w-100">Lihat Detail</a>
             </div>
 
             <div class="pricing-features">
@@ -305,7 +305,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             </div>
 
             <div class="pricing-cta">
-              <a href="<?= base_url('kursus/basic-barista---latte-art') ?>" class="btn btn-primary w-100">Lihat Detail</a>
+              <a href="kursus/basic-barista---latte-art" class="btn btn-primary w-100">Lihat Detail</a>
             </div>
 
             <div class="pricing-features">
@@ -359,7 +359,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
             </div>
 
             <div class="pricing-cta">
-              <a href="<?= base_url('kursus/workshop-membangun-bisnis-cafe-kedai-kopi') ?>" class="btn btn-primary w-100">Lihat Detail</a>
+              <a href="kursus/workshop-membangun-bisnis-cafe-kedai-kopi" class="btn btn-primary w-100">Lihat Detail</a>
             </div>
 
             <div class="pricing-features">
@@ -398,7 +398,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
         class="more-pricing text-center"
         data-aos="fade-up"
         data-aos-delay="500">
-        <a href="<?= base_url('kursus') ?>" class="btn-more">Lihat Semua Kursus</a>
+        <a href="kursus" class="btn-more">Lihat Semua Kursus</a>
       </div>
     </div>
   </section>
@@ -561,9 +561,9 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   <article class="position-relative h-100">
                     <div class="post-img position-relative overflow-hidden">
                       <?php if (!empty($artikel['gambar_utama'])): ?>
-                        <img src="<?= base_url($artikel['gambar_utama']) ?>" alt="<?= esc($artikel['judul']) ?>" class="img-fluid">
+                        <img src="<?= $artikel['gambar_utama'] ?>" alt="<?= esc($artikel['judul']) ?>" class="img-fluid" loading="lazy">
                       <?php else: ?>
-                        <img src="<?= base_url('assets/img/no-image.jpg') ?>" alt="No Image" class="img-fluid">
+                        <img src="assets/img/no-image.jpg" alt="No Image" class="img-fluid" loading="lazy">
                       <?php endif; ?>
                     </div>
 
@@ -595,7 +595,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               </div>
             <?php endif; ?>
             <div class="more-blog text-center aos-init aos-animate" data-aos="fade-up" data-aos-delay="500">
-              <a href="<?= base_url('info') ?>" class="btn-more">Lihat Semua Info</a>
+              <a href="info" class="btn-more">Lihat Semua Info</a>
             </div>
           </div>
       </div>
@@ -836,7 +836,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                         </div>
                         <p><?= esc($snippet ?: 'Tidak ada ulasan.') ?></p>
                         <div class="testimonial-profile">
-                          <img src="<?= esc($thumb) ?>" alt="Reviewer" class="img-fluid rounded-circle" />
+                          <img src="<?= esc($thumb) ?>" alt="Reviewer" class="img-fluid rounded-circle" loading="lazy" />
                           <div>
                             <h3><?= esc($name) ?></h3>
                             <h4>Google Maps Reviewer</h4>
@@ -853,7 +853,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                       </div>
                       <p>Tidak dapat memuat review Google saat ini.</p>
                       <div class="testimonial-profile">
-                        <img src="<?= base_url('assets/img/person/person-m-2.webp') ?>" alt="Reviewer" class="img-fluid rounded-circle" />
+                        <img src="assets/img/person/person-m-2.webp" alt="Reviewer" class="img-fluid rounded-circle" loading="lazy" />
                         <div>
                           <h3>Review tidak tersedia</h3>
                           <h4>Google Maps</h4>
@@ -930,7 +930,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                         </div>
                         <p><?= esc($snippet ?: 'Tidak ada ulasan.') ?></p>
                         <div class="testimonial-profile">
-                          <img src="<?= esc($thumb) ?>" alt="Reviewer" class="img-fluid rounded-circle" />
+                          <img src="<?= esc($thumb) ?>" alt="Reviewer" class="img-fluid rounded-circle" loading="lazy" />
                           <div>
                             <h3><?= esc($name) ?></h3>
                             <h4>Google Maps Reviewer</h4>
@@ -947,7 +947,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                       </div>
                       <p>Tidak dapat memuat review Google saat ini.</p>
                       <div class="testimonial-profile">
-                        <img src="<?= base_url('assets/img/person/person-m-2.webp') ?>" alt="Reviewer" class="img-fluid rounded-circle" />
+                        <img src="assets/img/person/person-m-2.webp" alt="Reviewer" class="img-fluid rounded-circle" loading="lazy" />
                         <div>
                           <h3>Review tidak tersedia</h3>
                           <h4>Google Maps</h4>

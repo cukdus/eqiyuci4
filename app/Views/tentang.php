@@ -33,7 +33,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
       <div class="row align-items-center">
         <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
           <img
-            src="assets/img/education/education-square-2.webp"
+            src="assets/img/education/fariz.webp"
             alt="About Us"
             class="img-fluid rounded-4" />
         </div>

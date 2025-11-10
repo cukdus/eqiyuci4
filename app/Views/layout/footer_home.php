@@ -21,37 +21,37 @@
             <div class="swiper-wrapper align-items-center">
               <div class="swiper-slide">
                 <a href="https://mbowis.id/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/mbowis.webp') ?>" class="img-fluid" alt="mbowis" title="mbowis syrup">
+                  <img src="assets/img/support/mbowis.webp" class="img-fluid" alt="mbowis" title="mbowis syrup">
                 </a>
               </div>
               <div class="swiper-slide">
                 <a href="https://atourwis.id/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/atourwis.webp') ?>" class="img-fluid" alt="atourwis" title="Atourwis Travel">
+                  <img src="assets/img/support/atourwis.webp" class="img-fluid" alt="atourwis" title="Atourwis Travel">
                 </a>
               </div>
               <div class="swiper-slide">
                 <a href="https://mlgcoffee.com/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/mlg.webp') ?>" class="img-fluid" alt="MLG management" title="MLG coffee">
+                  <img src="assets/img/support/mlg.webp" class="img-fluid" alt="MLG management" title="MLG coffee">
                 </a>
               </div>
               <div class="swiper-slide">
                 <a href="https://www.instagram.com/pressolve/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/pressolve.webp') ?>" class="img-fluid" alt="pressolve" title="pressolve Website">
+                  <img src="assets/img/support/pressolve.webp" class="img-fluid" alt="pressolve" title="pressolve Website">
                 </a>
               </div>
               <div class="swiper-slide">
                 <a href="https://overhaul.id/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/overhaul.webp') ?>" class="img-fluid" alt="overhaul" title="Overhaul Website">
+                  <img src="assets/img/support/overhaul.webp" class="img-fluid" alt="overhaul" title="Overhaul Website">
                 </a>
               </div>
               <div class="swiper-slide">
                 <a href="https://bekasbaru.com/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/bekasbaru.webp') ?>" class="img-fluid" alt="EQIYU" title="BekasBaru.com - Toko alat kopi Bekas dan Baru">
+                  <img src="assets/img/support/bekasbaru.webp" class="img-fluid" alt="EQIYU" title="BekasBaru.com - Toko alat kopi Bekas dan Baru">
                 </a>
               </div>
               <div class="swiper-slide">
                 <a href="https://azkaindiesatu.id/" target="_blank">
-                  <img src="<?= base_url('assets/img/support/ais.webp') ?>" class="img-fluid" alt="AIS" title="Azka Indie Satu">
+                  <img src="assets/img/support/ais.webp" class="img-fluid" alt="AIS" title="Azka Indie Satu">
                 </a>
               </div>
             </div>
@@ -62,7 +62,7 @@
         <div class="row gy-4">
           <div class="col-lg-6 col-md-12 footer-about">
             <a href="<?= base_url() ?>" class="logo d-flex align-items-center">
-              <img src="<?= base_url('assets/img/logofooter.webp') ?>" alt="Eqiyu Indonesia" />
+              <img src="assets/img/logofooter.webp" alt="Eqiyu Indonesia" />
             </a>
             <h3>Lembaga Pendidikan Profesional</h3>
             <p>

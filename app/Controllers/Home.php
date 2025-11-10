@@ -151,7 +151,7 @@ class Home extends BaseController
 
         // URL gambar utama
         $imgUrl = !empty($artikel['gambar_utama'])
-            ? base_url('uploads/artikel/' . $artikel['gambar_utama'])
+            ? base_url($artikel['gambar_utama'])
             : base_url('assets/img/blog/blog-hero-1.webp');
 
         // Ambil tags terkait artikel dari pivot berita_tag

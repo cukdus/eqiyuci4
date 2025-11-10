@@ -42,25 +42,25 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
     <div class="container" data-aos="fade-up" data-aos-delay="100">
       <div class="row gy-4">
         <?php if (!empty($berita) && is_array($berita)): ?>
-          <?php 
-            $bulanNama = [
-              '01' => 'Januari','02' => 'Februari','03' => 'Maret','04' => 'April',
-              '05' => 'Mei','06' => 'Juni','07' => 'Juli','08' => 'Agustus',
-              '09' => 'September','10' => 'Oktober','11' => 'November','12' => 'Desember'
-            ];
+          <?php
+          $bulanNama = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+          ];
           ?>
           <?php foreach ($berita as $item): ?>
-            <?php 
-              $tanggal = $item['tanggal_terbit'] ?? date('Y-m-d');
-              $day = date('d', strtotime($tanggal));
-              $monthNum = date('m', strtotime($tanggal));
-              $monthName = $bulanNama[$monthNum] ?? date('F', strtotime($tanggal));
-              $penulis = $item['penulis'] ?? 'Anonim';
-              $kategori = $item['kategori_nama'] ?? 'Uncategorized';
-              $judul = $item['judul'] ?? '';
-              $slug = $item['slug'] ?? '';
-              $img = !empty($item['gambar_utama']) ? base_url('uploads/artikel/'.$item['gambar_utama']) : base_url('assets/img/blog/blog-post-1.webp');
-              $detailUrl = !empty($slug) ? base_url('info/'.$slug) : base_url('info');
+            <?php
+            $tanggal = $item['tanggal_terbit'] ?? date('Y-m-d');
+            $day = date('d', strtotime($tanggal));
+            $monthNum = date('m', strtotime($tanggal));
+            $monthName = $bulanNama[$monthNum] ?? date('F', strtotime($tanggal));
+            $penulis = $item['penulis'] ?? 'Anonim';
+            $kategori = $item['kategori_nama'] ?? 'Uncategorized';
+            $judul = $item['judul'] ?? '';
+            $slug = $item['slug'] ?? '';
+            $img = !empty($item['gambar_utama']) ? base_url($item['gambar_utama']) : base_url('assets/img/blog/blog-post-1.webp');
+            $detailUrl = !empty($slug) ? base_url('info/' . $slug) : base_url('info');
             ?>
             <div class="col-lg-4">
               <article class="position-relative h-100">
