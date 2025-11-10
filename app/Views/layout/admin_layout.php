@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <title><?= $title ?? 'Admin Panel' ?> - Eqiyu Kita</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="<?= base_url('assets/img/favicon.png') ?>" rel="icon" />
+    <link href="<?= base_url('assets/img/favicon.png') ?>" rel="apple-touch-icon" />
     <link rel="preload" href="<?= base_url('assets/css/adminlte.css') ?>" as="style" />
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/bootstrap/css/bootstrap.min.css') ?>">

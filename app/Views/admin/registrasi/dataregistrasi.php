@@ -234,7 +234,7 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
         const id = r.id || 0;
         const waUrl = formatWhatsAppLink(r.no_telp || '');
         const status = String(r.status_pembayaran || '').toLowerCase();
-        const badgeClass = status === 'dp 50%' ? 'bg-warning' : (status === 'lunas' ? 'bg-success' : 'bg-secondary');
+        const statusIconClass = status === 'dp 50%' ? 'text-warning' : (status === 'lunas' ? 'text-success' : 'text-secondary');
         const isOn = !!r.akses_aktif;
         return (
           '<tr>' +
@@ -259,7 +259,7 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
                 '<label class="form-check-label"></label>' +
               '</div>' +
             '</td>' +
-            '<td><span class="badge ' + badgeClass + '">' + (status ? (status.charAt(0).toUpperCase() + status.slice(1)) : 'unknown') + '</span></td>' +
+            '<td><i class="bi bi-cash ' + statusIconClass + '"></i></td>' +
             '<td>' +
               '<div class="btn-group" role="group">' +
                 '<a href="<?= base_url('admin/registrasi') ?>/' + id + '/edit" class="btn btn-sm btn-warning rounded-0 rounded-start" title="Edit"><i class="bi bi-pencil-square"></i></a>' +

@@ -57,6 +57,11 @@
                         <tbody></tbody>
                       </table>
                     </div>
+                    <div class="d-flex justify-content-between align-items-center p-2 border-top" id="logsPager" style="display:flex;">
+                      <button class="btn btn-sm btn-outline-secondary" id="prevLogsBtn">Prev</button>
+                      <div class="small text-muted" id="logsPageInfo">Page</div>
+                      <button class="btn btn-sm btn-outline-secondary" id="nextLogsBtn">Next</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -450,8 +455,21 @@ document.getElementById('btnRunReminders').addEventListener('click', async () =>
   document.getElementById('queueStatus').textContent = 'Diantrikan: ' + (j.queued || 0);
 });
 
+let LOGS_STATE = { page: 1, per_page: 5 };
+
+function updateLogsPager(meta) {
+  const prevBtn = document.getElementById('prevLogsBtn');
+  const nextBtn = document.getElementById('nextLogsBtn');
+  const pageInfo = document.getElementById('logsPageInfo');
+  if (!meta) return;
+  prevBtn.disabled = !meta.has_prev;
+  nextBtn.disabled = !meta.has_next;
+  pageInfo.textContent = 'Halaman ' + meta.page + ' dari ' + (meta.total_pages || 1) + ' • Total ' + (meta.total || 0);
+}
+
 async function fetchLogs() {
-  const res = await fetch(API.logs);
+  const params = new URLSearchParams({ page: String(LOGS_STATE.page), per_page: String(LOGS_STATE.per_page) });
+  const res = await fetch(API.logs + '?' + params.toString());
   const j = await res.json();
   const tbody = document.querySelector('#tblLogs tbody');
   tbody.innerHTML = '';
@@ -466,9 +484,12 @@ async function fetchLogs() {
     `;
     tbody.appendChild(tr);
   });
+  updateLogsPager(j.meta || null);
 }
 
 document.getElementById('btnRefreshLogs').addEventListener('click', fetchLogs);
+document.getElementById('prevLogsBtn').addEventListener('click', () => { if (LOGS_STATE.page > 1) { LOGS_STATE.page -= 1; fetchLogs(); } });
+document.getElementById('nextLogsBtn').addEventListener('click', () => { LOGS_STATE.page += 1; fetchLogs(); });
 document.getElementById('btnClearLogs').addEventListener('click', async () => {
   if (!confirm('Hapus semua log pengiriman?')) return;
   const res = await fetch(API.clearLogs, { method: 'POST' });

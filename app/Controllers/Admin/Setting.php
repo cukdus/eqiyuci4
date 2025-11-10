@@ -383,9 +383,38 @@ class Setting extends BaseController
 
     public function wahaLogsJson()
     {
-        $lm = model(WahaLog::class);
-        $logs = $lm->orderBy('created_at', 'DESC')->findAll(100);
-        return $this->response->setJSON(['success' => true, 'data' => $logs]);
+        $request = $this->request;
+        $perPage = (int) ($request->getGet('per_page') ?? 5);
+        if ($perPage <= 0) { $perPage = 5; }
+        if ($perPage > 50) { $perPage = 50; }
+        $page = max(1, (int) ($request->getGet('page') ?? 1));
+        $start = ($page - 1) * $perPage;
+
+        $db = \Config\Database::connect();
+        // Sesuai dengan Model WahaLog: protected $table = 'waha_logs'
+        $builder = $db->table('waha_logs');
+        $countBuilder = clone $builder;
+        $totalData = (int) $countBuilder->countAllResults(false);
+        $totalPages = (int) ceil(($totalData > 0 ? $totalData : 0) / $perPage);
+
+        $rows = $builder
+            ->orderBy('created_at', 'DESC')
+            ->limit($perPage, $start)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $rows,
+            'meta' => [
+                'total' => $totalData,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $totalPages,
+                'has_next' => $page < $totalPages,
+                'has_prev' => $page > 1,
+            ],
+        ]);
     }
 
     public function wahaLogsClear()

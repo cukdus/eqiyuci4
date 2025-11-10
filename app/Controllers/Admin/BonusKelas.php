@@ -3,8 +3,8 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\Kelas as KelasModel;
 use App\Models\BonusFile;
+use App\Models\Kelas as KelasModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class BonusKelas extends BaseController
@@ -14,7 +14,7 @@ class BonusKelas extends BaseController
         // Ambil semua kelas tanpa filter kategori agar semua terlihat
         $classes = model(KelasModel::class)
             ->select('id, nama_kelas, kode_kelas')
-            ->orderBy('nama_kelas', 'ASC')
+            ->orderBy('kode_kelas', 'ASC')
             ->findAll();
 
         return view('layout/admin_layout', [
@@ -31,7 +31,8 @@ class BonusKelas extends BaseController
     public function listAll(): ResponseInterface
     {
         $db = \Config\Database::connect();
-        $files = $db->table('bonus_file bf')
+        $files = $db
+            ->table('bonus_file bf')
             ->select('bf.id, bf.tipe, bf.judul_file, bf.file_url, bf.urutan, k.id as kelas_id, k.nama_kelas, k.kode_kelas')
             ->join('kelas k', 'k.id = bf.kelas_id', 'left')
             ->orderBy('bf.id', 'DESC')
@@ -48,7 +49,7 @@ class BonusKelas extends BaseController
     public function attachExisting(int $kelasId): ResponseInterface
     {
         $kelas = model(\App\Models\Kelas::class)->find($kelasId);
-        if (! $kelas) {
+        if (!$kelas) {
             return $this->response->setJSON(['success' => false, 'message' => 'Kelas tidak ditemukan']);
         }
 
@@ -58,7 +59,7 @@ class BonusKelas extends BaseController
         }
 
         $src = model(BonusFile::class)->find($sourceId);
-        if (! $src || empty($src['file_url'])) {
+        if (!$src || empty($src['file_url'])) {
             return $this->response->setJSON(['success' => false, 'message' => 'File sumber tidak ditemukan']);
         }
 
@@ -70,11 +71,11 @@ class BonusKelas extends BaseController
         }
 
         $newId = model(BonusFile::class)->insert([
-            'kelas_id'   => $kelasId,
-            'tipe'       => (string) ($src['tipe'] ?? 'file'),
+            'kelas_id' => $kelasId,
+            'tipe' => (string) ($src['tipe'] ?? 'file'),
             'judul_file' => $judulOverride !== '' ? $judulOverride : (string) ($src['judul_file'] ?? ''),
-            'file_url'   => (string) $src['file_url'],
-            'urutan'     => $urutan,
+            'file_url' => (string) $src['file_url'],
+            'urutan' => $urutan,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -98,25 +99,25 @@ class BonusKelas extends BaseController
     public function uploadFile(int $kelasId): ResponseInterface
     {
         $kelas = model(KelasModel::class)->find($kelasId);
-        if (! $kelas) {
+        if (!$kelas) {
             return $this->response->setJSON(['success' => false, 'message' => 'Kelas tidak ditemukan']);
         }
 
         $judul = trim((string) $this->request->getPost('judul_file'));
         $urutan = $this->request->getPost('urutan') !== null ? (int) $this->request->getPost('urutan') : null;
         $upload = $this->request->getFile('file');
-        if (! $upload || ! $upload->isValid() || $upload->hasMoved()) {
+        if (!$upload || !$upload->isValid() || $upload->hasMoved()) {
             return $this->response->setJSON(['success' => false, 'message' => 'File tidak valid atau sudah dipindah']);
         }
 
         $ext = strtolower((string) $upload->getClientExtension());
         $allowedExt = ['pdf', 'xls', 'xlsx'];
-        if (! in_array($ext, $allowedExt, true)) {
+        if (!in_array($ext, $allowedExt, true)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Hanya file PDF atau Excel (xls/xlsx) yang diizinkan']);
         }
 
         $targetDir = FCPATH . 'uploads/kelas/bonus';
-        if (! is_dir($targetDir)) {
+        if (!is_dir($targetDir)) {
             @mkdir($targetDir, 0775, true);
         }
         $newName = $upload->getRandomName();
@@ -128,11 +129,11 @@ class BonusKelas extends BaseController
         $publicPath = '/uploads/kelas/bonus/' . $newName;
 
         $id = model(BonusFile::class)->insert([
-            'kelas_id'   => $kelasId,
-            'tipe'       => $ext === 'pdf' ? 'pdf' : 'excel',
+            'kelas_id' => $kelasId,
+            'tipe' => $ext === 'pdf' ? 'pdf' : 'excel',
             'judul_file' => $judul !== '' ? $judul : $upload->getClientName(),
-            'file_url'   => $publicPath,
-            'urutan'     => $urutan,
+            'file_url' => $publicPath,
+            'urutan' => $urutan,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -143,12 +144,12 @@ class BonusKelas extends BaseController
     {
         $model = model(BonusFile::class);
         $file = $model->find($fileId);
-        if (! $file) {
+        if (!$file) {
             return $this->response->setJSON(['success' => false, 'message' => 'File tidak ditemukan']);
         }
         // Jika file fisik juga dipakai oleh record lain, jangan hapus fisiknya
         $shouldDeletePhysical = false;
-        if (! empty($file['file_url'])) {
+        if (!empty($file['file_url'])) {
             $sameCount = $model
                 ->where('file_url', (string) $file['file_url'])
                 ->where('id !=', $fileId)

@@ -35,7 +35,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
           <!-- Course Hero -->
           <div class="course-hero" data-aos="fade-up" data-aos-delay="200">
             <div class="hero-content">
-              <h1>Tahapan Membuat Bisnis Cafe, Resto, Coffeeshop & Bisnis Kuliner</h1>
+              <h1><?= esc(($kelas['nama_kelas'] ?? 'Modul Online')) ?></h1>
               <!-- <p class="course-subtitle"></p> -->
 
               <!-- <div class="instructor-card">

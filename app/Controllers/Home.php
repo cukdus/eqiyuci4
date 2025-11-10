@@ -45,19 +45,18 @@ class Home extends BaseController
             ->where('nama !=', 'Se-Dunia')
             ->countAllResults();
 
-        // Data untuk statistik kelas berdasarkan kode_kelas
-        // Jumlah sertifikat aktif untuk kelas "Basic Barista & Latte Art" (kode_kelas '01')
+        // Data statistik kelas berdasarkan isi kolom nama_kelas (kode: 01=Barista, 02=Bisnis, 03=Private)
         $data['kelas_barista'] = $sertfikatModel
             ->where('status', 'aktif')
-            ->where('nama_kelas', 'Basic Barista & Latte Art')
+            ->where('nama_kelas', '01')
             ->countAllResults();
         $data['kelas_bisnis'] = $sertfikatModel
             ->where('status', 'aktif')
-            ->where('nama_kelas', 'Workshop Membangun Bisnis Cafe & Kedai Kopi')
+            ->where('nama_kelas', '02')
             ->countAllResults();
         $data['kelas_private'] = $sertfikatModel
             ->where('status', 'aktif')
-            ->where('nama_kelas', 'Private Class Beverage & Bisnis Culinary')
+            ->where('nama_kelas', '03')
             ->countAllResults();
 
         $data['berita'] = $berita;
@@ -559,9 +558,15 @@ class Home extends BaseController
                     $sampai = $voucherRow['tanggal_berlaku_sampai'] ?? null;
                     $today = date('Y-m-d');
                     $validDate = true;
-                    if ($mulai && $today < $mulai) { $validDate = false; }
-                    if ($sampai && $today > $sampai) { $validDate = false; }
-                    if (!$validDate) { $diskonPersen = 0; }
+                    if ($mulai && $today < $mulai) {
+                        $validDate = false;
+                    }
+                    if ($sampai && $today > $sampai) {
+                        $validDate = false;
+                    }
+                    if (!$validDate) {
+                        $diskonPersen = 0;
+                    }
                 }
             }
         }
@@ -577,7 +582,9 @@ class Home extends BaseController
         }
         if ($kodeUnikTagihan === $kodeUnikDP) {
             $kodeUnikTagihan = ($kodeUnikTagihan % 999) + 1;
-            if ($kodeUnikTagihan < 100) { $kodeUnikTagihan += 100; }
+            if ($kodeUnikTagihan < 100) {
+                $kodeUnikTagihan += 100;
+            }
         }
 
         $isDP = strtolower($statusPembayaran) === 'dp 50%';
@@ -628,7 +635,9 @@ class Home extends BaseController
             $db = \Config\Database::connect();
             $kelasNama = '';
             $k = $db->table('kelas')->select('nama_kelas')->where('kode_kelas', $kodeKelas)->get()->getRowArray();
-            if ($k) { $kelasNama = (string) ($k['nama_kelas'] ?? ''); }
+            if ($k) {
+                $kelasNama = (string) ($k['nama_kelas'] ?? '');
+            }
             // Tampilkan nama kota dari kode lokasi
             $kotaName = '';
             if (!empty($lokasi)) {
@@ -641,16 +650,19 @@ class Home extends BaseController
             // Bangun label jadwal: "dd MMMM yy - dd MMMM yy"
             $jadwalLabel = '';
             if (!empty($jadwalId)) {
-                $jr = $db->table('jadwal_kelas')
+                $jr = $db
+                    ->table('jadwal_kelas')
                     ->select('tanggal_mulai, tanggal_selesai')
                     ->where('id', (int) $jadwalId)
-                    ->get()->getRowArray();
+                    ->get()
+                    ->getRowArray();
                 $mulai = $jr['tanggal_mulai'] ?? null;
                 $selesai = $jr['tanggal_selesai'] ?? null;
-                $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
-                $fmt = function($d) use($bulanMap){
-                    $ts = strtotime((string)$d);
-                    if (!$ts) return '';
+                $bulanMap = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+                $fmt = function ($d) use ($bulanMap) {
+                    $ts = strtotime((string) $d);
+                    if (!$ts)
+                        return '';
                     $day = date('j', $ts);
                     $m = (int) date('n', $ts);
                     $yy = date('y', $ts);
@@ -665,7 +677,7 @@ class Home extends BaseController
                 }
             }
             // Format rupiah: 3.200.696 (tanpa desimal)
-            $fmtRp = function($v){
+            $fmtRp = function ($v) {
                 $n = (float) ($v ?? 0);
                 return number_format($n, 0, ',', '.');
             };
