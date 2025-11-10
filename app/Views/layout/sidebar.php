@@ -44,6 +44,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
     <!--begin::Brand Link-->
     <a href="<?= base_url('admin') ?>" class="brand-link">
       <!--begin::Brand Text-->
+      <img src="<?= base_url('assets/img/icon-logo.webp') ?>" alt="Panel Eqiyu" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text fw-light">Panel Eqiyu</span>
       <!--end::Brand Text-->
     </a>
