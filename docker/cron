@@ -15,3 +15,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Send lulus_peserta messages at 21:00 (akhir jadwal kelas)
 0 21 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-lulus >> /var/log/cron.log 2>&1
+
