@@ -106,9 +106,24 @@
                       </div>
                     </td>
                     <td>
-                      <?php $status = strtolower((string) ($r['status_pembayaran'] ?? '')); ?>
-                      <i class="bi bi-cash <?= $status === 'dp 50%' ? 'text-warning' : ($status === 'lunas' ? 'text-success' : 'text-secondary') ?>">
-                      </i>
+                      <?php
+                      $status = strtolower((string) ($r['status_pembayaran'] ?? ''));
+                      $matchDibayar = !!($r['paid_match_dibayar'] ?? ($r['paid_match'] ?? false));
+                      $matchTagihan = !!($r['paid_match_tagihan'] ?? false);
+                      $dp50 = !!($r['dp50'] ?? false);
+                      $walletClass = ($status === 'dp 50%') ? 'text-warning' : (($status === 'lunas') ? 'text-success' : 'text-secondary');
+                      $cashClass = ($status === 'lunas' && $matchDibayar) ? 'text-primary' : 'text-danger';
+                      // Coin 1 untuk biaya_dibayar: kuning jika DP dan match, hijau jika non-DP dan match, abu-abu jika tidak match
+                      $coin1Class = $matchDibayar ? ($dp50 ? 'text-warning' : 'text-success') : 'text-secondary';
+                      // Coin 2 untuk biaya_tagihan: hijau jika match, abu-abu jika tidak match
+                      $coin2Class = $matchTagihan ? 'text-success' : 'text-secondary';
+                      ?>
+                      <span class="d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-wallet-fill <?= $walletClass ?>" title="Status pembayaran: <?= esc($status) ?>"></i>
+                        <i class="bi bi-cash <?= $cashClass ?>" title="Lunas: cocok nilai dibayar dengan mutasi bank"></i>
+                        <i class="bi bi-piggy-bank-fill <?= $coin1Class ?>" title="DP/ Dibayar: cocok nilai biaya_dibayar dengan mutasi bank"></i>
+                        <i class="bi bi-piggy-bank-fill <?= $coin2Class ?>" title="Pelunasan/ Tagihan: cocok nilai biaya_tagihan dengan mutasi bank"></i>
+                      </span>
                     </td>
                     <td>
                         <div class="btn-group" role="group">
@@ -235,6 +250,12 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
         const waUrl = formatWhatsAppLink(r.no_telp || '');
         const status = String(r.status_pembayaran || '').toLowerCase();
         const statusIconClass = status === 'dp 50%' ? 'text-warning' : (status === 'lunas' ? 'text-success' : 'text-secondary');
+        const matchDibayar = !!(r.paid_match_dibayar ?? r.paid_match);
+        const matchTagihan = !!r.paid_match_tagihan;
+        const dp50 = !!r.dp50;
+        const cashIconClass = (String(r.status_pembayaran || '').toLowerCase() === 'lunas' && matchDibayar) ? 'text-primary' : 'text-danger';
+        const coin1Class = matchDibayar ? (dp50 ? 'text-warning' : 'text-success') : 'text-secondary';
+        const coin2Class = matchTagihan ? 'text-success' : 'text-secondary';
         const isOn = !!r.akses_aktif;
         return (
           '<tr>' +
@@ -259,7 +280,14 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
                 '<label class="form-check-label"></label>' +
               '</div>' +
             '</td>' +
-            '<td><i class="bi bi-cash ' + statusIconClass + '"></i></td>' +
+            '<td>' +
+              '<span class="d-inline-flex align-items-center gap-2">' +
+                '<i class="bi bi-wallet-fill ' + statusIconClass + '" title="Status pembayaran"></i>' +
+                '<i class="bi bi-cash ' + cashIconClass + '" title="Lunas: cocok nilai dibayar dengan mutasi bank"></i>' +
+                '<i class="bi bi-piggy-bank-fill ' + coin1Class + '" title="DP/ Dibayar: cocok nilai biaya_dibayar dengan mutasi bank"></i>' +
+                '<i class="bi bi-piggy-bank-fill ' + coin2Class + '" title="Pelunasan/ Tagihan: cocok nilai biaya_tagihan dengan mutasi bank"></i>' +
+              '</span>' +
+            '</td>' +
             '<td>' +
               '<div class="btn-group" role="group">' +
                 '<a href="<?= base_url('admin/registrasi') ?>/' + id + '/edit" class="btn btn-sm btn-warning rounded-0 rounded-start" title="Edit"><i class="bi bi-pencil-square"></i></a>' +

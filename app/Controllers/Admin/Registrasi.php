@@ -42,7 +42,7 @@ class Registrasi extends BaseController
         $db = \Config\Database::connect();
         $qb = $db
             ->table('registrasi')
-            ->select('registrasi.id, registrasi.nama, registrasi.email, registrasi.no_telp, registrasi.lokasi, registrasi.status_pembayaran, registrasi.akses_aktif, registrasi.tanggal_daftar, kelas.nama_kelas')
+            ->select('registrasi.id, registrasi.nama, registrasi.email, registrasi.no_telp, registrasi.lokasi, registrasi.status_pembayaran, registrasi.akses_aktif, registrasi.tanggal_daftar, registrasi.biaya_dibayar, registrasi.biaya_tagihan, registrasi.jadwal_id, kelas.nama_kelas')
             ->join('kelas', 'kelas.kode_kelas = registrasi.kode_kelas', 'left')
             ->where('registrasi.deleted_at', null);
 
@@ -67,8 +67,43 @@ class Registrasi extends BaseController
             ->get()
             ->getResultArray();
 
+        // Format angka sesuai database bank_transactions: "10353.00"
+        $formatPlain = static function($num): string {
+            if (!is_numeric($num)) { return ''; }
+            return number_format((float)$num, 2, '.', '');
+        };
+
         // Batasi kolom yang dikirim ke client
-        $data = array_map(static function (array $r): array {
+        $data = array_map(function (array $r) use ($formatPlain): array {
+            // Ambil periode jadwal untuk batasi pencocokan
+            $dbLocal = \Config\Database::connect();
+            $jadwalId = (int) ($r['jadwal_id'] ?? 0);
+            $mulai = null; $selesai = null;
+            if ($jadwalId > 0) {
+                $jr = $dbLocal->table('jadwal_kelas')->select('tanggal_mulai, tanggal_selesai')->where('id', $jadwalId)->get()->getRowArray();
+                $mulai = $jr['tanggal_mulai'] ?? null;
+                $selesai = $jr['tanggal_selesai'] ?? null;
+            }
+            // Bangun himpunan amount_formatted terbatas periode jadwal
+            $btQB = $dbLocal->table('bank_transactions')->select('amount_formatted');
+            if (!empty($selesai)) {
+                $btQB->where('period <=', $selesai);
+            }
+            // Sesuai kebutuhan: batasi hanya sampai tanggal_selesai (tanpa batas bawah)
+            $bankAmountsRaw = $btQB->get()->getResultArray();
+            $bankAmountSet = [];
+            foreach ($bankAmountsRaw as $ba) {
+                $val = trim((string)($ba['amount_formatted'] ?? ''));
+                if ($val !== '') { $bankAmountSet[$val] = true; }
+            }
+
+            $dibayar = $r['biaya_dibayar'] ?? 0;
+            $tagihan = $r['biaya_tagihan'] ?? 0;
+            $formattedDibayar = $formatPlain($dibayar);
+            $formattedTagihan = $formatPlain($tagihan);
+            $matchDibayar = ($formattedDibayar !== '' && isset($bankAmountSet[$formattedDibayar]));
+            $matchTagihan = ($formattedTagihan !== '' && isset($bankAmountSet[$formattedTagihan]));
+            $dp50 = (is_numeric($dibayar) && is_numeric($tagihan) && (float)$tagihan > 0 && abs(((float)$dibayar) - 0.5 * (float)$tagihan) < 0.01);
             return [
                 'id' => (int) ($r['id'] ?? 0),
                 'nama' => (string) ($r['nama'] ?? ''),
@@ -79,6 +114,10 @@ class Registrasi extends BaseController
                 'status_pembayaran' => (string) ($r['status_pembayaran'] ?? ''),
                 'akses_aktif' => !!($r['akses_aktif'] ?? false),
                 'tanggal_daftar' => (string) ($r['tanggal_daftar'] ?? ''),
+                'paid_match' => $matchDibayar,
+                'paid_match_dibayar' => $matchDibayar,
+                'paid_match_tagihan' => $matchTagihan,
+                'dp50' => $dp50,
             ];
         }, $rows);
 
@@ -120,6 +159,46 @@ class Registrasi extends BaseController
             ->where('status', 'aktif')
             ->orderBy('nama', 'ASC')
             ->findAll();
+
+        $formatPlain = static function($num): string {
+            if (!is_numeric($num)) { return ''; }
+            return number_format((float)$num, 2, '.', '');
+        };
+
+        // Tambahkan flag indikator ke setiap row SSR
+        if (is_array($registrations)) {
+            foreach ($registrations as &$row) {
+                // Batasi pencocokan ke periode jadwal registrasi
+                $dbLocal = \Config\Database::connect();
+                $jadwalId = (int) ($row['jadwal_id'] ?? 0);
+                $mulai = null; $selesai = null;
+                if ($jadwalId > 0) {
+                    $jr = $dbLocal->table('jadwal_kelas')->select('tanggal_mulai, tanggal_selesai')->where('id', $jadwalId)->get()->getRowArray();
+                    $mulai = $jr['tanggal_mulai'] ?? null;
+                    $selesai = $jr['tanggal_selesai'] ?? null;
+                }
+                $btQB = $dbLocal->table('bank_transactions')->select('amount_formatted');
+                if (!empty($selesai)) { $btQB->where('period <=', $selesai); }
+                // Batasi hanya sampai tanggal_selesai (tanpa batas bawah)
+                $bankAmountsRaw = $btQB->get()->getResultArray();
+                $bankAmountSet = [];
+                foreach ($bankAmountsRaw as $ba) {
+                    $val = trim((string)($ba['amount_formatted'] ?? ''));
+                    if ($val !== '') { $bankAmountSet[$val] = true; }
+                }
+                $dibayar = $row['biaya_dibayar'] ?? 0;
+                $tagihan = $row['biaya_tagihan'] ?? 0;
+                $formattedDibayar = $formatPlain($dibayar);
+                $formattedTagihan = $formatPlain($tagihan);
+                $matchDibayar = ($formattedDibayar !== '' && isset($bankAmountSet[$formattedDibayar]));
+                $matchTagihan = ($formattedTagihan !== '' && isset($bankAmountSet[$formattedTagihan]));
+                $row['paid_match'] = $matchDibayar;
+                $row['paid_match_dibayar'] = $matchDibayar;
+                $row['paid_match_tagihan'] = $matchTagihan;
+                $row['dp50'] = (is_numeric($dibayar) && is_numeric($tagihan) && (float)$tagihan > 0 && abs(((float)$dibayar) - 0.5 * (float)$tagihan) < 0.01);
+            }
+            unset($row);
+        }
 
         return view('layout/admin_layout', [
             'title' => 'Data Registrasi',

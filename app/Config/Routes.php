@@ -168,6 +168,13 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     // Sidebar: Setting
     $routes->get('setting', 'Admin\Setting::index');
     $routes->get('setting/waha', 'Admin\Setting::waha');
+    // Setting: Transaksi submenu
+    $routes->get('setting/transaksi', 'Admin\Setting::transaksi');
+    // Setting: Payment Matches Audit
+    $routes->get('setting/payment-matches', 'Admin\PaymentMatches::index');
+    $routes->post('setting/payment-matches', 'Admin\PaymentMatches::index');
+    // Import Mutasi BCA (manual trigger)
+    $routes->post('setting/import-bca', 'Admin\Setting::imporBca');
     // WAHA management
     $routes->get('setting/waha/templates-json', 'Admin\Setting::wahaTemplatesJson');
     $routes->get('setting/waha/logs-json', 'Admin\Setting::wahaLogsJson');
@@ -194,4 +201,8 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
         ]);
     });
     $routes->post('setting/update', 'Admin\Setting::update');
+
+    // Audit Payment Matches
+    $routes->get('payment-matches', 'Admin\PaymentMatches::index');
+    $routes->post('payment-matches', 'Admin\PaymentMatches::index');
 });

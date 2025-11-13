@@ -32,6 +32,9 @@ $isSetting = ($seg2 === 'setting');
 // Submenu Setting
 $isSettingRoot = ($isSetting && ($seg3 === null));
 $isWaha = ($isSetting && ($seg3 === 'waha'));
+$isTransaksi = ($isSetting && ($seg3 === 'transaksi'));
+// Setting: Payment Matches Audit
+$isPaymentMatches = ($isSetting && ($seg3 === 'payment-matches'));
 // Role-based visibility
 $me = service('authentication')->user();
 $authz = service('authorization');
@@ -187,6 +190,18 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
               <a href="<?= base_url('admin/setting') ?>" class="nav-link <?= $isSettingRoot ? 'active' : '' ?>">
                 <i class="nav-icon fas fa-user"></i>
                 <p><small>Users</small></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<?= base_url('admin/setting/transaksi') ?>" class="nav-link <?= $isTransaksi ? 'active' : '' ?>">
+                <i class="nav-icon bi bi-receipt"></i>
+                <p><small>Transaksi</small></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<?= base_url('admin/setting/payment-matches') ?>" class="nav-link <?= $isPaymentMatches ? 'active' : '' ?>">
+                <i class="nav-icon bi bi-clipboard-check"></i>
+                <p><small>Audit Payment</small></p>
               </a>
             </li>
             <?php if ($isAdmin): ?>

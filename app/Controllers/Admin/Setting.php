@@ -3,7 +3,9 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\BankBcaScraper;
 use App\Libraries\WahaService;
+use App\Models\BankTransaction;
 use App\Models\UserModel;
 use App\Models\WahaLog;
 use App\Models\WahaQueue;
@@ -139,6 +141,55 @@ class Setting extends BaseController
             'title' => 'WA-API',
             'content' => view('admin/setting/waha'),
         ]);
+    }
+
+    public function transaksi()
+    {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        // Gunakan periode hari ini (format d/m/Y - d/m/Y) sesuai JSON KlikBCA
+        $todayFmt = date('d/m/Y');
+        $periodToday = $todayFmt . ' - ' . $todayFmt;
+        $tm = model(BankTransaction::class);
+        $rows = $tm->where('period', $periodToday)->orderBy('id', 'DESC')->findAll();
+
+        return view('layout/admin_layout', [
+            'title' => 'Transaksi',
+            'content' => view('admin/setting/transaksi', [
+                'rows' => $rows,
+                'period' => $periodToday,
+            ]),
+        ]);
+    }
+
+    public function imporBca()
+    {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        // Batasi hanya admin
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(site_url('admin/setting/transaksi'))->with('error', 'Akses ditolak: hanya admin yang dapat mengimpor mutasi.');
+        }
+
+        $runParser = (bool) ($this->request->getPost('run_parser') ?? true);
+        $jsonPath = (string) ($this->request->getPost('json_path') ?? 'C:/wamp64/www/test/KlikBCA/hasil/mutasirekening.json');
+        $scriptPath = (string) ($this->request->getPost('script_path') ?? 'C:/wamp64/www/test/KlikBCA/parsingbca.php');
+
+        $importer = new \App\Libraries\BcaImporter();
+        $result = $importer->importFromJson($runParser, $jsonPath, $scriptPath);
+
+        $flashType = $result['success'] ? 'message' : 'error';
+        $msg = $result['success']
+            ? ("Impor Mutasi BCA selesai. Inserted: {$result['inserted']}, Skipped: {$result['skipped']}")
+            : ('Gagal impor: ' . $result['message']);
+
+        return redirect()->to(site_url('admin/setting/transaksi'))->with($flashType, $msg);
     }
 
     public function create()
@@ -385,8 +436,12 @@ class Setting extends BaseController
     {
         $request = $this->request;
         $perPage = (int) ($request->getGet('per_page') ?? 5);
-        if ($perPage <= 0) { $perPage = 5; }
-        if ($perPage > 50) { $perPage = 50; }
+        if ($perPage <= 0) {
+            $perPage = 5;
+        }
+        if ($perPage > 50) {
+            $perPage = 50;
+        }
         $page = max(1, (int) ($request->getGet('page') ?? 1));
         $start = ($page - 1) * $perPage;
 

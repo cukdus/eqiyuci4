@@ -4,7 +4,20 @@ FROM php:8.2-apache
 # Install required extensions and tools
 RUN apt-get update && apt-get install -y \
     libzip-dev unzip git \
- && docker-php-ext-install pdo_mysql mysqli \
+    libpng-dev libjpeg-dev libwebp-dev libfreetype6-dev \
+    libxml2-dev libonig-dev libcurl4-openssl-dev \
+    ca-certificates cron supervisor \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+ && docker-php-ext-install \
+    gd \
+    zip \
+    pdo_mysql \
+    mysqli \
+    intl \
+    bcmath \
+    dom \
+    mbstring \
+    curl \
  && a2enmod rewrite \
  && rm -rf /var/lib/apt/lists/*
 
@@ -30,8 +43,18 @@ RUN mkdir -p public/uploads \
  && chmod -R 775 writable public/uploads
 
 # Environment and ports
-ENV CI_ENVIRONMENT=production
+ENV CI_ENVIRONMENT=production \
+    BCA_CACERT_PATH=/etc/ssl/certs/ca-certificates.crt
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Copy Supervisor config and cron schedule
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/cron /etc/cron.d/app
+RUN chmod 0644 /etc/cron.d/app \
+ && touch /var/log/cron.log
+
+# Ensure cron uses our schedule
+RUN crontab /etc/cron.d/app
+
+# Start Supervisor to run Apache and cron
+CMD ["/usr/bin/supervisord", "-n"]
