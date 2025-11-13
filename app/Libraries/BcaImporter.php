@@ -12,11 +12,43 @@ class BcaImporter
      * @param string|null $scriptPath Path skrip parsingbca.php (jika runParser=true)
      * @return array [success=>bool, inserted=>int, skipped=>int, message=>string]
      */
-    public function importFromJson(bool $runParser = false, string $jsonPath = 'C:/wamp64/www/test/KlikBCA/hasil/mutasirekening.json', ?string $scriptPath = 'C:/wamp64/www/test/KlikBCA/parsingbca.php'): array
+    public function importFromJson(bool $runParser = false, string $jsonPath = '', ?string $scriptPath = null): array
     {
+        // Resolve defaults for Docker/Linux or Windows via ENV and OS detection
+        // Defaults strictly inside the application
+        $defaultJson = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'klikbca' . DIRECTORY_SEPARATOR . 'hasil' . DIRECTORY_SEPARATOR . 'mutasirekening.json';
+        $defaultScript = rtrim(ROOTPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'parsingbca.php';
+
+        $jsonPath = $jsonPath !== '' ? $jsonPath : ((string)(env('BCA_JSON_PATH') ?? $defaultJson));
+        $scriptPath = $scriptPath ?? (env('BCA_PARSER_PATH') ?: $defaultScript);
+
+        // Enforce paths to be inside ROOTPATH or WRITEPATH
+        $normalize = static function(string $p): string { return str_replace('\\', '/', $p); };
+        $allowedBases = [
+            rtrim($normalize(ROOTPATH), '/'),
+            rtrim($normalize(WRITEPATH), '/'),
+        ];
+        $isAllowed = static function(string $p) use ($allowedBases, $normalize): bool {
+            $np = $normalize($p);
+            foreach ($allowedBases as $base) {
+                if (str_starts_with($np, $base)) { return true; }
+            }
+            return false;
+        };
+
+        if (!$isAllowed($jsonPath)) {
+            return ['success' => false, 'inserted' => 0, 'skipped' => 0, 'message' => 'Path JSON di luar aplikasi tidak diizinkan'];
+        }
+
         if ($runParser) {
+            if (!function_exists('shell_exec')) {
+                return ['success' => false, 'inserted' => 0, 'skipped' => 0, 'message' => 'shell_exec tidak tersedia, tidak bisa menjalankan parser'];
+            }
             if (!is_file((string)$scriptPath)) {
                 return ['success' => false, 'inserted' => 0, 'skipped' => 0, 'message' => 'Script parsingbca.php tidak ditemukan'];
+            }
+            if (!$isAllowed((string)$scriptPath)) {
+                return ['success' => false, 'inserted' => 0, 'skipped' => 0, 'message' => 'Path script parser di luar aplikasi tidak diizinkan'];
             }
             $cmd = 'php ' . escapeshellarg((string)$scriptPath);
             @shell_exec($cmd);

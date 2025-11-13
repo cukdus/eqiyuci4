@@ -4,8 +4,11 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Cron jobs for automation
 # Adjust schedules as needed.
 
-# Scrape KlikBCA statement hourly (uses BANK_USER_ID, BANK_PIN, BCA_* envs)
-5 * * * * www-data /usr/local/bin/php /var/www/html/spark bank:scrape >> /var/log/cron.log 2>&1
+# Import BCA JSON (internal parser optional) every day at 04:50
+50 4 * * * www-data /usr/local/bin/php /var/www/html/spark bank:import-bca --skip-run >> /var/log/cron.log 2>&1
 
-# Sync payment matches hourly
+# Sync payment matches hourly at minute 10
 10 * * * * www-data /usr/local/bin/php /var/www/html/spark payment:sync-matches --verbose >> /var/log/cron.log 2>&1
+
+# Send H-3 reminders (pelunasan + jadwal) daily at 06:00
+0 6 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-h3 --scenario=all >> /var/log/cron.log 2>&1
