@@ -642,6 +642,207 @@ class Registrasi extends BaseController
         return redirect()->to(base_url('admin/registrasi'))->with('message', 'Data registrasi berhasil ditambahkan');
     }
 
+    /**
+     * Kirim pesan WAHA secara manual untuk satu registrasi.
+     * Default: registrasi_peserta, opsi: registrasi_admin.
+     */
+    public function sendWahaRegistrasi($id)
+    {
+        $id = (int) $id;
+        if ($id <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'registrasi_id tidak valid']);
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $row = $db
+                ->table('registrasi r')
+                ->select('r.*, k.nama_kelas, jk.tanggal_mulai, jk.tanggal_selesai, jk.id AS jadwal_id')
+                ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+                ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
+                ->where('r.id', $id)
+                ->where('r.deleted_at', null)
+                ->get()->getRowArray();
+
+            if (!$row) {
+                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Registrasi tidak ditemukan']);
+            }
+
+            $payload = $this->buildTemplatePayload($row, $db);
+
+            $ws = new \App\Libraries\WahaService();
+            if (!$ws->isConfigured()) {
+                return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'WAHA belum dikonfigurasi']);
+            }
+            // Tentukan key template: default peserta
+            $reqJson = $this->request->getJSON(true) ?? [];
+            $key = (string) ($reqJson['key'] ?? 'registrasi_peserta');
+
+            if ($key === 'registrasi_admin') {
+                // Kirim ke admin
+                $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_admin')->first();
+                $template = '';
+                if ($tplRow && ($tplRow['enabled'] ?? false)) {
+                    $template = (string) ($tplRow['template'] ?? '');
+                }
+                if ($template === '') {
+                    $template = '${registrasi_admin}: pendaftaran baru {{nama}} untuk {{nama_kelas}} {{kota}} jadwal {{jadwal}}. Status {{status_pembayaran}}, tagihan {{jumlah_tagihan}}';
+                }
+                $adminPhone = (string) (env('WAHA_ADMIN_PHONE') ?? '');
+                if ($adminPhone === '') {
+                    $cfg = model(\App\Models\WahaConfig::class)->where('key', 'admin_phone')->first();
+                    $adminPhone = (string) ($cfg['value'] ?? '');
+                }
+                if ($adminPhone === '') {
+                    return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Nomor admin belum dikonfigurasi']);
+                }
+                $message = $ws->renderTemplate($template, $payload);
+                $res = $ws->sendMessage($adminPhone, $message);
+                $this->upsertWahaLog($id, 'registrasi_admin', 'admin', $adminPhone, $message, (($res['success'] ?? false) ? 'success' : 'failed'), (($res['success'] ?? false) ? null : ($res['message'] ?? '')));
+                return $this->response->setJSON([
+                    'success' => (bool) ($res['success'] ?? false),
+                    'message' => $res['message'] ?? (($res['success'] ?? false) ? 'Terkirim' : 'Gagal mengirim'),
+                ]);
+            } elseif ($key === 'registrasi_both') {
+                // Kirim ke peserta lalu admin
+                // Peserta
+                $tplPeserta = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_peserta')->first();
+                $templatePeserta = '';
+                if ($tplPeserta && ($tplPeserta['enabled'] ?? false)) {
+                    $templatePeserta = (string) ($tplPeserta['template'] ?? '');
+                }
+                if ($templatePeserta === '') {
+                    $templatePeserta = '${registrasi_peserta}: {{nama}} mendaftar {{nama_kelas}} di {{kota}}. Status {{status_pembayaran}}. Tagihan {{jumlah_tagihan}}. Dibayar {{jumlah_dibayar}}. Jadwal {{jadwal}}. Voucher {{voucher}}';
+                }
+                $messagePeserta = $ws->renderTemplate($templatePeserta, $payload);
+                $phonePeserta = (string) ($row['no_telp'] ?? '');
+                $resPeserta = $ws->sendMessage($phonePeserta, $messagePeserta);
+                $this->upsertWahaLog($id, 'registrasi_peserta', 'user', $phonePeserta, $messagePeserta, (($resPeserta['success'] ?? false) ? 'success' : 'failed'), (($resPeserta['success'] ?? false) ? null : ($resPeserta['message'] ?? '')));
+
+                // Admin
+                $tplAdmin = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_admin')->first();
+                $templateAdmin = '';
+                if ($tplAdmin && ($tplAdmin['enabled'] ?? false)) {
+                    $templateAdmin = (string) ($tplAdmin['template'] ?? '');
+                }
+                if ($templateAdmin === '') {
+                    $templateAdmin = '${registrasi_admin}: pendaftaran baru {{nama}} untuk {{nama_kelas}} {{kota}} jadwal {{jadwal}}. Status {{status_pembayaran}}, tagihan {{jumlah_tagihan}}, voucher {{voucher}}';
+                }
+                $adminPhone = (string) (env('WAHA_ADMIN_PHONE') ?? '');
+                if ($adminPhone === '') {
+                    $cfg = model(\App\Models\WahaConfig::class)->where('key', 'admin_phone')->first();
+                    $adminPhone = (string) ($cfg['value'] ?? '');
+                }
+                if ($adminPhone === '') {
+                    // tetap kembalikan hasil peserta, tapi beri pesan admin belum dikonfig
+                    $combinedSuccess = (bool) ($resPeserta['success'] ?? false);
+                    $msg = ($resPeserta['success'] ?? false) ? 'Peserta terkirim; admin belum dikonfigurasi' : ('Gagal peserta: ' . ($resPeserta['message'] ?? '')); 
+                    return $this->response->setStatusCode($combinedSuccess ? 200 : 400)->setJSON(['success' => $combinedSuccess, 'message' => $msg]);
+                }
+                $messageAdmin = $ws->renderTemplate($templateAdmin, $payload);
+                $resAdmin = $ws->sendMessage($adminPhone, $messageAdmin);
+                $this->upsertWahaLog($id, 'registrasi_admin', 'admin', $adminPhone, $messageAdmin, (($resAdmin['success'] ?? false) ? 'success' : 'failed'), (($resAdmin['success'] ?? false) ? null : ($resAdmin['message'] ?? '')));
+
+                $combinedSuccess = ((bool) ($resPeserta['success'] ?? false)) && ((bool) ($resAdmin['success'] ?? false));
+                $message = 'Peserta: ' . (($resPeserta['success'] ?? false) ? 'OK' : ('ERR ' . ($resPeserta['message'] ?? ''))) . ', Admin: ' . (($resAdmin['success'] ?? false) ? 'OK' : ('ERR ' . ($resAdmin['message'] ?? '')));
+                return $this->response->setStatusCode($combinedSuccess ? 200 : 400)->setJSON(['success' => $combinedSuccess, 'message' => $message]);
+            } else {
+                // Default: kirim ke peserta
+                $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_peserta')->first();
+                $template = '';
+                if ($tplRow && ($tplRow['enabled'] ?? false)) {
+                    $template = (string) ($tplRow['template'] ?? '');
+                }
+                if ($template === '') {
+                    $template = '${registrasi_peserta}: {{nama}} mendaftar {{nama_kelas}} di {{kota}}. Status {{status_pembayaran}}. Tagihan {{jumlah_tagihan}}. Dibayar {{jumlah_dibayar}}. Jadwal {{jadwal}}. Voucher {{voucher}}';
+                }
+                $message = $ws->renderTemplate($template, $payload);
+                $phone = (string) ($row['no_telp'] ?? '');
+                $res = $ws->sendMessage($phone, $message);
+                $this->upsertWahaLog($id, 'registrasi_peserta', 'user', $phone, $message, (($res['success'] ?? false) ? 'success' : 'failed'), (($res['success'] ?? false) ? null : ($res['message'] ?? '')));
+                return $this->response->setJSON([
+                    'success' => (bool) ($res['success'] ?? false),
+                    'message' => $res['message'] ?? (($res['success'] ?? false) ? 'Terkirim' : 'Gagal mengirim'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    protected function buildTemplatePayload(array $r, $db): array
+    {
+        $namaKelas = (string) ($r['nama_kelas'] ?? '');
+        $kota = (string) ($r['lokasi'] ?? '');
+        $kabupaten = (string) ($r['kabupaten'] ?? '');
+        $provinsi = (string) ($r['provinsi'] ?? '');
+        $noTelp = (string) ($r['no_telp'] ?? '');
+        $email = (string) ($r['email'] ?? '');
+        $statusPembayaran = (string) ($r['status_pembayaran'] ?? '');
+        $jumlahTagihan = (float) ($r['biaya_tagihan'] ?? 0);
+        $jumlahDibayar = (float) ($r['biaya_dibayar'] ?? 0);
+        $jadwalMulai = (string) ($r['tanggal_mulai'] ?? '');
+        $jadwalSelesai = (string) ($r['tanggal_selesai'] ?? '');
+        $jadwalLabel = trim($jadwalMulai . ($jadwalSelesai ? (' s/d ' . $jadwalSelesai) : ''));
+
+        // Voucher payload
+        $voucherCode = (string) ($r['kode_voucher'] ?? '');
+        $voucherLabel = '';
+        $diskonPersen = null;
+        if ($voucherCode !== '') {
+            try {
+                $vrow = $db->table('voucher')->where('kode_voucher', $voucherCode)->get()->getRowArray();
+                if ($vrow) {
+                    $diskonPersen = isset($vrow['diskon_persen']) ? (int) $vrow['diskon_persen'] : null;
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+            $voucherLabel = $voucherCode . (($diskonPersen !== null && $diskonPersen > 0) ? (' (Diskon ' . $diskonPersen . '%)') : '');
+        }
+
+        return [
+            'registrasi_id' => (int) ($r['id'] ?? 0),
+            'nama' => (string) ($r['nama'] ?? ''),
+            'nama_kelas' => $namaKelas,
+            'jadwal' => $jadwalLabel,
+            'kota' => $kota,
+            'kabupaten' => $kabupaten,
+            'provinsi' => $provinsi,
+            'no_tlp' => $noTelp,
+            'email' => $email,
+            'status_pembayaran' => $statusPembayaran,
+            'jumlah_tagihan' => number_format($jumlahTagihan, 0, ',', '.'),
+            'jumlah_dibayar' => number_format($jumlahDibayar, 0, ',', '.'),
+            'voucher' => $voucherLabel,
+            'diskon_persen' => $diskonPersen,
+        ];
+    }
+
+    /**
+     * Upsert log WAHA untuk menghindari duplicate key pada (registrasi_id, scenario, recipient)
+     */
+    protected function upsertWahaLog(int $registrasiId, string $scenario, string $recipient, string $phone, string $message, string $status, ?string $error): void
+    {
+        $lm = model(\App\Models\WahaLog::class);
+        $existing = $lm->where('registrasi_id', $registrasiId)->where('scenario', $scenario)->where('recipient', $recipient)->first();
+        $data = [
+            'registrasi_id' => $registrasiId,
+            'scenario' => $scenario,
+            'recipient' => $recipient,
+            'phone' => $phone,
+            'message' => $message,
+            'status' => $status,
+            'error' => $error,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+        if ($existing && isset($existing['id'])) {
+            $lm->update((int) $existing['id'], $data);
+        } else {
+            $lm->insert($data);
+        }
+    }
+
     public function edit($id)
     {
         $model = model(RegistrasiModel::class);

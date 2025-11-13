@@ -148,6 +148,8 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->post('registrasi/(:num)/delete', 'Admin\Registrasi::delete/$1');
     $routes->post('registrasi/(:num)/toggle-akses', 'Admin\Registrasi::toggleAkses/$1');
     $routes->post('registrasi/check-voucher', 'Admin\Registrasi::checkVoucher');
+    // Kirim WAHA registrasi_peserta manual
+    $routes->post('registrasi/(:num)/send-registrasi-waha', 'Admin\Registrasi::sendWahaRegistrasi/$1');
 
     // Sidebar: Sertifikat (controller-based)
     $routes->get('sertifikat', 'Admin\Sertifikat::index');

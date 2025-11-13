@@ -4,11 +4,14 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Cron jobs for automation
 # Adjust schedules as needed.
 
-# Import BCA JSON (internal parser optional) at 09:00, 12:00, 15:00, 18:00
-0 9,12,15,18 * * * www-data /usr/local/bin/php /var/www/html/spark bank:scrape >> /var/log/cron.log 2>&1
+# Import BCA JSON (skip run external parser) at 09:00, 12:00, 15:00, 18:00
+0 9,12,15,18 * * * www-data /usr/local/bin/php /var/www/html/spark bank:import-bca --skip-run >> /var/log/cron.log 2>&1
 
 # Sync payment matches at 09:01, 12:01, 15:01, 18:01
 1 9,12,15,18 * * * www-data /usr/local/bin/php /var/www/html/spark payment:sync-matches --verbose >> /var/log/cron.log 2>&1
 
-# Send H-3 reminders (pelunasan + jadwal) daily at 09:00
-0 9 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-h3 --scenario=all >> /var/log/cron.log 2>&1
+# Send H-3 tagihan (DP50 peserta/admin + lunas peserta) daily at 09:00
+0 9 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-tagihan-h3 >> /var/log/cron.log 2>&1
+
+# Send lulus_peserta messages at 21:00 (akhir jadwal kelas)
+0 21 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-lulus >> /var/log/cron.log 2>&1

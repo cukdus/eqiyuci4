@@ -74,9 +74,9 @@
                       <a href="<?= esc($waUrl) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-success">
                         <i class="bi bi-whatsapp me-1"></i>
                       </a>
-                      <a href="<?= esc($waUrl) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-warning">
-                        <i class="bi bi-whatsapp me-1"></i>
-                      </a>
+                      <button type="button" class="btn btn-sm btn-warning btn-send-waha" data-id="<?= (int)($r['id'] ?? 0) ?>" title="Kirim WAHA peserta+admin">
+                        <i class="bi bi-send"></i>
+                      </button>
                       </div>
                     </td>
                     <?php
@@ -265,7 +265,7 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
             '<td>' +
               '<div class="btn-group">' +
                 '<a href="' + waUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-success"><i class="bi bi-whatsapp me-1"></i></a>' +
-                '<a href="' + waUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-warning"><i class="bi bi-whatsapp me-1"></i></a>' +
+                '<button type="button" class="btn btn-sm btn-warning btn-send-waha" data-id="' + id + '" title="Kirim WAHA peserta+admin"><i class="bi bi-send"></i></button>' +
               '</div>' +
             '</td>' +
             '<td>' + (function(){
@@ -332,6 +332,38 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
       pageInfo.textContent = 'Halaman ' + meta.page + ' dari ' + meta.total_pages + ' • Total ' + meta.total;
     }
 
+    async function sendWahaRegistrasi(id) {
+      const url = '<?= base_url('admin/registrasi') ?>/' + id + '/send-registrasi-waha';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': '<?= csrf_hash() ?>'
+          },
+          body: JSON.stringify({ key: 'registrasi_both' })
+        });
+        const j = await res.json();
+        alert(j.success ? 'Pesan WAHA peserta+admin terkirim' : ('Gagal kirim: ' + (j.message || '')));
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function bindSendButtons() {
+      document.querySelectorAll('.btn-send-waha').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const id = this.getAttribute('data-id');
+          if (!id) return;
+          sendWahaRegistrasi(id);
+        });
+      });
+    }
+
+    // Bind for initial SSR
+    bindSendButtons();
+
     function fetchData() {
       const params = new URLSearchParams({
         page: String(state.page),
@@ -350,7 +382,7 @@ echo json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | J
       // Sembunyikan pager SSR jika ada
       const ssrPager = document.querySelector('.card-footer .pagination');
       if (ssrPager) ssrPager.style.display = 'none';
-      fetchData().then(json => { renderRows(json.data || []); updatePager(json.meta || null); });
+      fetchData().then(json => { renderRows(json.data || []); updatePager(json.meta || null); bindSendButtons(); });
     }
 
     // Bind search submit to AJAX
