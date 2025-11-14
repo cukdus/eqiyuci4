@@ -50,8 +50,11 @@ class BcaImporter
             if (!$isAllowed((string)$scriptPath)) {
                 return ['success' => false, 'inserted' => 0, 'skipped' => 0, 'message' => 'Path script parser di luar aplikasi tidak diizinkan'];
             }
-            $cmd = 'php ' . escapeshellarg((string)$scriptPath);
-            @shell_exec($cmd);
+            $cmd = 'php ' . escapeshellarg((string)$scriptPath) . ' 2>&1';
+            $parserOut = (string) @shell_exec($cmd);
+            $logFile = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'klikbca.log';
+            $ts = date('Y-m-d H:i:s');
+            @file_put_contents($logFile, "[$ts] RUN parsingbca.php\n" . $parserOut . "\n", FILE_APPEND);
         }
 
         if (!is_file($jsonPath)) {

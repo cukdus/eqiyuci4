@@ -23,6 +23,10 @@ class BankScrape extends BaseCommand
             return;
         }
 
+        if (isset($result['message']) && is_string($result['message']) && $result['message'] !== '') {
+            CLI::write($result['message']);
+        }
+
         CLI::write("Scrape & impor selesai. Inserted: {$result['inserted']}, Skipped (duplikat): {$result['skipped']}");
     }
 }
