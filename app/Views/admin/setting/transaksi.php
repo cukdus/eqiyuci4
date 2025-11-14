@@ -11,7 +11,7 @@
             <form method="post" action="<?= site_url('admin/setting/import-bca'); ?>" onsubmit="return confirm('Jalankan impor Mutasi BCA sekarang?');" class="d-inline ms-auto">
                   <?= csrf_field(); ?>
                   <input type="hidden" name="run_parser" value="1">
-                  <button type="submit" class="btn btn-sm btn-primary ms-auto"><i class="bi bi-cloud-download"></i> Impor Mutasi BCA</button>
+                  <button type="submit" class="btn btn-sm btn-primary ms-auto"><i class="bi bi-cloud-download"></i> Scrape & Impor Mutasi BCA</button>
                 </form>
           </div>
           <div class="card-body">

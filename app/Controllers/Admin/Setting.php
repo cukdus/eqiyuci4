@@ -177,12 +177,21 @@ class Setting extends BaseController
             return redirect()->to(site_url('admin/setting/transaksi'))->with('error', 'Akses ditolak: hanya admin yang dapat mengimpor mutasi.');
         }
 
-        $runParser = (bool) ($this->request->getPost('run_parser') ?? true);
-        $jsonPath = (string) ($this->request->getPost('json_path') ?? '');
-        $scriptPath = (string) ($this->request->getPost('script_path') ?? '');
-
-        $importer = new \App\Libraries\BcaImporter();
-        $result = $importer->importFromJson($runParser, $jsonPath, $scriptPath !== '' ? $scriptPath : null);
+        $spark = rtrim(ROOTPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'spark';
+        $cmd = 'php ' . escapeshellarg($spark) . ' bank:scrape';
+        $out = function_exists('shell_exec') ? @shell_exec($cmd . ' 2>&1') : '';
+        if (is_string($out) && $out !== '') {
+            $ins = 0; $sk = 0; $ok = false;
+            if (preg_match('/Inserted:\s*(\d+),\s*Skipped:\s*(\d+)/', $out, $m)) {
+                $ins = (int)($m[1] ?? 0);
+                $sk = (int)($m[2] ?? 0);
+                $ok = true;
+            }
+            $result = ['success' => $ok ?: true, 'inserted' => $ins, 'skipped' => $sk, 'message' => trim($out)];
+        } else {
+            $importer = new \App\Libraries\BcaImporter();
+            $result = $importer->importFromJson(true);
+        }
 
         $flashType = $result['success'] ? 'message' : 'error';
         $msg = $result['success']
