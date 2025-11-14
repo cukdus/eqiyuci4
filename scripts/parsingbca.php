@@ -211,12 +211,19 @@ $getRowVal = function ($html, $label) {
         return trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8'));
     return null;
 };
+$getVal = function ($html, array $labels) use ($getRowVal) {
+    foreach ($labels as $lab) {
+        $v = $getRowVal($html, $lab);
+        if ($v !== null && $v !== '') return $v;
+    }
+    return null;
+};
 
 $header = [
-    'account_number' => $getRowVal($o['out'], 'NO. REK.'),
-    'name' => $getRowVal($o['out'], 'NAMA'),
-    'period' => $getRowVal($o['out'], 'PERIODE'),
-    'currency' => $getRowVal($o['out'], 'MATA UANG'),
+    'account_number' => $getVal($o['out'], ['NO. REK.', 'NO. REKENING', 'No. Rekening', 'Account Number']),
+    'name' => $getVal($o['out'], ['NAMA', 'Nama', 'Name']),
+    'period' => $getVal($o['out'], ['PERIODE', 'Periode', 'Period']),
+    'currency' => $getVal($o['out'], ['MATA UANG', 'Mata Uang', 'Currency']),
 ];
 
 $tx = [];
@@ -257,33 +264,44 @@ foreach ($rows as $tr) {
     }, $segments), function ($x) {
         return $x !== '' && stripos($x, 'MENU UTAMA') === false && stripos($x, 'LOGOUT') === false;
     }));
-    $amount = null;
     $type = null;
     if ($tds->length >= 3) {
         $typeCandidate = strtoupper(trim($tds->item(2)->textContent));
-        if ($typeCandidate === 'CR' || $typeCandidate === 'DR')
-            $type = $typeCandidate;
-    }
-    if (!empty($segments)) {
-        $last = $segments[count($segments) - 1];
-        if (preg_match('/([0-9.,]+)\s*(CR|DR)?$/i', $last, $m)) {
-            $amount = $m[1];
-            if (!$type && isset($m[2]) && $m[2] !== '')
-                $type = strtoupper($m[2]);
-            array_pop($segments);
+        if (preg_match('/\b(CR|DR|DB)\b/', $typeCandidate, $tm)) {
+            $type = ($tm[1] === 'DB') ? 'DR' : $tm[1];
         }
     }
-    $info = trim(implode(' ', $segments));
-    if ($amount === null || !($type === 'CR' || $type === 'DR'))
+    $amtCellText = '';
+    if ($tds->length >= 4) {
+        $amtCellText = trim($tds->item(3)->textContent);
+    } else {
+        $amtCellText = trim($tds->item(2)->textContent);
+    }
+    $money = function ($s) {
+        $c = preg_replace('/[^0-9.,-]/', '', (string) $s);
+        if (strpos($c, ',') !== false && strpos($c, '.') !== false) {
+            $c = str_replace('.', '', $c);
+            $c = str_replace(',', '.', $c);
+        } elseif (strpos($c, ',') !== false) {
+            $c = str_replace(',', '.', $c);
+        } elseif (substr_count($c, '.') > 1) {
+            $c = str_replace('.', '', $c);
+        }
+        $n = (float) $c;
+        $fmt = number_format($n, 2, '.', '');
+        return [$n, $fmt];
+    };
+    list($amountNum, $amountFmt) = $money($amtCellText);
+    if (!($type === 'CR' || $type === 'DR'))
         continue;
-    $amountClean = preg_replace('/[^0-9.,]/', '', (string) $amount);
-    $amountClean = str_replace(',', '', $amountClean);
-    $amountNum = round((float) $amountClean, 2);
+    if ($amountNum <= 0)
+        continue;
+    $info = trim(implode(' ', $segments));
     $tx[] = [
         'date' => $date,
         'type' => $type,
         'amount' => $amountNum,
-        'amount_formatted' => number_format($amountNum, 2, '.', ''),
+        'amount_formatted' => $amountFmt,
         'info' => $info,
     ];
 }
@@ -293,9 +311,16 @@ $sc = $getRowVal($o['out'], 'MUTASI KREDIT');
 $sd = $getRowVal($o['out'], 'MUTASI DEBET');
 $sl = $getRowVal($o['out'], 'SALDO AKHIR');
 $norm = function ($s) {
-    $c = preg_replace('/[^0-9.,]/', '', (string) $s);
-    $c = str_replace(',', '', $c);
-    $n = round((float) $c, 2);
+    $c = preg_replace('/[^0-9.,-]/', '', (string) $s);
+    if (strpos($c, ',') !== false && strpos($c, '.') !== false) {
+        $c = str_replace('.', '', $c);
+        $c = str_replace(',', '.', $c);
+    } elseif (strpos($c, ',') !== false) {
+        $c = str_replace(',', '.', $c);
+    } elseif (substr_count($c, '.') > 1) {
+        $c = str_replace('.', '', $c);
+    }
+    $n = (float) $c;
     return [$n, number_format($n, 2, '.', '')];
 };
 list($saNum, $saFmt) = $norm($sa);
