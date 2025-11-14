@@ -3,12 +3,36 @@
 // Menggunakan kredensial dari ENV: BANK_USER_ID / BANK_PIN (fallback: KLIK_BCA_USER / KLIK_BCA_PASS)
 
 // Kredensial
-$username = getenv('BANK_USER_ID');
-$password = getenv('BANK_PIN');
-if ((!is_string($username) || $username === '') || (!is_string($password) || $password === '')) {
-    $username = getenv('KLIK_BCA_USER');
-    $password = getenv('KLIK_BCA_PASS');
-}
+$get = static function (string $key, ?string $fallback = null): string {
+    $v = getenv($key);
+    if (is_string($v) && $v !== '') {
+        return $v;
+    }
+    $root = dirname(__DIR__);
+    $envFile = $root . DIRECTORY_SEPARATOR . '.env';
+    if (is_file($envFile)) {
+        $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) {
+                continue;
+            }
+            [$k, $val] = explode('=', $line, 2);
+            $k = trim($k);
+            $val = trim($val, " \t\"'");
+            if ($k !== '') {
+                putenv($k . '=' . $val);
+            }
+        }
+        $v = getenv($key);
+        if (is_string($v) && $v !== '') {
+            return $v;
+        }
+    }
+    return (string) ($fallback ?? '');
+};
+$username = $get('BANK_USER_ID', $get('KLIK_BCA_USER'));
+$password = $get('BANK_PIN', $get('KLIK_BCA_PASS'));
 if (!is_string($username) || !is_string($password) || $username === '' || $password === '') {
     fwrite(STDERR, "Kredensial tidak tersedia (BANK_USER_ID/BANK_PIN atau KLIK_BCA_USER/KLIK_BCA_PASS)\n");
     exit(1);
@@ -20,18 +44,22 @@ $ua = 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like G
 $root = dirname(__DIR__);
 $writable = $root . DIRECTORY_SEPARATOR . 'writable';
 $cookieDir = $writable . DIRECTORY_SEPARATOR . 'cookies';
-if (!is_dir($cookieDir)) { @mkdir($cookieDir, 0755, true); }
+if (!is_dir($cookieDir)) {
+    @mkdir($cookieDir, 0755, true);
+}
 $cookie = $cookieDir . DIRECTORY_SEPARATOR . 'klikbca_m.cookie';
 @touch($cookie);
 
 // CA bundle optional via ENV
-$caEnv = getenv('BCA_CACERT_PATH');
+$caEnv = $get('BCA_CACERT_PATH');
 $ca = (is_string($caEnv) && $caEnv !== '' && file_exists($caEnv)) ? $caEnv : null;
 $verify = $ca !== null;
 
 // Direktori hasil JSON
 $hasilDir = $writable . DIRECTORY_SEPARATOR . 'klikbca' . DIRECTORY_SEPARATOR . 'hasil';
-if (!is_dir($hasilDir)) { @mkdir($hasilDir, 0755, true); }
+if (!is_dir($hasilDir)) {
+    @mkdir($hasilDir, 0755, true);
+}
 
 function go($url, $opt = [], $referer = null, $fetchSite = 'none')
 {
@@ -79,7 +107,9 @@ function go($url, $opt = [], $referer = null, $fetchSite = 'none')
         $headers[] = 'Content-Type: application/x-www-form-urlencoded';
     }
     $def[CURLOPT_HTTPHEADER] = $headers;
-    foreach ($opt as $k => $v) { $def[$k] = $v; }
+    foreach ($opt as $k => $v) {
+        $def[$k] = $v;
+    }
     curl_setopt_array($ch, $def);
     $out = curl_exec($ch);
     $info = curl_getinfo($ch);
@@ -95,19 +125,19 @@ if ($o['ern'] || $o['err']) {
     fwrite(STDERR, "HTTP error saat memuat login: {$o['err']}\n");
     exit(1);
 }
-if (!preg_match('/const\s+publicKeyString\s*=\s*"([A-Za-z0-9+\/=]+)"/Us', (string)$o['out'], $pkm)) {
+if (!preg_match('/const\s+publicKeyString\s*=\s*"([A-Za-z0-9+\/=]+)"/Us', (string) $o['out'], $pkm)) {
     fwrite(STDERR, "Public key tidak ditemukan\n");
     exit(1);
 }
-if (!preg_match('/var\s+dtSign\s*=\s*new\s+Date\((\d+),\s*parseInt\("(\d+)"\)\-1,\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)/Us', (string)$o['out'], $dm)) {
+if (!preg_match('/var\s+dtSign\s*=\s*new\s+Date\((\d+),\s*parseInt\("(\d+)"\)\-1,\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)/Us', (string) $o['out'], $dm)) {
     fwrite(STDERR, "dtSign tidak ditemukan\n");
     exit(1);
 }
 
 $pubKeyPem = "-----BEGIN PUBLIC KEY-----\n" . $pkm[1] . "\n-----END PUBLIC KEY-----\n";
-$base = mktime((int)$dm[4], (int)$dm[5], (int)$dm[6], (int)$dm[2], (int)$dm[3], (int)$dm[1]);
+$base = mktime((int) $dm[4], (int) $dm[5], (int) $dm[6], (int) $dm[2], (int) $dm[3], (int) $dm[1]);
 $now = time();
-$diff = 0; // gunakan nol untuk kesederhanaan
+$diff = 0;  // gunakan nol untuk kesederhanaan
 $dt = $base + $diff;
 $formatedDate = date('YmdHis', $dt);
 $plain = $password . $formatedDate;
@@ -131,7 +161,7 @@ $o = go('https://m.klikbca.com/authentication.do', [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => http_build_query($posts),
 ], 'https://m.klikbca.com/login.jsp', 'same-origin');
-if (!preg_match('/authentication\.do\?value\(actions\)=menu/i', (string)$o['out']) && !preg_match('/MENU UTAMA/i', (string)$o['out'])) {
+if (!preg_match('/authentication\.do\?value\(actions\)=menu/i', (string) $o['out']) && !preg_match('/MENU UTAMA/i', (string) $o['out'])) {
     fwrite(STDERR, "Login gagal\n");
     exit(1);
 }
@@ -142,7 +172,9 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt', [CURLOP
 
 // 4) Submit form untuk tanggal hari ini
 $st = time();
-$sd = date('d', $st); $sm = date('m', $st); $sy = date('Y', $st);
+$sd = date('d', $st);
+$sm = date('m', $st);
+$sy = date('Y', $st);
 $posts = [
     'r1' => '1',
     'value(D1)' => '0',
@@ -153,12 +185,17 @@ $posts = [
     'value(endMt)' => $sm,
     'value(endYr)' => $sy,
 ];
-if (preg_match_all('/<input.+>/Us', (string)$o['out'], $m)) {
+if (preg_match_all('/<input.+>/Us', (string) $o['out'], $m)) {
     foreach ($m[0] as $v) {
-        if (!preg_match('/hidden/i', $v)) continue;
-        if (!preg_match('/name="(.*)"/Us', $v, $mm)) continue;
+        if (!preg_match('/hidden/i', $v))
+            continue;
+        if (!preg_match('/name="(.*)"/Us', $v, $mm))
+            continue;
         $key = html_entity_decode($mm[1], ENT_QUOTES, 'UTF-8');
-        if (preg_match('/value="(.*)"/Us', $v, $mm)) $val = html_entity_decode($mm[1], ENT_QUOTES, 'UTF-8'); else $val = '';
+        if (preg_match('/value="(.*)"/Us', $v, $mm))
+            $val = html_entity_decode($mm[1], ENT_QUOTES, 'UTF-8');
+        else
+            $val = '';
         $posts[$key] = $val;
     }
 }
@@ -170,7 +207,8 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acctstmtview', [
 
 $getRowVal = function ($html, $label) {
     $re = '/<td[^>]*>\s*' . preg_quote($label, '/') . '\s*<\/td>\s*<td[^>]*>:\s*<\/td>\s*<td[^>]*>(.*?)<\/td>/is';
-    if (preg_match($re, (string)$html, $m)) return trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8'));
+    if (preg_match($re, (string) $html, $m))
+        return trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8'));
     return null;
 };
 
@@ -184,15 +222,17 @@ $header = [
 $tx = [];
 libxml_use_internal_errors(true);
 $dom = new DOMDocument();
-$dom->loadHTML((string)$o['out']);
+$dom->loadHTML((string) $o['out']);
 $xpath = new DOMXPath($dom);
 $rows = $xpath->query('//tr[td]');
 foreach ($rows as $tr) {
     $tds = $tr->getElementsByTagName('td');
-    if ($tds->length < 2) continue;
+    if ($tds->length < 2)
+        continue;
     $date = trim(html_entity_decode($tds->item(0)->textContent, ENT_QUOTES, 'UTF-8'));
     $dateBlack = ['', 'NO. REK.', 'NAMA', 'PERIODE', 'MATA UANG', 'TGL.', 'SALDO AWAL', 'MUTASI KREDIT', 'MUTASI DEBET', 'SALDO AKHIR', 'INFORMASI REKENING - MUTASI REKENING', chr(194) . chr(160)];
-    if (in_array($date, $dateBlack, true)) continue;
+    if (in_array($date, $dateBlack, true))
+        continue;
     $descTd = $tds->item(1);
     $segments = [];
     $buffer = '';
@@ -204,10 +244,12 @@ foreach ($rows as $tr) {
             $buffer = '';
         }
     }
-    if (trim($buffer) !== '') $segments[] = trim($buffer);
+    if (trim($buffer) !== '')
+        $segments[] = trim($buffer);
     if (empty($segments)) {
         $text = trim($descTd->textContent);
-        if ($text !== '') $segments = preg_split('/\s*\n+\s*/', $text);
+        if ($text !== '')
+            $segments = preg_split('/\s*\n+\s*/', $text);
     }
     $segments = array_values(array_filter(array_map(function ($x) {
         $t = trim(html_entity_decode($x, ENT_QUOTES, 'UTF-8'));
@@ -215,24 +257,28 @@ foreach ($rows as $tr) {
     }, $segments), function ($x) {
         return $x !== '' && stripos($x, 'MENU UTAMA') === false && stripos($x, 'LOGOUT') === false;
     }));
-    $amount = null; $type = null;
+    $amount = null;
+    $type = null;
     if ($tds->length >= 3) {
         $typeCandidate = strtoupper(trim($tds->item(2)->textContent));
-        if ($typeCandidate === 'CR' || $typeCandidate === 'DR') $type = $typeCandidate;
+        if ($typeCandidate === 'CR' || $typeCandidate === 'DR')
+            $type = $typeCandidate;
     }
     if (!empty($segments)) {
         $last = $segments[count($segments) - 1];
         if (preg_match('/([0-9.,]+)\s*(CR|DR)?$/i', $last, $m)) {
             $amount = $m[1];
-            if (!$type && isset($m[2]) && $m[2] !== '') $type = strtoupper($m[2]);
+            if (!$type && isset($m[2]) && $m[2] !== '')
+                $type = strtoupper($m[2]);
             array_pop($segments);
         }
     }
     $info = trim(implode(' ', $segments));
-    if ($amount === null || !($type === 'CR' || $type === 'DR')) continue;
-    $amountClean = preg_replace('/[^0-9.,]/', '', (string)$amount);
+    if ($amount === null || !($type === 'CR' || $type === 'DR'))
+        continue;
+    $amountClean = preg_replace('/[^0-9.,]/', '', (string) $amount);
     $amountClean = str_replace(',', '', $amountClean);
-    $amountNum = round((float)$amountClean, 2);
+    $amountNum = round((float) $amountClean, 2);
     $tx[] = [
         'date' => $date,
         'type' => $type,
@@ -247,9 +293,9 @@ $sc = $getRowVal($o['out'], 'MUTASI KREDIT');
 $sd = $getRowVal($o['out'], 'MUTASI DEBET');
 $sl = $getRowVal($o['out'], 'SALDO AKHIR');
 $norm = function ($s) {
-    $c = preg_replace('/[^0-9.,]/', '', (string)$s);
+    $c = preg_replace('/[^0-9.,]/', '', (string) $s);
     $c = str_replace(',', '', $c);
-    $n = round((float)$c, 2);
+    $n = round((float) $c, 2);
     return [$n, number_format($n, 2, '.', '')];
 };
 list($saNum, $saFmt) = $norm($sa);
