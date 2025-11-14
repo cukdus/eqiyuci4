@@ -1,23 +1,21 @@
 services:
   app:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    build: ./app
     container_name: eqiyuci4-app
+    restart: always
     ports:
       - "8080:80"
-    environment:
-      TZ: Asia/Jakarta
+    env_file:
+      - ./app/.env # masih dipakai oleh container; interpolation di-resolve dari root .env symlink
+    depends_on:
+      - db
     volumes:
       - ./app:/var/www/html
-      - ./app/vendor:/var/www/html/vendor
-      - ./app/writable:/var/www/html/writable
-      - ./app/public/uploads:/var/www/html/public/uploads
-      - ./.env:/var/www/html/.env:ro
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
+      - ./.env:/var/www/html/.env
+      # Tambahkan volume persist untuk folder upload (sesuaikan dengan folder upload kamu)
+      - ./app/writable/uploads:/var/www/html/writable/uploads
+    networks:
+      - eqiyuci4_net
 
   db:
     image: mariadb:11.3
@@ -29,30 +27,30 @@ services:
       MYSQL_USER: eqiyu
       MYSQL_PASSWORD: eqiyu_pass
       TZ: Asia/Jakarta
+    ports:
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
     restart: unless-stopped
+    networks:
+      - eqiyuci4_net
 
   adminer:
     image: adminer:latest
-    container_name: eqiyuci4-adminer
-    environment:
-      ADMINER_DEFAULT_SERVER: db
+    container_name: eqiyuci4_adminer
+    restart: always
     ports:
       - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
     depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
+      - db
+    networks:
+      - eqiyuci4_net
 
 volumes:
   db_data:
+
+networks:
+  eqiyuci4_net:
+    driver: bridge
