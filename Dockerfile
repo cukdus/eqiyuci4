@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev unzip git \
     libpng-dev libjpeg-dev libwebp-dev libfreetype6-dev \
     libxml2-dev libonig-dev libcurl4-openssl-dev \
+    libicu-dev \
     ca-certificates \
     cron supervisor \
  && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
