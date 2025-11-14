@@ -178,11 +178,11 @@ class Setting extends BaseController
         }
 
         $runParser = (bool) ($this->request->getPost('run_parser') ?? true);
-        $jsonPath = (string) ($this->request->getPost('json_path') ?? 'C:/wamp64/www/test/KlikBCA/hasil/mutasirekening.json');
-        $scriptPath = (string) ($this->request->getPost('script_path') ?? 'C:/wamp64/www/test/KlikBCA/parsingbca.php');
+        $jsonPath = (string) ($this->request->getPost('json_path') ?? '');
+        $scriptPath = (string) ($this->request->getPost('script_path') ?? '');
 
         $importer = new \App\Libraries\BcaImporter();
-        $result = $importer->importFromJson($runParser, $jsonPath, $scriptPath);
+        $result = $importer->importFromJson($runParser, $jsonPath, $scriptPath !== '' ? $scriptPath : null);
 
         $flashType = $result['success'] ? 'message' : 'error';
         $msg = $result['success']

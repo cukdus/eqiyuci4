@@ -5,8 +5,11 @@ services:
     restart: always
     ports:
       - "8080:80"
-    env_file:
-      - ./app/.env # masih dipakai oleh container; interpolation di-resolve dari root .env symlink
+    environment:
+      TZ: Asia/Jakarta
+      BANK_USER_ID: BALQISAZ0806
+      BANK_PIN: "080906"
+      BCA_SSL_VERIFY: "false"
     depends_on:
       - db
     volumes:
