@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set(getenv('TZ') ?: 'Asia/Jakarta');
 // Parser KlikBCA (mobile) yang menghasilkan JSON mutasi rekening untuk tanggal hari ini.
 // Menggunakan kredensial dari ENV: BANK_USER_ID / BANK_PIN (fallback: KLIK_BCA_USER / KLIK_BCA_PASS)
 
