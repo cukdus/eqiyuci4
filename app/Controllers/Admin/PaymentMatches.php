@@ -9,6 +9,16 @@ class PaymentMatches extends BaseController
 {
     public function index()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(site_url('admin/setting'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat melihat audit pembayaran.');
+        }
+
         $req = $this->request;
         $type = trim((string)$req->getGet('type') ?? $req->getPost('type') ?? '');
         $start = trim((string)$req->getGet('start') ?? $req->getPost('start') ?? '');

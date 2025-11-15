@@ -96,6 +96,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
             </li>
           </ul>
         </li>
+        <?php if ($isAdmin): ?>
         <li class="nav-header">Kelas</li>
         <li class="nav-item <?= ($isKelas || $isModulOnline) ? 'menu-open' : '' ?>">
           <a href="#" class="nav-link <?= ($isKelas || $isModulOnline) ? 'active' : '' ?>">
@@ -138,6 +139,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
             </li>
           </ul>
         </li>
+        <?php endif; ?>
         <li class="nav-header">Jadwal</li>
         <li class="nav-item <?= $isJadwal ? 'menu-open' : '' ?>">
           <a href="#" class="nav-link <?= $isJadwal ? 'active' : '' ?>">
@@ -192,6 +194,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
                 <p><small>Users</small></p>
               </a>
             </li>
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
               <a href="<?= base_url('admin/setting/transaksi') ?>" class="nav-link <?= $isTransaksi ? 'active' : '' ?>">
                 <i class="nav-icon bi bi-receipt"></i>
@@ -204,6 +207,7 @@ $isAdmin = $me ? $authz->inGroup('admin', $me->id) : false;
                 <p><small>Audit Payment</small></p>
               </a>
             </li>
+            <?php endif; ?>
             <?php if ($isAdmin): ?>
             <li class="nav-item">
               <a href="<?= base_url('admin/setting/waha') ?>" class="nav-link <?= $isWaha ? 'active' : '' ?>">

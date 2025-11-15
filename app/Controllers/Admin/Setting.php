@@ -149,6 +149,11 @@ class Setting extends BaseController
         if (!$me) {
             return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
         }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(site_url('admin/setting'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat melihat transaksi.');
+        }
 
         // Gunakan periode hari ini (format d/m/Y - d/m/Y) sesuai JSON KlikBCA
         $todayFmt = date('d/m/Y');

@@ -248,8 +248,9 @@ foreach ($rows as $tr) {
         $typeCandidate = strtoupper(trim($tds->item(2)->textContent));
         $amtCellText = trim($tds->item(3)->textContent);
     } elseif ($tds->length >= 3) {
+        // Struktur 3 kolom: [tgl, keterangan(+jumlah), tipe]; tidak ada kolom jumlah terpisah
         $typeCandidate = strtoupper(trim($tds->item(2)->textContent));
-        $amtCellText = trim($tds->item(2)->textContent);
+        $amtCellText = '';
     } else {
         $typeCandidate = '';
     }
@@ -258,19 +259,25 @@ foreach ($rows as $tr) {
             $type = ($tm[1] === 'DB') ? 'DR' : $tm[1];
         }
     }
-    // Fallback: extract from description's last segment
-    if (!empty($segments) && ($amtCellText === '' || !preg_match('/[0-9]/', $amtCellText))) {
+    // Ambil dari kolom jumlah jika ada dan berisi angka
+    if ($amtCellText !== '' && preg_match('/[0-9]/', $amtCellText)) {
+        $amount = $amtCellText;
+    }
+    // Fallback: cari angka di seluruh segmen keterangan
+    if ($amount === NULL && !empty($segments)) {
         $last = $segments[count($segments) - 1];
         if (preg_match('/([0-9.,]+)\s*(CR|DR|DB)?$/i', $last, $m)) {
             $amount = $m[1];
             if (!$type && isset($m[2]) && $m[2] !== '')
                 $type = strtoupper($m[2]) === 'DB' ? 'DR' : strtoupper($m[2]);
-            array_pop($segments);
         }
-    }
-    // Primary: amount from amount cell
-    if ($amtCellText !== '') {
-        $amount = $amtCellText;
+        if ($amount === NULL) {
+            foreach ($segments as $seg) {
+                if (preg_match('/[0-9]{1,3}(?:[\.,][0-9]{3})*(?:[\.,][0-9]{2})?/', $seg, $mm)) {
+                    $amount = $mm[0];  // gunakan angka terakhir yang ditemukan
+                }
+            }
+        }
     }
     $info = trim(implode(' ', $segments));
     if ($amount === NULL || !($type === 'CR' || $type === 'DR'))
