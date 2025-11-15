@@ -11,6 +11,14 @@ class ModulOnline extends BaseController
 {
     public function list(): ResponseInterface
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Silakan login terlebih dahulu.']);
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Akses ditolak']);
+        }
         $kelasId = (int) $this->request->getGet('kelas_id');
         $search = trim((string) $this->request->getGet('search'));
         $db = \Config\Database::connect();

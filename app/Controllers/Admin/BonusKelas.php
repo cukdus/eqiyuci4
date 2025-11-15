@@ -11,6 +11,15 @@ class BonusKelas extends BaseController
 {
     public function index()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         // Ambil semua kelas tanpa filter kategori agar semua terlihat
         $classes = model(KelasModel::class)
             ->select('id, nama_kelas, kode_kelas')
@@ -84,6 +93,14 @@ class BonusKelas extends BaseController
 
     public function list(): ResponseInterface
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Silakan login terlebih dahulu.']);
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Akses ditolak']);
+        }
         $kelasId = (int) $this->request->getGet('kelas_id');
         if ($kelasId <= 0) {
             return $this->response->setJSON(['data' => []]);

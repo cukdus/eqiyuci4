@@ -9,6 +9,15 @@ class Voucher extends BaseController
 {
     public function index()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         $db = \Config\Database::connect();
 
         // Ambil daftar kelas untuk pilihan
@@ -80,6 +89,15 @@ class Voucher extends BaseController
 
     public function delete($id)
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin/kelas/voucher'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat menghapus voucher.');
+        }
         $db = \Config\Database::connect();
         $exists = $db->table('voucher')->where('id', (int) $id)->get()->getRowArray();
         if (!$exists) {

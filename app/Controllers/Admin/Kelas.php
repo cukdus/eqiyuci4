@@ -10,6 +10,15 @@ class Kelas extends BaseController
 {
     public function online()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         $model = model(KelasModel::class);
 
         $search = trim((string) $this->request->getGet('search'));
@@ -64,6 +73,15 @@ class Kelas extends BaseController
 
     public function create()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         // Form tambah kelas
         $kotaOptions = model(KotaKelasModel::class)
             ->select('kode, nama, status')
@@ -80,6 +98,15 @@ class Kelas extends BaseController
 
     public function store()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         $rules = [
             'nama_kelas' => 'required|min_length[3]|max_length[100]',
             'kode_kelas' => 'required|min_length[2]|max_length[20]|is_unique[kelas.kode_kelas]',
@@ -181,6 +208,15 @@ class Kelas extends BaseController
 
     public function edit(int $id)
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         $model = model(KelasModel::class);
         $kelas = $model->find($id);
         if (!$kelas) {
@@ -214,6 +250,15 @@ class Kelas extends BaseController
      */
     public function kota()
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         $model = model(KotaKelasModel::class);
         $kotaList = $model->orderBy('nama', 'ASC')->findAll();
         return view('layout/admin_layout', [
@@ -259,6 +304,15 @@ class Kelas extends BaseController
 
     public function update(int $id)
     {
+        $me = service('authentication')->user();
+        if (!$me) {
+            return redirect()->to(site_url('login'))->with('error', 'Silakan login terlebih dahulu.');
+        }
+        $authz = service('authorization');
+        if (!$authz->inGroup('admin', $me->id)) {
+            return redirect()->to(base_url('admin'))
+                ->with('error', 'Akses ditolak: hanya admin yang dapat mengelola kelas.');
+        }
         $model = model(KelasModel::class);
         $existing = $model->find($id);
         if (!$existing) {
