@@ -54,6 +54,7 @@ $routes->get('logout', 'AuthController::logout');
 $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->get('/', 'Admin\Dashboard::index');
     $routes->get('dashboard', 'Admin\Dashboard::index');
+    $routes->get('dashboard/download-report', 'Admin\Dashboard::downloadReport');
 
     // Sidebar: Artikel/Info
     $routes->get('artikel', 'Admin\Artikel::index');

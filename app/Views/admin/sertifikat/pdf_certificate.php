@@ -10,7 +10,7 @@
         body { font-family: DejaVu Sans, Arial, sans-serif; }
         .certificate-container {
             width: 100%;
-            height: 210mm;
+            height: 100vh; /* Dompdf maps to page height */
             position: relative;
             background-image: url('assets/images/certificate-bg.png');
             background-size: cover;
@@ -25,9 +25,9 @@
             transform: translate(-50%, -50%);
             width: 80%;
         }
-        .recipient { font-size: 45px; font-weight: 700; text-transform: uppercase; margin-bottom: 60px; }
+        .recipient { font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
         .kelas { font-size: 22px; font-weight: 600; text-transform: uppercase; }
-        .number { position: absolute; bottom: 35px; right: 50px; font-size: 20px; color: #fff; }
+        .number { position: absolute; bottom: 16px; right: 24px; font-size: 16px; color: #222; }
     </style>
     <?php $d = $data ?? []; ?>
     </head>

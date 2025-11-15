@@ -148,7 +148,30 @@
               <!-- Start col -->
               <div class="col-lg-7 connectedSortable">
                 <div class="card mb-4">
-                  <div class="card-header"><h3 class="card-title">Sales Value</h3></div>
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Sales Value</h3>
+                    <div class="d-flex align-items-center ms-auto" id="sales-filter">
+                      <select class="form-select form-select-sm me-2" id="monthDropdown" aria-label="Pilih bulan">
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                      </select>
+                      <select class="form-select form-select-sm me-2" id="yearDropdown" aria-label="Pilih tahun"></select>
+                      <a href="#" class="btn btn-sm btn-primary" id="btnDownloadXlsx">
+                        <i class="bi bi-download"></i>
+                        Download XLSX
+                      </a>
+                    </div>
+                  </div>
                   <div class="card-body"><div id="revenue-chart"></div></div>
                 </div>
                 <!-- /.card -->
@@ -199,4 +222,47 @@
           <!--end::Container-->
         </div>
         <!--end::App Content-->
+<script>
+  (function(){
+    var monthSelect = document.getElementById('monthDropdown');
+    var yearSelect = document.getElementById('yearDropdown');
+    var downloadBtn = document.getElementById('btnDownloadXlsx');
+    var baseUrl = '<?= base_url('admin/dashboard/download-report') ?>';
+
+    function initYears(){
+      var now = new Date();
+      var currentYear = now.getFullYear();
+      var startYear = currentYear - 5;
+      var endYear = currentYear + 1;
+      for (var y = startYear; y <= endYear; y++) {
+        var opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+      }
+      yearSelect.value = currentYear;
+    }
+
+    function setDefaultMonth(){
+      var now = new Date();
+      var m = now.getMonth() + 1;
+      monthSelect.value = String(m);
+    }
+
+    function updateHref(){
+      var m = monthSelect.value;
+      var y = yearSelect.value;
+      var url = baseUrl + '?month=' + encodeURIComponent(m) + '&year=' + encodeURIComponent(y);
+      downloadBtn.setAttribute('href', url);
+    }
+
+    if (monthSelect && yearSelect && downloadBtn) {
+      initYears();
+      setDefaultMonth();
+      updateHref();
+      monthSelect.addEventListener('change', updateHref);
+      yearSelect.addEventListener('change', updateHref);
+    }
+  })();
+  </script>
 <?= $this->endSection() ?>
