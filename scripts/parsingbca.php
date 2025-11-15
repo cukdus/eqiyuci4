@@ -270,13 +270,14 @@ foreach ($rows as $tr) {
     if ($amount === NULL || !($type === 'CR' || $type === 'DR'))
         continue;
 $amountClean = preg_replace('/[^0-9.,-]/', '', (string)$amount);
-if (strpos($amountClean, ',') !== false && strpos($amountClean, '.') !== false) {
+if (strpos($amountClean, ',') !== false) {
     $amountClean = str_replace('.', '', $amountClean);
     $amountClean = str_replace(',', '.', $amountClean);
-} elseif (strpos($amountClean, ',') !== false) {
-    $amountClean = str_replace(',', '.', $amountClean);
-} elseif (substr_count($amountClean, '.') > 1) {
-    $amountClean = str_replace('.', '', $amountClean);
+} else {
+    if (preg_match('/\.\d{2}$/', $amountClean)) {
+    } else {
+        $amountClean = str_replace('.', '', $amountClean);
+    }
 }
 $amountNum = (float) $amountClean;
     $tx[] = [
@@ -294,13 +295,14 @@ $sd = $getRowVal($o['out'], 'MUTASI DEBET');
 $sl = $getRowVal($o['out'], 'SALDO AKHIR');
 $norm = function($s){
     $c = preg_replace('/[^0-9.,-]/', '', (string)$s);
-    if (strpos($c, ',') !== false && strpos($c, '.') !== false) {
+    if (strpos($c, ',') !== false) {
         $c = str_replace('.', '', $c);
         $c = str_replace(',', '.', $c);
-    } elseif (strpos($c, ',') !== false) {
-        $c = str_replace(',', '.', $c);
-    } elseif (substr_count($c, '.') > 1) {
-        $c = str_replace('.', '', $c);
+    } else {
+        if (preg_match('/\.\d{2}$/', $c)) {
+        } else {
+            $c = str_replace('.', '', $c);
+        }
     }
     $n = (float)$c;
     return [$n, number_format($n, 2, '.', '')];
