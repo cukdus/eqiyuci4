@@ -31,7 +31,6 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-COPY eqiyu/ /var/www/html/
 
 # Apache DocumentRoot untuk CodeIgniter 4
 RUN printf "<VirtualHost *:80>\n\
@@ -42,10 +41,12 @@ RUN printf "<VirtualHost *:80>\n\
     </Directory>\n\
 </VirtualHost>" > /etc/apache2/sites-available/000-default.conf
 
-# Install dependencies
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress || true
+RUN if [ -f /var/www/html/composer.json ]; then \
+    composer install --no-dev --prefer-dist --no-interaction --no-progress; \
+  fi
 
-RUN chown -R www-data:www-data /var/www/html && \
+RUN mkdir -p /var/www/html/writable /var/www/html/writable/logs && \
+    chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/writable
 
 # Upload directory fix
