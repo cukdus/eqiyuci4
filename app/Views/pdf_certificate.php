@@ -10,11 +10,12 @@
         body { font-family: DejaVu Sans, Arial, sans-serif; }
         .certificate-container {
             width: 100%;
-            height: 100vh; /* Dompdf maps to page height */
+            height: 210mm;
             position: relative;
             background-image: url('assets/images/certificate-bg.png');
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
         }
         .content {
             text-align: center;

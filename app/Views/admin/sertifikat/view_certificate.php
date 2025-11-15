@@ -45,7 +45,7 @@
         <div class="certificate-number"><?= esc($d['nomor_sertifikat'] ?? '') ?></div>
     </div>
 
-    <a href="<?= base_url('admin/sertifikat/' . (int)($d['id'] ?? 0) . '/download') ?>" class="btn btn-success download-button">Download Sertifikat</a>
+    <a href="<?= base_url('admin/sertifikat/' . (int) ($d['id'] ?? 0) . '/download') ?>" class="btn btn-success download-button">Download Sertifikat</a>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

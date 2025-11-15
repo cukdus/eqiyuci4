@@ -566,9 +566,11 @@ class Sertifikat extends BaseController
         $options = new Options();
         $options->set('isRemoteEnabled', true);
         $options->set('defaultFont', 'DejaVu Sans');
+        $options->setChroot(FCPATH);
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
+        $dompdf->setBasePath(FCPATH);
         $dompdf->render();
 
         $filename = 'sertifikat-' . ((string) ($row['nomor_sertifikat'] ?? '')) . '.pdf';
