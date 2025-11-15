@@ -2,7 +2,7 @@
 date_default_timezone_set(getenv('TZ') ?: 'Asia/Jakarta');
 
 // Kredensial: prefer BANK_USER_ID/BANK_PIN, fallback KLIK_BCA_USER/KLIK_BCA_PASS, lalu credentials.tmp
-$getEnv = static function(string $key): string {
+$getEnv = static function (string $key): string {
     $v = getenv($key);
     return is_string($v) ? $v : '';
 };
@@ -25,19 +25,25 @@ $ua = 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like G
 $root = dirname(__DIR__);
 $writable = $root . DIRECTORY_SEPARATOR . 'writable';
 $cookieDir = $writable . DIRECTORY_SEPARATOR . 'cookies';
-if (!is_dir($cookieDir)) { @mkdir($cookieDir, 0755, true); }
+if (!is_dir($cookieDir)) {
+    @mkdir($cookieDir, 0755, true);
+}
 $cookie = $cookieDir . DIRECTORY_SEPARATOR . 'klikbca_m.cookie';
 @touch($cookie);
 $hasilDir = $writable . DIRECTORY_SEPARATOR . 'klikbca' . DIRECTORY_SEPARATOR . 'hasil';
-if (!is_dir($hasilDir)) { @mkdir($hasilDir, 0755, true); }
+if (!is_dir($hasilDir)) {
+    @mkdir($hasilDir, 0755, true);
+}
 $htmlDir = $writable . DIRECTORY_SEPARATOR . 'klikbca' . DIRECTORY_SEPARATOR . 'html';
-if (!is_dir($htmlDir)) { @mkdir($htmlDir, 0755, true); }
+if (!is_dir($htmlDir)) {
+    @mkdir($htmlDir, 0755, true);
+}
 
 // CA bundle optional via ENV
 $caEnv = $getEnv('BCA_CACERT_PATH');
 $ca = (is_string($caEnv) && $caEnv !== '' && file_exists($caEnv)) ? $caEnv : null;
-$sslVerifyEnv = strtolower((string)$getEnv('BCA_SSL_VERIFY'));
-$verify = $ca !== null ? true : !in_array($sslVerifyEnv, ['false','0','no','off'], true);
+$sslVerifyEnv = strtolower((string) $getEnv('BCA_SSL_VERIFY'));
+$verify = $ca !== null ? true : !in_array($sslVerifyEnv, ['false', '0', 'no', 'off'], true);
 
 function go($url, $opt = [], $referer = null, $fetchSite = 'none')
 {
@@ -141,7 +147,7 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt', [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => ''
 ], 'https://m.klikbca.com/authentication.do?value(actions)=menu', 'same-origin');
-@file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acct_stmt_form.html', (string)($o['out'] ?? ''));
+@file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acct_stmt_form.html', (string) ($o['out'] ?? ''));
 
 $st = time();
 $sd = date('d', $st);
@@ -176,7 +182,7 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acctstmtview', [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => http_build_query($posts)
 ], 'https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt', 'same-origin');
-@file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acctstmtview.html', (string)($o['out'] ?? ''));
+@file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acctstmtview.html', (string) ($o['out'] ?? ''));
 
 $getRowVal = function ($html, $label) {
     $re = '/<td[^>]*>\s*' . preg_quote($label, '/') . '\s*<\/td>\s*<td[^>]*>:\s*<\/td>\s*<td[^>]*>(.*?)<\/td>/is';
@@ -269,17 +275,17 @@ foreach ($rows as $tr) {
     $info = trim(implode(' ', $segments));
     if ($amount === NULL || !($type === 'CR' || $type === 'DR'))
         continue;
-$amountClean = preg_replace('/[^0-9.,-]/', '', (string)$amount);
-if (strpos($amountClean, ',') !== false) {
-    $amountClean = str_replace('.', '', $amountClean);
-    $amountClean = str_replace(',', '.', $amountClean);
-} else {
-    if (preg_match('/\.\d{2}$/', $amountClean)) {
+    $amountClean = preg_replace('/[^0-9.,-]/', '', (string) $amount);
+    if (strpos($amountClean, ',') !== false && strpos($amountClean, '.') !== false) {
+        $amountClean = str_replace(',', '', $amountClean);
+    } elseif (strpos($amountClean, ',') !== false) {
+        $amountClean = str_replace(',', '.', $amountClean);
     } else {
-        $amountClean = str_replace('.', '', $amountClean);
+        if (!preg_match('/\.\d{2}$/', $amountClean)) {
+            $amountClean = str_replace('.', '', $amountClean);
+        }
     }
-}
-$amountNum = (float) $amountClean;
+    $amountNum = (float) $amountClean;
     $tx[] = [
         'date' => $date,
         'type' => $type,
@@ -293,18 +299,18 @@ $sa = $getRowVal($o['out'], 'SALDO AWAL');
 $sc = $getRowVal($o['out'], 'MUTASI KREDIT');
 $sd = $getRowVal($o['out'], 'MUTASI DEBET');
 $sl = $getRowVal($o['out'], 'SALDO AKHIR');
-$norm = function($s){
-    $c = preg_replace('/[^0-9.,-]/', '', (string)$s);
-    if (strpos($c, ',') !== false) {
-        $c = str_replace('.', '', $c);
+$norm = function ($s) {
+    $c = preg_replace('/[^0-9.,-]/', '', (string) $s);
+    if (strpos($c, ',') !== false && strpos($c, '.') !== false) {
+        $c = str_replace(',', '', $c);
+    } elseif (strpos($c, ',') !== false) {
         $c = str_replace(',', '.', $c);
     } else {
-        if (preg_match('/\.\d{2}$/', $c)) {
-        } else {
+        if (!preg_match('/\.\d{2}$/', $c)) {
             $c = str_replace('.', '', $c);
         }
     }
-    $n = (float)$c;
+    $n = (float) $c;
     return [$n, number_format($n, 2, '.', '')];
 };
 list($saNum, $saFmt) = $norm($sa);
