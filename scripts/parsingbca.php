@@ -236,13 +236,24 @@ foreach ($rows as $tr) {
     }));
     $amount = NULL;
     $type = NULL;
-    if ($tds->length >= 3) {
+    // Prefer type and amount from table cells (mutasi/saldo columns)
+    $amtCellText = '';
+    if ($tds->length >= 4) {
         $typeCandidate = strtoupper(trim($tds->item(2)->textContent));
+        $amtCellText = trim($tds->item(3)->textContent);
+    } elseif ($tds->length >= 3) {
+        $typeCandidate = strtoupper(trim($tds->item(2)->textContent));
+        $amtCellText = trim($tds->item(2)->textContent);
+    } else {
+        $typeCandidate = '';
+    }
+    if ($typeCandidate !== '') {
         if (preg_match('/\b(CR|DR|DB)\b/', $typeCandidate, $tm)) {
             $type = ($tm[1] === 'DB') ? 'DR' : $tm[1];
         }
     }
-    if (!empty($segments)) {
+    // Fallback: extract from description's last segment
+    if (!empty($segments) && ($amtCellText === '' || !preg_match('/[0-9]/', $amtCellText))) {
         $last = $segments[count($segments) - 1];
         if (preg_match('/([0-9.,]+)\s*(CR|DR|DB)?$/i', $last, $m)) {
             $amount = $m[1];
@@ -250,6 +261,10 @@ foreach ($rows as $tr) {
                 $type = strtoupper($m[2]) === 'DB' ? 'DR' : strtoupper($m[2]);
             array_pop($segments);
         }
+    }
+    // Primary: amount from amount cell
+    if ($amtCellText !== '') {
+        $amount = $amtCellText;
     }
     $info = trim(implode(' ', $segments));
     if ($amount === NULL || !($type === 'CR' || $type === 'DR'))
