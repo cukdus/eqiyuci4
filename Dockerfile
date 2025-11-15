@@ -31,7 +31,6 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-COPY eqiyu/ /var/www/html/
 
 # Apache DocumentRoot untuk CodeIgniter 4
 RUN printf "<VirtualHost *:80>\n\
