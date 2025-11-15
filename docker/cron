@@ -2,10 +2,10 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Import BCA JSON at 09:00, 12:00, 15:00, 18:00
-0 9,12,15,18 * * * www-data /usr/local/bin/php /var/www/html/spark bank:scrape --skip-run >> /var/www/html/writable/logs/cron.log 2>&1
+0 9,12,15,18,21 * * * www-data /usr/local/bin/php /var/www/html/spark bank:scrape --skip-run >> /var/www/html/writable/logs/cron.log 2>&1
 
-# Sync payment matches at 09:01, 12:01, 15:01, 18:01
-1 9,12,15,18 * * * www-data /usr/local/bin/php /var/www/html/spark payment:sync-matches --verbose >> /var/www/html/writable/logs/cron.log 2>&1
+# Sync payment matches at 09:01, 12:01, 15:01, 18:01, 21:01
+1 9,12,15,18,21 * * * www-data /usr/local/bin/php /var/www/html/spark payment:sync-matches --verbose >> /var/www/html/writable/logs/cron.log 2>&1
 
 # Send H-3 tagihan
 0 9 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-tagihan-h3 >> /var/www/html/writable/logs/cron.log 2>&1
