@@ -44,7 +44,7 @@ RUN printf "<VirtualHost *:80>\n\
 # Install dependencies
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress || true
 
-RUN mkdir -p /var/www/html/writable/logs && \
+RUN mkdir -p /var/www/html/writable /var/www/html/writable/logs && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/writable
 
