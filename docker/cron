@@ -8,8 +8,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 1 9,12,15,18,21 * * * www-data /usr/local/bin/php /var/www/html/spark payment:sync-matches --verbose >> /var/www/html/writable/logs/cron.log 2>&1
 
 # Send H-3 tagihan
-0 9 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-tagihan-h3 >> /var/www/html/writable/logs/cron.log 2>&1
+0 10 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-tagihan-h3 >> /var/www/html/writable/logs/cron.log 2>&1
 
 # Send lulus_peserta messages at 21:00
-0 21 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-lulus >> /var/www/html/writable/logs/cron.log 2>&1
+0 20 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-lulus >> /var/www/html/writable/logs/cron.log 2>&1
 

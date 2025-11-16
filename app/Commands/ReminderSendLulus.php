@@ -19,6 +19,8 @@ class ReminderSendLulus extends BaseCommand
     {
         $forDate = (string)(CLI::getOption('for') ?? date('Y-m-d'));
         $verbose = CLI::getOption('verbose') !== null;
+        $delay = (int) (env('WAHA_SEND_DELAY_SECONDS') ?? 60);
+        if ($delay < 1) { $delay = 60; }
 
         $waha = new WahaService();
         if (!$waha->isConfigured()) {
@@ -68,6 +70,7 @@ class ReminderSendLulus extends BaseCommand
             $this->log($logModel, $rid, 'lulus_peserta', $nama, $phone, $msg, $ok, $ok ? null : ($res['message'] ?? ''));
             if ($ok) { $countSent++; } else { $countFail++; }
             if ($verbose) { CLI::write(($ok ? '[SENT ] ' : '[FAIL ] ') . 'R#' . $rid . ' lulus_peserta to ' . $phone); }
+            sleep($delay);
         }
 
         CLI::write('Selesai lulus_peserta: sent=' . $countSent . ' fail=' . $countFail . ' skip=' . $countSkip, 'green');

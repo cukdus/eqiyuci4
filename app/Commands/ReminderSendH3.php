@@ -20,6 +20,8 @@ class ReminderSendH3 extends BaseCommand
         $scenario = strtolower((string)(CLI::getOption('scenario') ?? 'all')); // pelunasan|jadwal|all
         $forDate = (string)(CLI::getOption('for') ?? date('Y-m-d', strtotime('+3 days'))); // tanggal_mulai target
         $verbose = CLI::getOption('verbose') !== null;
+        $delay = (int) (env('WAHA_SEND_DELAY_SECONDS') ?? 60);
+        if ($delay < 1) { $delay = 60; }
 
         $waha = new WahaService();
         if (!$waha->isConfigured()) {
@@ -84,6 +86,7 @@ class ReminderSendH3 extends BaseCommand
                     $this->log($logModel, $rid, 'pelunasan_h3', $nama, $phone, $msg, $ok, $ok ? null : ($res['message'] ?? ''));
                     if ($ok) { $countSent++; } else { $countFail++; }
                     if ($verbose) { CLI::write(($ok ? '[SENT ] ' : '[FAIL ] ') . 'R#' . $rid . ' pelunasan_h3 to ' . $phone); }
+                    sleep($delay);
                 } else {
                     $countSkip++;
                     if ($verbose) { CLI::write('[SKIP ] R#' . $rid . ' tidak memenuhi syarat pelunasan_h3'); }
@@ -97,6 +100,7 @@ class ReminderSendH3 extends BaseCommand
                 $this->log($logModel, $rid, 'jadwal_h3', $nama, $phone, $msg, $ok, $ok ? null : ($res['message'] ?? ''));
                 if ($ok) { $countSent++; } else { $countFail++; }
                 if ($verbose) { CLI::write(($ok ? '[SENT ] ' : '[FAIL ] ') . 'R#' . $rid . ' jadwal_h3 to ' . $phone); }
+                sleep($delay);
             }
         }
 

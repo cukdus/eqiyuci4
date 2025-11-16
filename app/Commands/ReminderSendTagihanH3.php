@@ -20,6 +20,8 @@ class ReminderSendTagihanH3 extends BaseCommand
     {
         $forDate = (string)(CLI::getOption('for') ?? date('Y-m-d', strtotime('+3 days'))); // H-3
         $verbose = CLI::getOption('verbose') !== null;
+        $delay = (int) (env('WAHA_SEND_DELAY_SECONDS') ?? 60);
+        if ($delay < 1) { $delay = 60; }
 
         $waha = new WahaService();
         if (!$waha->isConfigured()) {
@@ -84,6 +86,7 @@ class ReminderSendTagihanH3 extends BaseCommand
                 $this->log($logModel, $rid, 'tagihan_dp50_peserta', $nama, $phone, $msgPeserta, $ok, $ok ? null : ($res['message'] ?? ''));
                 if ($ok) { $countSent++; } else { $countFail++; }
                 if ($verbose) { CLI::write(($ok ? '[SENT ] ' : '[FAIL ] ') . 'R#' . $rid . ' tagihan_dp50_peserta to ' . $phone); }
+                sleep($delay);
 
                 // Admin notification
                 if ($adminPhone !== '') {
@@ -93,6 +96,7 @@ class ReminderSendTagihanH3 extends BaseCommand
                     $this->log($logModel, $rid, 'tagihan_dp50_admin', 'ADMIN', $adminPhone, $msgAdmin, $okA, $okA ? null : ($resA['message'] ?? ''));
                     // Tidak dihitung ke peserta; tetap log
                     if ($verbose) { CLI::write(($okA ? '[SENT ] ' : '[FAIL ] ') . 'ADMIN tagihan_dp50_admin to ' . $adminPhone); }
+                    sleep($delay);
                 } else {
                     $countSkip++;
                     if ($verbose) { CLI::write('[SKIP ] admin_phone kosong, tidak kirim tagihan_dp50_admin'); }
@@ -105,6 +109,7 @@ class ReminderSendTagihanH3 extends BaseCommand
                 $this->log($logModel, $rid, 'tagihan_lunas_peserta', $nama, $phone, $msgLunas, $ok, $ok ? null : ($res['message'] ?? ''));
                 if ($ok) { $countSent++; } else { $countFail++; }
                 if ($verbose) { CLI::write(($ok ? '[SENT ] ' : '[FAIL ] ') . 'R#' . $rid . ' tagihan_lunas_peserta to ' . $phone); }
+                sleep($delay);
             } else {
                 $countSkip++;
                 if ($verbose) { CLI::write('[SKIP ] R#' . $rid . ' status_pembayaran=' . $statusBayar); }
