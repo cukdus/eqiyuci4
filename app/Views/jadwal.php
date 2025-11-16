@@ -311,6 +311,10 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
       const detailUrl = '<?= base_url('kursus') ?>/' + encodeURIComponent(item.slug || '');
       const imgSrc = item.gambar_utama ? '<?= base_url('') ?>' + item.gambar_utama : '<?= base_url('assets/img/no-image.jpg') ?>';
       const imgAlt = escapeHtml(item.nama_kelas || 'Gambar Kelas');
+      const isPrivateSpecial = String(item.nama_kelas || '').toLowerCase() === 'private class beverage & business culinary'.toLowerCase();
+      const daftarBtnHtml = isPrivateSpecial
+        ? `<a href="javascript:void(0)" class="btn btn-secondary disabled" aria-disabled="true" style="pointer-events:none;">Daftar Sekarang</a>`
+        : `<a href="<?= base_url('daftar') ?>" class="btn btn-primary">Daftar Sekarang</a>`;
       return `
         <article class="event-card" data-aos="fade-up" data-aos-delay="400">
           <div class="row g-0">
@@ -339,7 +343,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   <div class="event-price">${hargaHtml}</div>
                 </div>
                 <div class="event-actions">
-                  <a href="<?= base_url('daftar') ?>" class="btn btn-primary">Daftar Sekarang</a>
+                  ${daftarBtnHtml}
                   <a href="${detailUrl}" class="btn btn-outline">Pelajari Lebih Lanjut</a>
                 </div>
               </div>

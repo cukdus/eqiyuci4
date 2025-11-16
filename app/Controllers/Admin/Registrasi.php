@@ -676,7 +676,7 @@ class Registrasi extends BaseController
             }
             // Tentukan key template: default peserta
             $reqJson = $this->request->getJSON(true) ?? [];
-            $key = (string) ($reqJson['key'] ?? 'registrasi_peserta');
+            $key = (string) ($reqJson['key'] ?? ($this->request->getPost('key') ?? 'registrasi_peserta'));
 
             if ($key === 'registrasi_admin') {
                 // Kirim ke admin
@@ -746,6 +746,80 @@ class Registrasi extends BaseController
                 $combinedSuccess = ((bool) ($resPeserta['success'] ?? false)) && ((bool) ($resAdmin['success'] ?? false));
                 $message = 'Peserta: ' . (($resPeserta['success'] ?? false) ? 'OK' : ('ERR ' . ($resPeserta['message'] ?? ''))) . ', Admin: ' . (($resAdmin['success'] ?? false) ? 'OK' : ('ERR ' . ($resAdmin['message'] ?? '')));
                 return $this->response->setStatusCode($combinedSuccess ? 200 : 400)->setJSON(['success' => $combinedSuccess, 'message' => $message]);
+            } elseif ($key === 'tagihan_dp50_peserta') {
+                // Kirim ke peserta: tagihan DP50%
+                $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'tagihan_dp50_peserta')->first();
+                $template = '';
+                if ($tplRow && ($tplRow['enabled'] ?? false)) { $template = (string) ($tplRow['template'] ?? ''); }
+                if ($template === '') {
+                    $template = 'Halo {{nama}}, pengingat: Anda masih DP 50% untuk kelas {{nama_kelas}} mulai {{tanggal_mulai}}. Sisa bayar: Rp {{sisa_bayar}}.';
+                }
+                $tagihan = (float) ($row['biaya_tagihan'] ?? ($row['biaya_total'] ?? 0));
+                $dibayar = (float) ($row['biaya_dibayar'] ?? 0);
+                $sisa = max(0.0, $tagihan - $dibayar);
+                $payload2 = $payload;
+                $payload2['tanggal_mulai'] = (string) ($row['tanggal_mulai'] ?? '');
+                $payload2['sisa_bayar'] = number_format($sisa, 0, ',', '.');
+                $payload2['total_tagihan'] = number_format($tagihan, 0, ',', '.');
+                $payload2['dibayar'] = number_format($dibayar, 0, ',', '.');
+                $message = $ws->renderTemplate($template, $payload2);
+                $phone = (string) ($row['no_telp'] ?? '');
+                $res = $ws->sendMessage($phone, $message);
+                $this->upsertWahaLog($id, 'tagihan_dp50_peserta', 'user', $phone, $message, (($res['success'] ?? false) ? 'success' : 'failed'), (($res['success'] ?? false) ? null : ($res['message'] ?? '')));
+                return $this->response->setJSON([
+                    'success' => (bool) ($res['success'] ?? false),
+                    'message' => $res['message'] ?? (($res['success'] ?? false) ? 'Terkirim' : 'Gagal mengirim'),
+                ]);
+            } elseif ($key === 'tagihan_dp50_admin') {
+                // Kirim ke admin: tagihan DP50%
+                $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'tagihan_dp50_admin')->first();
+                $template = '';
+                if ($tplRow && ($tplRow['enabled'] ?? false)) { $template = (string) ($tplRow['template'] ?? ''); }
+                if ($template === '') {
+                    $template = '[ADMIN] Peserta {{nama}} ({{phone}}) DP 50%. Kelas {{nama_kelas}} mulai {{tanggal_mulai}}. Sisa: Rp {{sisa_bayar}}.';
+                }
+                $adminPhone = (string) (env('WAHA_ADMIN_PHONE') ?? '');
+                if ($adminPhone === '') {
+                    $cfg = model(\App\Models\WahaConfig::class)->where('key', 'admin_phone')->first();
+                    $adminPhone = (string) ($cfg['value'] ?? '');
+                }
+                if ($adminPhone === '') {
+                    return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Nomor admin belum dikonfigurasi']);
+                }
+                $tagihan = (float) ($row['biaya_tagihan'] ?? ($row['biaya_total'] ?? 0));
+                $dibayar = (float) ($row['biaya_dibayar'] ?? 0);
+                $sisa = max(0.0, $tagihan - $dibayar);
+                $payload2 = $payload;
+                $payload2['tanggal_mulai'] = (string) ($row['tanggal_mulai'] ?? '');
+                $payload2['sisa_bayar'] = number_format($sisa, 0, ',', '.');
+                $payload2['total_tagihan'] = number_format($tagihan, 0, ',', '.');
+                $payload2['dibayar'] = number_format($dibayar, 0, ',', '.');
+                $payload2['phone'] = (string) ($row['no_telp'] ?? '');
+                $message = $ws->renderTemplate($template, $payload2);
+                $res = $ws->sendMessage($adminPhone, $message);
+                $this->upsertWahaLog($id, 'tagihan_dp50_admin', 'admin', $adminPhone, $message, (($res['success'] ?? false) ? 'success' : 'failed'), (($res['success'] ?? false) ? null : ($res['message'] ?? '')));
+                return $this->response->setJSON([
+                    'success' => (bool) ($res['success'] ?? false),
+                    'message' => $res['message'] ?? (($res['success'] ?? false) ? 'Terkirim' : 'Gagal mengirim'),
+                ]);
+            } elseif ($key === 'tagihan_lunas_peserta') {
+                // Kirim ke peserta: status lunas
+                $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'tagihan_lunas_peserta')->first();
+                $template = '';
+                if ($tplRow && ($tplRow['enabled'] ?? false)) { $template = (string) ($tplRow['template'] ?? ''); }
+                if ($template === '') {
+                    $template = 'Halo {{nama}}, pengingat H-3: kelas {{nama_kelas}} mulai {{tanggal_mulai}}. Pembayaran Anda sudah lunas. Sampai jumpa!';
+                }
+                $payload2 = $payload;
+                $payload2['tanggal_mulai'] = (string) ($row['tanggal_mulai'] ?? '');
+                $message = $ws->renderTemplate($template, $payload2);
+                $phone = (string) ($row['no_telp'] ?? '');
+                $res = $ws->sendMessage($phone, $message);
+                $this->upsertWahaLog($id, 'tagihan_lunas_peserta', 'user', $phone, $message, (($res['success'] ?? false) ? 'success' : 'failed'), (($res['success'] ?? false) ? null : ($res['message'] ?? '')));
+                return $this->response->setJSON([
+                    'success' => (bool) ($res['success'] ?? false),
+                    'message' => $res['message'] ?? (($res['success'] ?? false) ? 'Terkirim' : 'Gagal mengirim'),
+                ]);
             } else {
                 // Default: kirim ke peserta
                 $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'registrasi_peserta')->first();

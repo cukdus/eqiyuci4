@@ -72,7 +72,7 @@
             <tr>
               <th style="width:50px;">No</th>
               <th data-sort="nama" class="sortable">Nama Peserta</th>
-              <th>No. Telepon</th>
+              <th>WA</th>
               <th>Kelas</th>
               <th data-sort="tanggal_mulai" class="sortable">Tanggal</th>
               <th>Lokasi</th>
@@ -161,7 +161,11 @@
             tr.innerHTML = `
               <td>${startIndex + idx + 1}.</td>
               <td>${escapeHtml(row.nama ?? '')}</td>
-              <td>${escapeHtml(row.no_telp ?? '')}</td>
+              <td>
+                <button class="btn btn-sm btn-success btn-wa" title="Kirim WhatsApp" data-id="${row.id}" data-status="${escapeHtml(row.status_pembayaran ?? '')}" data-phone="${escapeHtml(row.no_telp ?? '')}">
+                  <i class="bi bi-whatsapp"></i>
+                </button>
+              </td>
               <td>${escapeHtml(row.nama_kelas ?? '-')}</td>
               <td>${formatRangeDate(row.tanggal_mulai, row.tanggal_selesai)}</td>
               <td>${escapeHtml((row.lokasi ?? '').charAt(0).toUpperCase() + (row.lokasi ?? '').slice(1))}</td>
@@ -214,6 +218,37 @@
                 }
               } catch (err) {
                 alert('Terjadi kesalahan jaringan');
+              }
+            });
+            // Attach WA send handler
+            const btnWa = tr.querySelector('.btn-wa');
+            btnWa.addEventListener('click', async (e) => {
+              e.preventDefault();
+              const regId = btnWa.getAttribute('data-id');
+              const status = (btnWa.getAttribute('data-status') || '').toLowerCase();
+              async function sendWa(regId, key) {
+                const url = '<?= base_url('admin/registrasi') ?>/' + encodeURIComponent(regId) + '/send-registrasi-waha';
+                const formData = new URLSearchParams();
+                formData.append(csrfToken, csrfHash);
+                formData.append('key', key);
+                const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData.toString() });
+                return resp.json();
+              }
+              try {
+                if (status === 'dp 50%' || status === 'dp50%' || status === 'dp50') {
+                  const r1 = await sendWa(regId, 'tagihan_dp50_peserta');
+                  const r2 = await sendWa(regId, 'tagihan_dp50_admin');
+                  const ok1 = !!(r1.success);
+                  const ok2 = !!(r2.success);
+                  alert('Kirim DP50%: Peserta ' + (ok1 ? 'OK' : 'Gagal') + '; Admin ' + (ok2 ? 'OK' : 'Gagal'));
+                } else if (status === 'lunas') {
+                  const r = await sendWa(regId, 'tagihan_lunas_peserta');
+                  alert('Kirim Lunas: ' + (r.success ? 'OK' : ('Gagal: ' + (r.message || ''))));
+                } else {
+                  alert('Status pembayaran tidak didukung untuk pengiriman cepat.');
+                }
+              } catch (err) {
+                alert('Gagal mengirim WA: masalah jaringan');
               }
             });
             tbody.appendChild(tr);
