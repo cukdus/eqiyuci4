@@ -40,7 +40,7 @@
                         <?php if ($config->allowRemembering): ?>
                         <div class="remember-me">
                             <input type="checkbox" id="remember" name="remember" <?php if (old('remember')): ?> checked <?php endif ?>>
-                            <label for="remember">Remember Me</label>
+                            <label for="remember">Aku gampang pikun</label>
                         </div>
                         <?php endif; ?>
                     </div>
