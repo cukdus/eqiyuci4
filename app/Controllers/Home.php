@@ -45,19 +45,21 @@ class Home extends BaseController
             ->where('nama !=', 'Se-Dunia')
             ->countAllResults();
 
-        // Data statistik kelas berdasarkan isi kolom nama_kelas (kode: 01=Barista, 02=Bisnis, 03=Private)
-        $data['kelas_barista'] = $sertfikatModel
-            ->where('status', 'aktif')
-            ->where('nama_kelas', '01')
-            ->countAllResults();
-        $data['kelas_bisnis'] = $sertfikatModel
-            ->where('status', 'aktif')
-            ->where('nama_kelas', '02')
-            ->countAllResults();
-        $data['kelas_private'] = $sertfikatModel
-            ->where('status', 'aktif')
-            ->where('nama_kelas', '03')
-            ->countAllResults();
+        $cache = service('cache');
+        $stats = $cache->get('home_stats_kelas');
+        if (!is_array($stats)) {
+            $m = new \App\Models\Sertifikat();
+            $barista = $m->where('nama_kelas', 'Basic Barista & Latte Art')->countAllResults();
+            $m = new \App\Models\Sertifikat();
+            $bisnis = $m->where('nama_kelas', 'Workshop Membangun Bisnis Cafe & Kedai Kopi')->countAllResults();
+            $m = new \App\Models\Sertifikat();
+            $private = $m->like('nama_kelas', 'private')->countAllResults();
+            $stats = ['barista' => $barista, 'bisnis' => $bisnis, 'private' => $private];
+            $cache->save('home_stats_kelas', $stats, 600);
+        }
+        $data['kelas_barista'] = (int)($stats['barista'] ?? 0);
+        $data['kelas_bisnis'] = (int)($stats['bisnis'] ?? 0);
+        $data['kelas_private'] = (int)($stats['private'] ?? 0);
 
         $data['berita'] = $berita;
 
