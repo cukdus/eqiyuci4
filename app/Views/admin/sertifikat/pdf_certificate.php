@@ -12,7 +12,7 @@
             width: 100%;
             height: 100vh; /* Dompdf maps to page height */
             position: relative;
-            background-image: url('assets/images/certificate-bg.png');
+            background-image: url('<?= base_url('assets/images/certificate-bg.png') ?>');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -25,9 +25,9 @@
             transform: translate(-50%, -50%);
             width: 80%;
         }
-        .recipient { font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
-        .kelas { font-size: 22px; font-weight: 600; text-transform: uppercase; }
-        .number { position: absolute; bottom: 16px; right: 24px; font-size: 16px; color: #222; }
+        .recipient { font-size: 48px; font-weight: 700; text-transform: uppercase; margin: 60px 0 20px; }
+        .kelas { font-size: 22px; font-weight: 600; text-transform: uppercase; margin: 50px 0; }
+        .number { position: absolute; bottom: 16px; right: 24px; font-size: 16px; color: #fff; }
     </style>
     <?php $d = $data ?? []; ?>
     </head>
