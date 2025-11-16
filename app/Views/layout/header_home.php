@@ -16,7 +16,7 @@
   <meta
     property="og:description"
     content="Kursus dan pelatihan profesional untuk menjadi Barista handal dan membangun bisnis kuliner sukses." />
-  <meta property="og:image" content="assets/img/eqiyu-logo.png" />
+  <meta property="og:image" content="<?= base_url('assets/img/eqiyu-logo.png') ?>" />
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:site" content="@Eqiyu_Indonesia" />
@@ -27,11 +27,11 @@
   <meta
     property="twitter:description"
     content="Kursus dan pelatihan profesional untuk menjadi Barista handal dan membangun bisnis kuliner sukses." />
-  <meta property="twitter:image" content="assets/img/eqiyu-logo.png" />
+  <meta property="twitter:image" content="<?= base_url('assets/img/eqiyu-logo.png') ?>" />
 
   <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon" />
-  <link href="assets/img/favicon.png" rel="apple-touch-icon" />
+  <link href="<?= base_url('assets/img/favicon.png') ?>" rel="icon" />
+  <link href="<?= base_url('assets/img/favicon.png') ?>" rel="apple-touch-icon" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -41,11 +41,11 @@
     rel="stylesheet" />
 
   <!-- Vendor CSS Files -->
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet" />
-  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" />
+  <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet" />
+  <link href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet" />
+  <link href="<?= base_url('assets/vendor/aos/aos.css') ?>" rel="stylesheet" />
+  <link href="<?= base_url('assets/vendor/swiper/swiper-bundle.min.css') ?>" rel="stylesheet" />
 
   <!-- Template Main CSS Files -->
-  <link href="assets/css/main.css" rel="stylesheet" />
+  <link href="<?= base_url('assets/css/main.css') ?>" rel="stylesheet" />
 </head>
