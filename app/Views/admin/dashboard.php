@@ -168,7 +168,7 @@
                       <select class="form-select form-select-sm me-2" id="yearDropdown" aria-label="Pilih tahun"></select>
                       <a href="#" class="btn btn-sm btn-primary" id="btnDownloadXlsx">
                         <i class="bi bi-download"></i>
-                        Download XLSX
+                        Down
                       </a>
                     </div>
                   </div>
