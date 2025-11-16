@@ -418,7 +418,7 @@ document.getElementById('btnTestSend').addEventListener('click', async () => {
       message: jPrev.rendered || ''
     }, async () => {
       document.getElementById('testStatus').textContent = 'Mengirim...';
-      const res = await fetch(API.test, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ key, registrasi_id: rid }) });
+      const res = await fetch(API.test, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ key, registrasi_id: rid, phone: phoneInput }) });
       const j = await res.json();
       document.getElementById('testStatus').textContent = j.success ? 'Terkirim' : ('Gagal: ' + (j.message || ''));
       fetchLogs();

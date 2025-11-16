@@ -154,18 +154,36 @@ class Setting extends BaseController
             return redirect()->to(site_url('admin/setting'))
                 ->with('error', 'Akses ditolak: hanya admin yang dapat melihat transaksi.');
         }
+        $req = $this->request;
+        $month = (int) ($req->getGet('month') ?? $req->getPost('month') ?? 0);
+        $year  = (int) ($req->getGet('year') ?? $req->getPost('year') ?? 0);
 
-        // Gunakan periode hari ini (format d/m/Y - d/m/Y) sesuai JSON KlikBCA
-        $todayFmt = date('d/m/Y');
-        $periodToday = $todayFmt . ' - ' . $todayFmt;
         $tm = model(BankTransaction::class);
-        $rows = $tm->where('period', $periodToday)->orderBy('id', 'DESC')->findAll();
+        if ($month >= 1 && $month <= 12 && $year >= 2000) {
+            $startDate = sprintf('%04d-%02d-01', $year, $month);
+            $endDate = date('Y-m-t', strtotime($startDate));
+            $rows = $tm
+                ->where('created_at >=', $startDate . ' 00:00:00')
+                ->where('created_at <=', $endDate . ' 23:59:59')
+                ->orderBy('created_at', 'DESC')
+                ->findAll();
+        } else {
+            // Tampilkan semua data transaksi bila filter tidak diberikan
+            $rows = $tm->orderBy('created_at', 'DESC')->findAll();
+        }
+
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
 
         return view('layout/admin_layout', [
             'title' => 'Transaksi',
             'content' => view('admin/setting/transaksi', [
                 'rows' => $rows,
-                'period' => $periodToday,
+                'filters' => [ 'month' => $month, 'year' => $year ],
+                'months' => $months,
+                'years' => range((int)date('Y') - 5, (int)date('Y') + 1),
             ]),
         ]);
     }
