@@ -21,7 +21,7 @@ if (!isset($activePage)) {
 ?>
 <div class="container-fluid container-xl position-relative d-flex align-items-center">
   <a href="<?= base_url() ?>" class="logo d-flex align-items-center me-auto">
-    <img src="assets/img/logo.webp" alt="logo Eqiyu Indonesia" />
+    <img src="<?= base_url('assets/img/logo.webp') ?>" alt="logo Eqiyu Indonesia" />
   </a>
 
   <nav id="navmenu" class="navmenu">
@@ -42,5 +42,5 @@ if (!isset($activePage)) {
     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
   </nav>
 
-  <a class="btn-getstarted" href="kursus">Semua Kursus</a>
+  <a class="btn-getstarted" href="<?= base_url('kursus') ?>">Semua Kursus</a>
 </div>
