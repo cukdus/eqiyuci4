@@ -6,6 +6,8 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('tentang', 'Home::tentang');
 $routes->get('info', 'Home::info');
+// Public API: articles list for infinite scroll
+$routes->get('api/info', 'Home::infoJson');
 // Detail artikel berdasarkan slug
 $routes->get('info/(:segment)', 'Home::infoDetail/$1');
 // Legacy route for static template (kept for backward compatibility)

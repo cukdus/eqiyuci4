@@ -40,7 +40,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
   <!-- Blog Posts Section -->
   <section id="blog-posts" class="blog-posts section">
     <div class="container" data-aos="fade-up" data-aos-delay="100">
-      <div class="row gy-4">
+      <div class="row gy-4" id="postsList">
         <?php if (!empty($berita) && is_array($berita)): ?>
           <?php
           $bulanNama = [
@@ -100,10 +100,21 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
   </section>
   <!-- /Blog Posts Section -->
 
-  <!-- Pagination 2 Section -->
-  <?php if (!empty($berita) && is_array($berita) && count($berita) > 0): ?>
-    <?= isset($pager) ? $pager->links('default', 'front_pagination_2') : '' ?>
-  <?php endif; ?>
-  <!-- /Pagination 2 Section -->
+  <div id="postsLoading" class="text-center text-muted my-3" style="display:none">Memuat...</div>
+  <div id="postsSentinel" style="height:1px"></div>
 </main>
+<script>
+(function(){
+  const API = '<?= base_url('api/info') ?>';
+  const list = document.getElementById('postsList');
+  const sentinel = document.getElementById('postsSentinel');
+  const loadingEl = document.getElementById('postsLoading');
+  let page = 1; let loading = false; const limit = 9; const tag = '<?= esc($currentTag ?? '') ?>';
+  function fmtDate(dStr){ const d=new Date(dStr); if(isNaN(d.getTime())) return {day:'',month:''}; const day=String(d.getDate()).padStart(2,'0'); const m=d.getMonth()+1; const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']; return {day,month:months[m-1]}; }
+  function cardHtml(item){ const t=item.tanggal_terbit||''; const dm=fmtDate(t); const penulis=item.penulis||'Anonim'; const kategori=item.kategori_nama||'Uncategorized'; const judul=item.judul||''; const slug=item.slug||''; const img=(item.gambar_utama? '<?= base_url('') ?>'+item.gambar_utama : '<?= base_url('assets/img/blog/blog-post-1.webp') ?>'); const detail='<?= base_url('info') ?>/'+encodeURIComponent(slug); return `<div class="col-lg-4"><article class="position-relative h-100"><div class="post-img position-relative overflow-hidden"><img src="${img}" class="img-fluid" alt="${judul}" /></div><div class="meta d-flex align-items-end"><span class="post-date"><span>${dm.day}</span>${dm.month}</span><div class="d-flex align-items-center"><i class="bi bi-person"></i><span class="ps-2">${penulis}</span></div><span class="px-3 text-black-50">/</span><div class="d-flex align-items-center"><i class="bi bi-folder2"></i><span class="ps-2">${kategori}</span></div></div><div class="post-content d-flex flex-column"><h3 class="post-title">${judul}</h3><a href="${detail}" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a></div></article></div>`; }
+  async function loadNext(){ if(loading) return; loading=true; if(loadingEl) loadingEl.style.display='block'; try{ const usp=new URLSearchParams({ page: page+1, limit, tag }); const res=await fetch(API+'?'+usp.toString(),{ headers:{ 'Accept':'application/json' }}); const json=await res.json(); const rows=Array.isArray(json.data)? json.data:[]; if(rows.length){ page++; rows.forEach(r=>{ const w=document.createElement('div'); w.innerHTML=cardHtml(r); list.appendChild(w.firstElementChild); }); }
+  }catch(e){} finally{ loading=false; if(loadingEl) loadingEl.style.display='none'; }}
+  const io=new IntersectionObserver((entries)=>{ for(const en of entries){ if(en.isIntersecting && !loading){ loadNext(); } } },{ root:null, rootMargin:'200px', threshold:0 }); io.observe(sentinel);
+})();
+</script>
 <?= $this->endSection() ?>

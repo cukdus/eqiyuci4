@@ -95,35 +95,66 @@ class Home extends BaseController
                 ->groupBy('berita.id');
         }
 
-        $berita = $builder
+        $rows = $builder
             ->orderBy('tanggal_terbit', 'DESC')
-            ->paginate(9);
+            ->limit(9)
+            ->get()
+            ->getResultArray();
 
         // Tambahkan kategori_nama untuk tiap item
-        foreach ($berita as $key => $artikel) {
+        foreach ($rows as $key => $artikel) {
             if (!empty($artikel['kategori_id'])) {
                 $kategori = $kategoriModel->find($artikel['kategori_id']);
-                $berita[$key]['kategori_nama'] = $kategori ? $kategori['nama_kategori'] : 'Uncategorized';
+                $rows[$key]['kategori_nama'] = $kategori ? $kategori['nama_kategori'] : 'Uncategorized';
             } else {
-                $berita[$key]['kategori_nama'] = 'Uncategorized';
+                $rows[$key]['kategori_nama'] = 'Uncategorized';
             }
         }
-
-        // Siapkan pager path agar mempertahankan query ?tag=...
-        $pager = $beritaModel->pager;
-        $path = site_url('info');
-        if ($tagParam !== '') {
-            $path .= '?tag=' . urlencode($tagParam);
-        }
-        $pager->setPath($path);
-
-        $data = [
-            'berita' => $berita,
-            'pager' => $pager,
+        return view('info', [
+            'berita' => $rows,
             'currentTag' => $tagParam,
-        ];
+        ]);
+    }
 
-        return view('info', $data);
+    public function infoJson()
+    {
+        $limit = max(1, min(24, (int) ($this->request->getGet('limit') ?? 9)));
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $offset = ($page - 1) * $limit;
+        $tagParamRaw = (string) ($this->request->getGet('tag') ?? '');
+        $tagParam = trim(mb_strtolower($tagParamRaw));
+        $now = date('Y-m-d H:i:s');
+
+        $beritaModel = new \App\Models\Berita();
+        $kategoriModel = new \App\Models\KategoriBerita();
+        $builder = $beritaModel
+            ->select('berita.*')
+            ->where('status', 'publish')
+            ->where('tanggal_terbit <=', $now);
+        if ($tagParam !== '') {
+            $builder = $builder
+                ->join('berita_tag bt', 'bt.berita_id = berita.id', 'left')
+                ->join('tag t', 't.id = bt.tag_id', 'left')
+                ->where('t.nama_tag', $tagParam)
+                ->groupBy('berita.id');
+        }
+        $rows = $builder
+            ->orderBy('tanggal_terbit', 'DESC')
+            ->limit($limit, $offset)
+            ->get()
+            ->getResultArray();
+        foreach ($rows as $key => $artikel) {
+            if (!empty($artikel['kategori_id'])) {
+                $kategori = $kategoriModel->find($artikel['kategori_id']);
+                $rows[$key]['kategori_nama'] = $kategori ? $kategori['nama_kategori'] : 'Uncategorized';
+            } else {
+                $rows[$key]['kategori_nama'] = 'Uncategorized';
+            }
+        }
+        return $this->response->setJSON([
+            'ok' => true,
+            'data' => $rows,
+        ]);
     }
 
     public function infoDetail(string $slug = '')
