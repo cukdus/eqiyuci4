@@ -25,9 +25,9 @@ return [
     'notActivated' => 'This user account is not yet activated.',
     'errorSendingActivation' => 'Failed to send activation message to: {0}',
     // Login
-    'badAttempt' => 'Unable to log you in. Please check your credentials.',
+    'badAttempt' => 'Guoblok! Ojok ngawur timbangane tak awur.',
     'loginSuccess' => 'Welcome back!',
-    'invalidPassword' => 'Unable to log you in. Please check your password.',
+    'invalidPassword' => 'Ojok ngawur timbangane tak awur. Coba lagi.',
     // Forgotten Passwords
     'forgotDisabled' => 'Reseting password option has been disabled.',
     'forgotNoUser' => 'Unable to locate a user with that email.',
@@ -69,8 +69,8 @@ return [
     'email' => 'Email',
     'emailAddress' => 'Email Address',
     'sendInstructions' => 'Send Instructions',
-    'loginTitle' => 'Mau masuk a mas?',
-    'loginAction' => 'masuk mas',
+    'loginTitle' => 'Mau masuk a Lur?',
+    'loginAction' => 'masuk Lur',
     'rememberMe' => 'Remember me',
     'needAnAccount' => 'Need an account?',
     'forgotYourPassword' => 'Forgot your password?',

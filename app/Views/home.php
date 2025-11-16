@@ -120,7 +120,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   </div>
                   <div class="card-content">
                     <h6>Kelas Private</h6>
-                    <span>10<?= number_format($kelas_private ?? 3200) ?> alumni</span>
+                    <span>1<?= number_format($kelas_private ?? 3200) ?> alumni</span>
                   </div>
                 </div>
               </div>
