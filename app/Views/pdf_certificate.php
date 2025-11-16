@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title><?= esc($title ?? ('Sertifikat - ' . ($data['nomor_sertifikat'] ?? ''))) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
     <style>
         /* Layout A4 landscape: 297mm x 210mm */
         @page { size: A4 landscape; margin: 0; }
@@ -23,7 +27,7 @@
             width: 80%;
             z-index: 2;
         }
-        .recipient { font-size: 48px; font-weight: 700; text-transform: uppercase; margin: 60px 0 20px; }
+        .recipient { font-family: 'Teko', sans-serif; font-size: 35px; font-weight: 700; text-transform: uppercase; margin: 60px 0 80px; }
         .kelas { font-size: 22px; font-weight: 600; text-transform: uppercase; margin: 50px 0; }
         .number { position: absolute; bottom: 40px; right: 50px; font-size: 16px; color: #ffffff !important; z-index: 3; }
     </style>
