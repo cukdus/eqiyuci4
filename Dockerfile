@@ -4,12 +4,16 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y \
     cron \
     supervisor \
+    tzdata \
     libzip-dev unzip git \
     libpng-dev libjpeg-dev libwebp-dev libfreetype6-dev \
     libxml2-dev libonig-dev libcurl4-openssl-dev \
     libicu-dev \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Asia/Jakarta
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Enable apache modules
 RUN a2enmod rewrite headers
