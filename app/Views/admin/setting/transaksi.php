@@ -13,13 +13,13 @@
                 <select name="month" class="form-select form-select-sm me-2" style="width:auto;">
                   <option value="">Bulan</option>
                   <?php foreach (($months ?? []) as $mVal => $mName): ?>
-                    <option value="<?= (int)$mVal ?>" <?= ((int)($filters['month'] ?? 0) === (int)$mVal) ? 'selected' : '' ?>><?= esc($mName) ?></option>
+                    <option value="<?= (int) $mVal ?>" <?= ((int) ($filters['month'] ?? 0) === (int) $mVal) ? 'selected' : '' ?>><?= esc($mName) ?></option>
                   <?php endforeach; ?>
                 </select>
                 <select name="year" class="form-select form-select-sm me-2" style="width:auto;">
                   <option value="">Tahun</option>
                   <?php foreach (($years ?? []) as $yy): ?>
-                    <option value="<?= (int)$yy ?>" <?= ((int)($filters['year'] ?? 0) === (int)$yy) ? 'selected' : '' ?>><?= (int)$yy ?></option>
+                    <option value="<?= (int) $yy ?>" <?= ((int) ($filters['year'] ?? 0) === (int) $yy) ? 'selected' : '' ?>><?= (int) $yy ?></option>
                   <?php endforeach; ?>
                 </select>
                 <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
@@ -28,7 +28,7 @@
               <form method="post" action="<?= site_url('admin/setting/import-bca'); ?>" onsubmit="return confirm('Jalankan impor Mutasi BCA sekarang?');" class="d-inline">
                   <?= csrf_field(); ?>
                   <input type="hidden" name="run_parser" value="1">
-                  <button type="submit" class="btn btn-sm btn-primary ms-auto"><i class="bi bi-cloud-download"></i> Scrape & Impor Mutasi BCA</button>
+                  <button type="submit" class="btn btn-sm btn-danger ms-auto"><i class="bi bi-cloud-download"></i> Jangan Dipencet Ngawur</button>
               </form>
             </div>
           </div>
