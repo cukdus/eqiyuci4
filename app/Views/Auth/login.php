@@ -34,7 +34,7 @@
                         <span class="password-toggle"><i class="fa fa-eye"></i></span>
                     </div>
 
-                    <button type="submit" class="btn btn-signin">Masukno mas...</button>
+                    <button type="submit" class="btn btn-signin">Masukkan Lur...</button>
 
                     <div class="form-footer">
                         <?php if ($config->allowRemembering): ?>
