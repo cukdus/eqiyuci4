@@ -10,13 +10,10 @@
         body { font-family: DejaVu Sans, Arial, sans-serif; }
         .certificate-container {
             width: 100%;
-            height: 100vh; /* Dompdf maps to page height */
+            height: 210mm;
             position: relative;
-            background-image: url('<?= base_url('assets/images/certificate-bg.png') ?>');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
         }
+        .bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
         .content {
             text-align: center;
             position: absolute;
@@ -24,15 +21,17 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 80%;
+            z-index: 2;
         }
         .recipient { font-size: 48px; font-weight: 700; text-transform: uppercase; margin: 60px 0 20px; }
         .kelas { font-size: 22px; font-weight: 600; text-transform: uppercase; margin: 50px 0; }
-        .number { position: absolute; bottom: 16px; right: 24px; font-size: 16px; color: #fff; }
+        .number { position: absolute; bottom: 40px; right: 50px; font-size: 16px; color: #ffffff !important; z-index: 3; }
     </style>
     <?php $d = $data ?? []; ?>
     </head>
 <body>
     <div class="certificate-container">
+        <img class="bg-img" src="assets/images/certificate-bg.png" alt="bg" />
         <div class="content">
             <div class="recipient"><?= esc($d['nama_pemilik'] ?? '') ?></div>
             <div class="kelas"><?= esc($d['nama_kelas'] ?? '') ?></div>
