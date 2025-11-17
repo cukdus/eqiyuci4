@@ -47,5 +47,5 @@
   <link href="<?= base_url('assets/vendor/swiper/swiper-bundle.min.css') ?>" rel="stylesheet" />
 
   <!-- Template Main CSS Files -->
-  <link href="<?= base_url('assets/css/main.css?v=' . time()) ?>" rel="stylesheet" />
+  <link href="<?= base_url('assets/css/main.css')" rel="stylesheet" />
 </head>
