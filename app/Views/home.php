@@ -584,7 +584,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                       <h3 class="post-title">
                         <?= esc($artikel['judul']) ?>
                       </h3>
-                      <a href="blog-details.php" class="readmore stretched-link"><span>Selengkapnya</span><i class="bi bi-arrow-right"></i></a>
+                      <a href="<?= base_url('info/' . urlencode($artikel['slug'] ?? '')) ?>" class="readmore stretched-link"><span>Selengkapnya</span><i class="bi bi-arrow-right"></i></a>
                     </div>
                   </article>
                 </div>
@@ -595,7 +595,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               </div>
             <?php endif; ?>
             <div class="more-blog text-center aos-init aos-animate" data-aos="fade-up" data-aos-delay="500">
-              <a href="info" class="btn-more">Lihat Semua Info</a>
+              <a href="<?= base_url('info') ?>" class="btn-more">Lihat Semua Info</a>
             </div>
           </div>
       </div>
