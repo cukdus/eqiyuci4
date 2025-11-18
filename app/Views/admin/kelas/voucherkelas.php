@@ -108,17 +108,17 @@
                         <td><?= $no++ ?></td>
                         <td><code><?= esc($v['kode_voucher']) ?></code></td>
                         <td><?= esc($v['nama_kelas'] ?? '-') ?></td>
-                        <td><?= number_format((float) ($v['diskon_persen'] ?? 0), 2) ?></td>
+                        <td><?= number_format((float) ($v['diskon_persen'] ?? 0), 0) ?></td>
                         <td>
                           <?php
                           $mulai = $v['tanggal_berlaku_mulai'] ?? null;
                           $sampai = $v['tanggal_berlaku_sampai'] ?? null;
                           if ($mulai && $sampai) {
-                            echo esc($mulai) . ' s/d ' . esc($sampai);
+                            echo esc(date('d-m-Y', strtotime($mulai))) . ' s/d ' . esc(date('d-m-Y', strtotime($sampai)));
                           } elseif ($mulai) {
-                            echo 'Mulai ' . esc($mulai);
+                            echo 'Mulai ' . esc(date('d-m-Y', strtotime($mulai)));
                           } elseif ($sampai) {
-                            echo 'Sampai ' . esc($sampai);
+                            echo 'Sampai ' . esc(date('d-m-Y', strtotime($sampai)));
                           } else {
                             echo '<span class="text-muted">Tanpa batas tanggal</span>';
                           }
