@@ -159,7 +159,6 @@ class Artikel extends BaseController
             // Fallback jika tidak ada sesi user (seharusnya terlindungi oleh filter login)
             $penulis = trim((string) $this->request->getPost('penulis'));
         }
-        $statusInput = $this->request->getPost('status');
         $kategoriId = $this->request->getPost('kategori_id');
         $tanggalTerbitRaw = (string) $this->request->getPost('tanggal_terbit');
 
@@ -181,16 +180,7 @@ class Artikel extends BaseController
             $tanggalTerbit = date('Y-m-d') . ' 11:00:00';
         }
 
-        // Tentukan status otomatis berdasarkan tanggal terbit
-        $statusAuto = 'draft';
-        try {
-            $dtTarget = new \DateTime($tanggalTerbit);
-            $now = new \DateTime('now');
-            $statusAuto = ($dtTarget <= $now) ? 'publish' : 'draft';
-        } catch (\Throwable $e) {
-            // Jika parsing gagal, fallback ke draft
-            $statusAuto = 'draft';
-        }
+        $statusAuto = 'publish';
 
         // Generate slug unik dari judul
         $baseSlug = url_title($judul, '-', true);
@@ -347,20 +337,7 @@ class Artikel extends BaseController
             $tanggalTerbit = (string) ($original['tanggal_terbit'] ?? date('Y-m-d H:i:s'));
         }
 
-        // Tentukan status otomatis berdasarkan tanggal terbit
-        $statusAuto = 'draft';
-        try {
-            if ($tanggalTerbitRaw) {
-                $dtTarget = new \DateTime($tanggalTerbitRaw);
-                $now = new \DateTime('now');
-                $statusAuto = ($dtTarget <= $now) ? 'publish' : 'draft';
-            } else {
-                // Jika tidak diisi, gunakan status saat ini
-                $statusAuto = (string) ($original['status'] ?? 'draft');
-            }
-        } catch (\Throwable $e) {
-            $statusAuto = (string) ($original['status'] ?? 'draft');
-        }
+        $statusAuto = 'publish';
 
         // Slug: update jika judul berubah, dengan memastikan unik (kecuali id saat ini)
         $slug = (string) ($original['slug'] ?? '');
