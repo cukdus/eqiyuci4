@@ -571,6 +571,7 @@ class Home extends BaseController
         // Price calculation server-side (trust but verify)
         $hargaKelas = isset($kelasRow['harga']) && is_numeric($kelasRow['harga']) ? (float) $kelasRow['harga'] : 0.0;
         $diskonPersen = 0;
+        $kodeVoucherFinal = null;
         if ($kodeVoucher !== '') {
             $db = \Config\Database::connect();
             $voucherRow = $db->table('voucher')->where('kode_voucher', $kodeVoucher)->get()->getRowArray();
@@ -599,6 +600,9 @@ class Home extends BaseController
                     }
                     if (!$validDate) {
                         $diskonPersen = 0;
+                    } else {
+                        // Voucher valid → setkan ke field untuk menjaga integritas FK
+                        $kodeVoucherFinal = $kodeVoucher;
                     }
                 }
             }
@@ -654,7 +658,8 @@ class Home extends BaseController
             'biaya_dibayar' => $biayaDibayar,
             'biaya_tagihan' => $biayaTagihan,
             'akses_aktif' => 0,
-            'kode_voucher' => $kodeVoucher,
+            // Hanya set kode_voucher bila valid untuk mencegah FK error
+            'kode_voucher' => $kodeVoucherFinal,
             'tanggal_daftar' => date('Y-m-d H:i:s'),
         ];
 
