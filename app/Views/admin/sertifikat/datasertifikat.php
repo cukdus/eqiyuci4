@@ -45,7 +45,13 @@
     </div>
 
     <div class="card card-outline card-success">
-      <div class="card-header"><h3 class="card-title">Daftar Sertifikat</h3></div>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">Daftar Sertifikat</h3>
+        <div class="d-flex align-items-center gap-2">
+          <input type="text" id="certSearch" class="form-control form-control-sm" placeholder="Cari nama / nomor sertifikat" style="max-width: 280px;">
+          <button class="btn btn-sm btn-primary" type="button" id="certSearchBtn">Cari</button>
+        </div>
+      </div>
       <div class="card-body">
         <div class="table-responsive">
           <table class="table table-bordered table-hover text-nowrap">
@@ -151,6 +157,8 @@
       const certBody = document.getElementById('sertifikatTbody');
       const certEmpty = document.getElementById('sertifikatEmpty');
       const certPager = document.getElementById('sertifikatPager');
+      const certSearch = document.getElementById('certSearch');
+      const certSearchBtn = document.getElementById('certSearchBtn');
 
       // Modal refs
       const modalGenerateEl = document.getElementById('modalGenerate');
@@ -260,6 +268,8 @@
         certEmpty.classList.add('d-none');
         certPager.innerHTML = '';
         const params = new URLSearchParams({ page: String(certPage), per_page: String(certPerPage) });
+        const q = (certSearch && certSearch.value || '').trim();
+        if (q) params.append('search', q);
         try {
           const res = await fetch(endpointCert + '?' + params.toString());
           const j = await res.json();
@@ -332,6 +342,14 @@
             else { alert(j.message || 'Gagal menyimpan'); }
           } catch(e){ alert('Gagal menyimpan'); }
         });
+
+        // Search handlers
+        if (certSearchBtn) {
+          certSearchBtn.addEventListener('click', function(){ certPage = 1; loadSertifikat(); });
+        }
+        if (certSearch) {
+          certSearch.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); certPage = 1; loadSertifikat(); } });
+        }
       }
 
       function renderPager(container, meta, onMove){
