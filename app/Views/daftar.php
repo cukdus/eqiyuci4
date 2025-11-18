@@ -868,7 +868,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
 
                 <div class="enrollment-stats mt-4">
                   <div class="stat-item">
-                    <span class="stat-number"><?= number_format($total_alumni ?? 0) ?></span>
+                    <span class="stat-number">2<?= number_format($total_alumni ?? 0) ?></span>
                     <span class="stat-label">Total Alumni</span>
                   </div>
                 </div>
