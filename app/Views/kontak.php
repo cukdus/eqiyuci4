@@ -87,7 +87,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               </div>
               <div class="contact-text">
                 <h4>Call</h4>
-                <p>0858-5222-9959</p>
+                <p>0821-4290-2700</p>
               </div>
             </div>
 

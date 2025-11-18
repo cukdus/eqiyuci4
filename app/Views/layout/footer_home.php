@@ -144,7 +144,7 @@
 
   <!-- WhatsApp Float Button -->
   <a
-    href="https://wa.me/6285852229959?text=Hallo%2C%20Saya%20tahu%20info%20dari%20web%20https%3A%2F%2Feqiyu.id%20ingin%20bertanya%20tentang%20kelas%2Fkursus"
+    href="https://wa.me/6282142902700?text=Hallo%2C%20Saya%20tahu%20info%20dari%20web%20https%3A%2F%2Feqiyu.id%20ingin%20bertanya%20tentang%20kelas%2Fkursus"
     class="whatsapp-float"
     target="_blank">
     <i class="bi bi-whatsapp"></i>
