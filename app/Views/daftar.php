@@ -173,6 +173,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                             style="min-width: 120px">
                             Check Voucher
                           </button>
+                          <div id="voucherFeedback" class="form-text"></div>
                         </div>
                       </div>
                     </div>

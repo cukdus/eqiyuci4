@@ -719,6 +719,11 @@ class Home extends BaseController
                 $n = (float) ($v ?? 0);
                 return number_format($n, 0, ',', '.');
             };
+            // Label voucher untuk pesan WAHA
+            $voucherLabel = '-';
+            if ($kodeVoucherFinal !== null && $diskonPersen > 0) {
+                $voucherLabel = 'diskon ' . (int) $diskonPersen . '%';
+            }
             $payload = [
                 'nama' => (string) $nama,
                 'nama_kelas' => $kelasNama,
@@ -731,6 +736,7 @@ class Home extends BaseController
                 'status_pembayaran' => (string) ($isDP ? 'DP 50%' : 'lunas'),
                 'jumlah_tagihan' => (string) $fmtRp($biayaTagihan),
                 'jumlah_dibayar' => (string) $fmtRp($biayaDibayar),
+                'voucher' => (string) $voucherLabel,
             ];
             // Enqueue ke waha_queue: peserta
             model(\App\Models\WahaQueue::class)->insert([
@@ -761,6 +767,7 @@ class Home extends BaseController
                     'status_pembayaran' => (string) ($isDP ? 'DP 50%' : 'lunas'),
                     'jumlah_tagihan' => (string) $fmtRp($biayaTagihan),
                     'jumlah_dibayar' => (string) $fmtRp($biayaDibayar),
+                    'voucher' => (string) $voucherLabel,
                 ];
                 model(\App\Models\WahaQueue::class)->insert([
                     'registrasi_id' => $newId,
