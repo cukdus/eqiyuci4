@@ -371,10 +371,14 @@ class Home extends BaseController
             }
         }
 
+        $sertifikatModel = new \App\Models\Sertifikat();
+        $totalAlumni = $sertifikatModel->countAllResults();
+
         return view('daftar', [
             'kelasList' => $kelasList,
             'kotaOptions' => $kotaOptions,
             'selectedKode' => $selectedKode,
+            'total_alumni' => $totalAlumni,
         ]);
     }
 
