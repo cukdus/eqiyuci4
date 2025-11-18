@@ -47,10 +47,14 @@
     <div class="card card-outline card-success">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">Daftar Sertifikat</h3>
-        <div class="d-flex align-items-center gap-2">
-          <input type="text" id="certSearch" class="form-control form-control-sm" placeholder="Cari nama / nomor sertifikat" style="max-width: 280px;">
-          <button class="btn btn-sm btn-primary" type="button" id="certSearchBtn">Cari</button>
-        </div>
+        <!--div class="d-flex align-items-center gap-2"> -->
+        <form id="formSearch" class="input-group input-group-sm" style="width: 250px;">
+          <input type="text" id="certSearch" class="form-control form-control-sm float-right" placeholder="Cari nama / nomor sertifikat" style="max-width: 280px;">
+          <button type="submit" class="btn btn-default">
+            <i class="fas fa-search"></i>
+        </button>
+              </form>
+        <!-- /div> -->
       </div>
       <div class="card-body">
         <div class="table-responsive">
