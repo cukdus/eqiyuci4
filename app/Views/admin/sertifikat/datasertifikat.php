@@ -45,11 +45,13 @@
     </div>
 
     <div class="card card-outline card-success">
-      <div class="card-header d-flex align-items-center gap-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">Daftar Sertifikat</h3>
-        <div class="input-group input-group-sm" style="max-width: 320px;">
-          <input type="text" id="certSearch" class="form-control" placeholder="Cari nama / nomor sertifikat">
-          <button class="btn btn-primary" type="button" id="certSearchBtn">Cari</button>
+        <div class="ms-auto" style="max-width: 320px;">
+          <div class="input-group input-group-sm">
+            <input type="text" id="certSearch" class="form-control" placeholder="Cari nama / nomor sertifikat">
+            <button class="btn btn-primary" type="button" id="certSearchBtn"><i class="fas fa-search"></i> Cari</button>
+          </div>
         </div>
       </div>
       <div class="card-body">
