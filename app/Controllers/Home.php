@@ -837,6 +837,7 @@ class Home extends BaseController
                         'status_pembayaran' => (string) ($isDP ? 'DP 50%' : 'lunas'),
                         'jumlah_tagihan' => (string) $fmtRp($biayaTagihan),
                         'jumlah_dibayar' => (string) $fmtRp($biayaDibayar),
+                        'voucher' => (string) $voucherLabel,
                     ];
                     if ($tplA && !empty($tplA['template'])) {
                         $messageA = $ws->renderTemplate((string) $tplA['template'], $payloadAdmin2);
