@@ -1,9 +1,16 @@
+<?php $me = service('authentication')->user();
+$authz = service('authorization');
+$isAdmin = $me && $authz->inGroup('admin', $me->id);
+$isStaff = $me && $authz->inGroup('staff', $me->id);
+$canEditCert = $isAdmin;
+$showFilterGenerate = $isAdmin; ?>
 <section class="content">
   <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0">Data Sertifikat</h5>
     </div>
 
+    <?php if ($showFilterGenerate): ?>
     <div class="card card-outline card-primary mb-3">
       <div class="card-header"><h3 class="card-title">Filter & Generate Sertifikat</h3></div>
       <div class="card-body">
@@ -43,6 +50,7 @@
         <div class="d-flex justify-content-end align-items-center gap-2" id="registrasiPager"></div>
       </div>
     </div>
+    <?php endif; ?>
 
     <div class="card card-outline card-success">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -152,6 +160,7 @@
       const formFilter = document.getElementById('formFilter');
       const inputSearch = document.getElementById('searchInput');
       const kelasSelect = document.getElementById('kelasSelect');
+      const canEditCert = <?= $canEditCert ? 'true' : 'false' ?>;
 
       const regBody = document.getElementById('registrasiTbody');
       const regEmpty = document.getElementById('registrasiEmpty');
@@ -200,9 +209,12 @@
       let regPage = 1, regPerPage = 10;
       let certPage = 1, certPerPage = 10;
 
-      formFilter.addEventListener('submit', function(e){ e.preventDefault(); regPage = 1; loadRegistrasi(); });
+      if (formFilter) {
+        formFilter.addEventListener('submit', function(e){ e.preventDefault(); regPage = 1; loadRegistrasi(); });
+      }
 
       async function loadRegistrasi(){
+        if (!formFilter) return;
         regBody.innerHTML = '';
         regEmpty.classList.add('d-none');
         regPager.innerHTML = '';
@@ -288,6 +300,7 @@
         if (!rows.length){ certEmpty.classList.remove('d-none'); return; }
         const html = rows.map(function(s){
           const dtInfo = formatDate(s.tanggal_terbit);
+          const editBtn = canEditCert ? `<button class="btn btn-sm btn-warning" data-act="edit" data-id="${s.id}" title="Edit Sertifikat"><i class="fas fa-edit"></i></button>` : '';
           return `
             <tr>
               <td><span class="small text-muted">${dtInfo}</span></td>
@@ -297,7 +310,7 @@
               <td>
                 <div class="btn-group">
                   <a class="btn btn-sm btn-info" href="<?= base_url('admin/sertifikat') ?>/${s.id}/view" target="_blank" title="Lihat Sertifikat"><i class="fas fa-eye"></i></a>
-                  <button class="btn btn-sm btn-warning" data-act="edit" data-id="${s.id}" title="Edit Sertifikat"><i class="fas fa-edit"></i></button>
+                  ${editBtn}
                   <button class="btn btn-sm btn-outline-danger" data-act="del" data-id="${s.id}"><i class="fas fa-trash"></i></button>
                 </div>
               </td>
@@ -388,7 +401,7 @@
       }
 
       // Initial load
-      loadRegistrasi();
+      if (formFilter) { loadRegistrasi(); }
       loadSertifikat();
     })();
   </script>
