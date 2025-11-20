@@ -25,12 +25,12 @@
         }
         .certificate-content { text-align: center; margin: 200px 0; }
         .recipient-name {
-            font-size: 60px; color: #000; margin: 70px 0 20px;
+            font-size: 50px; color: #000; margin: 120px 0 20px 220px;
             font-family: 'Teko', sans-serif; text-transform: uppercase;
             display: inline-block; padding: 0 50px 5px;
         }
-        .certificate-class { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 20px 0; color: #000; }
-        .certificate-number { position: absolute; bottom: 40px; right: 20px; font-size: 18px; font-family: 'Rubik', sans-serif; color: #fff; }
+        .certificate-class { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 20px 0 0 210px; color: #000; }
+        .certificate-number { position: absolute; bottom: 15px; right: 35px; font-size: 22px; font-weight: bold; font-family: 'Rubik', sans-serif; color: #000; display: inline-block; transform: rotate(90deg); transform-origin: bottom right; }
         .download-button { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
         @media print { body { background: none; } .certificate-container { box-shadow: none; margin: 0; padding: 40px; } .download-button { display: none; } }
     </style>
