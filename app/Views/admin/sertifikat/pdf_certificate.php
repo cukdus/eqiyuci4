@@ -15,8 +15,8 @@
         }
         .bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
         .content { position: absolute; top: 52mm; left: 0; right: 0; z-index: 2; }
-        .recipient { font-size: 10mm; font-weight: 700; text-transform: uppercase; text-align: center; margin: 47mm 0 6mm 70mm; color: #000; }
-        .kelas { font-size: 6mm; font-weight: 600; text-align: center; text-transform: uppercase; margin: 16mm 0 0 56mm; color: #000; }
+        .recipient { font-size: 10mm; font-weight: 700; text-transform: uppercase; text-align: center; margin: 47mm 0 6mm 55mm; color: #000; }
+        .kelas { font-size: 6mm; font-weight: 600; text-align: center; text-transform: uppercase; margin: 16mm 0 0 55mm; color: #000; }
         .number { position: absolute; bottom: 5.6mm; right: 15.6mm; font-size: 5.8mm; color: #000; z-index: 3; display: inline-block; transform: rotate(90deg); transform-origin: bottom right; }
     </style>
     <?php $d = $data ?? []; ?>
