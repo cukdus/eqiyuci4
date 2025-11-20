@@ -114,7 +114,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                     </table>
 
                     <div class="text-center mt-4">
-                      <a href="<?= base_url('lihatsertifikat') ?>?nomor=<?= urlencode($cert_data['nomor_sertifikat'] ?? '') ?>" class="btn btn-primary" target="_blank">
+                      <a href="<?= base_url('lihatsertifikat') ?>?nomor=<?= urlencode($cert_data['nomor_sertifikat'] ?? '') ?>" class="btn btn-primary js-download">
                         <i class="bi bi-download"></i> Download E-Sertifikat
                       </a>
                     </div>
@@ -180,7 +180,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               <tr><th>Status</th><td>${d.status || ''}</td></tr>
             </table>
             <div class="text-center mt-3">
-              <a href="<?= base_url('lihatsertifikat') ?>?nomor=` + encodeURIComponent(d.nomor_sertifikat || '') + `" class="btn btn-primary" target="_blank">
+              <a href="<?= base_url('lihatsertifikat') ?>?nomor=` + encodeURIComponent(d.nomor_sertifikat || '') + `" class="btn btn-primary js-download">
                 <i class="bi bi-download"></i> Download E-Sertifikat
               </a>
             </div>
@@ -193,6 +193,75 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-search me-2"></i>Cari';
         }
+      }
+    });
+  })();
+</script>
+<script>
+  (function(){
+    function createOverlay(){
+      const overlay = document.createElement('div');
+      overlay.id = 'download-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.right = '0';
+      overlay.style.bottom = '0';
+      overlay.style.background = 'rgba(0,0,0,0.4)';
+      overlay.style.zIndex = '1050';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      const box = document.createElement('div');
+      box.style.background = '#fff';
+      box.style.padding = '16px 20px';
+      box.style.borderRadius = '8px';
+      box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+      const spinner = document.createElement('span');
+      spinner.className = 'spinner-border spinner-border-sm me-2';
+      spinner.setAttribute('role', 'status');
+      spinner.setAttribute('aria-hidden', 'true');
+      const text = document.createElement('span');
+      text.textContent = 'Menyiapkan unduhan sertifikat...';
+      box.appendChild(spinner);
+      box.appendChild(text);
+      overlay.appendChild(box);
+      return overlay;
+    }
+
+    document.addEventListener('click', async function(e){
+      const link = e.target.closest('a.js-download');
+      if (!link) return;
+      e.preventDefault();
+      const originalHtml = link.innerHTML;
+      link.disabled = true;
+      link.classList.add('disabled');
+      link.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mengunduh...';
+      const overlay = createOverlay();
+      document.body.appendChild(overlay);
+      try {
+        const res = await fetch(link.href, { headers: { 'Accept': 'application/pdf' } });
+        if (!res.ok) throw new Error('Gagal mengunduh');
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const disposition = res.headers.get('Content-Disposition') || '';
+        let filename = 'sertifikat.pdf';
+        const match = /filename="?([^";]+)"?/i.exec(disposition);
+        if (match && match[1]) filename = match[1];
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function(){ window.URL.revokeObjectURL(url); }, 1000);
+      } catch (err) {
+        alert('Unduhan gagal. Silakan coba lagi.');
+      } finally {
+        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        link.disabled = false;
+        link.classList.remove('disabled');
+        link.innerHTML = originalHtml;
       }
     });
   })();
