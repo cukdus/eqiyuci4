@@ -151,12 +151,13 @@ class Setting extends BaseController
         }
         $authz = service('authorization');
         if (!$authz->inGroup('admin', $me->id)) {
-            return redirect()->to(site_url('admin/setting'))
+            return redirect()
+                ->to(site_url('admin/setting'))
                 ->with('error', 'Akses ditolak: hanya admin yang dapat melihat transaksi.');
         }
         $req = $this->request;
         $month = (int) ($req->getGet('month') ?? $req->getPost('month') ?? 0);
-        $year  = (int) ($req->getGet('year') ?? $req->getPost('year') ?? 0);
+        $year = (int) ($req->getGet('year') ?? $req->getPost('year') ?? 0);
 
         $tm = model(BankTransaction::class);
         if ($month >= 1 && $month <= 12 && $year >= 2000) {
@@ -173,17 +174,27 @@ class Setting extends BaseController
         }
 
         $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
-            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
         ];
 
         return view('layout/admin_layout', [
             'title' => 'Transaksi',
             'content' => view('admin/setting/transaksi', [
                 'rows' => $rows,
-                'filters' => [ 'month' => $month, 'year' => $year ],
+                'filters' => ['month' => $month, 'year' => $year],
                 'months' => $months,
-                'years' => range((int)date('Y') - 5, (int)date('Y') + 1),
+                'years' => range((int) date('Y') - 5, (int) date('Y') + 1),
             ]),
         ]);
     }
@@ -204,10 +215,12 @@ class Setting extends BaseController
         $cmd = 'php ' . escapeshellarg($spark) . ' bank:scrape';
         $out = function_exists('shell_exec') ? @shell_exec($cmd . ' 2>&1') : '';
         if (is_string($out) && $out !== '') {
-            $ins = 0; $sk = 0; $ok = false;
+            $ins = 0;
+            $sk = 0;
+            $ok = false;
             if (preg_match('/Inserted:\s*(\d+),\s*Skipped:\s*(\d+)/', $out, $m)) {
-                $ins = (int)($m[1] ?? 0);
-                $sk = (int)($m[2] ?? 0);
+                $ins = (int) ($m[1] ?? 0);
+                $sk = (int) ($m[2] ?? 0);
                 $ok = true;
             }
             $result = ['success' => $ok ?: true, 'inserted' => $ins, 'skipped' => $sk, 'message' => trim($out)];
@@ -826,6 +839,10 @@ class Setting extends BaseController
         $qm = model(WahaQueue::class);
         $ws = new WahaService();
         $now = date('Y-m-d H:i:s');
+        $sendDelaySeconds = (int) (env('WAHA_SEND_DELAY_SECONDS') ?? 60);
+        if ($sendDelaySeconds < 1) {
+            $sendDelaySeconds = 60;
+        }
         // Ambil konfigurasi retry dari tabel waha_config atau .env fallback
         $cfg = model(\App\Models\WahaConfig::class);
         // Ubah strategi retry: default 6 kali, interval 5 menit
@@ -900,6 +917,7 @@ class Setting extends BaseController
                     'created_at' => date('Y-m-d H:i:s'),
                 ]);
             }
+            sleep($sendDelaySeconds);
         }
         return $this->response->setJSON(['success' => true, 'processed' => $processed]);
     }
