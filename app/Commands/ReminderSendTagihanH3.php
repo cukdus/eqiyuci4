@@ -46,7 +46,7 @@ class ReminderSendTagihanH3 extends BaseCommand
 
         // Registrasi yang jadwalnya start di forDate
         $rows = $db->table('registrasi r')
-            ->select('r.id, r.nama, r.no_telp, r.status_pembayaran, r.biaya_tagihan, r.biaya_dibayar, r.kode_kelas, k.nama_kelas, j.tanggal_mulai')
+            ->select('r.id, r.nama, r.no_telp, r.status_pembayaran, r.biaya_tagihan, r.biaya_dibayar, r.kode_kelas, r.lokasi AS reg_lokasi, k.nama_kelas, j.tanggal_mulai, j.tanggal_selesai, j.lokasi')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
             ->join('jadwal_kelas j', 'j.id = r.jadwal_id', 'left')
             ->where('r.deleted_at', null)
@@ -68,10 +68,34 @@ class ReminderSendTagihanH3 extends BaseCommand
             $dibayar = (float)($r['biaya_dibayar'] ?? 0);
             $sisa = max(0.0, $tagihan - $dibayar);
 
+            $bulanMap = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+            $fmt = function ($d) use ($bulanMap) {
+                $ts = strtotime((string) $d);
+                if (!$ts) return '';
+                $day = date('j', $ts);
+                $m = (int) date('n', $ts);
+                $yy = date('y', $ts);
+                $bulan = $bulanMap[$m] ?? date('F', $ts);
+                return $day . ' ' . $bulan . ' ' . $yy;
+            };
+            $jadwalLabel = '';
+            $mulai = (string) ($r['tanggal_mulai'] ?? '');
+            $selesai = (string) ($r['tanggal_selesai'] ?? '');
+            if ($mulai !== '') {
+                $jadwalLabel = $fmt($mulai);
+                if ($selesai !== '') {
+                    $jadwalLabel .= ' - ' . $fmt($selesai);
+                }
+            }
+            $kotaOut = (string) ($r['lokasi'] ?? '');
+            if ($kotaOut === '') { $kotaOut = (string) ($r['reg_lokasi'] ?? ''); }
+
             $data = [
                 'nama' => $nama,
                 'nama_kelas' => $kelas,
                 'tanggal_mulai' => $tglMulai,
+                'jadwal' => $jadwalLabel,
+                'kota' => $kotaOut,
                 'sisa_bayar' => $this->formatRupiah($sisa),
                 'total_tagihan' => $this->formatRupiah($tagihan),
                 'dibayar' => $this->formatRupiah($dibayar),
