@@ -71,7 +71,7 @@ $penulis = isset($artikel['penulis']) ? (string) $artikel['penulis'] : 'Anonim';
             <?= isset($artikel['konten']) ? $artikel['konten'] : '' ?>
             <div class="container" data-aos="fade-up" data-aos-delay="100">
           <div class="mt-4">
-            <a href="info" class="btn btn-sm btn-secondary d-inline-flex align-items-center">
+            <a href="<?= base_url('info') ?>" class="btn btn-sm btn-secondary d-inline-flex align-items-center">
               <i class="bi bi-arrow-left me-2"></i>
               <span>Kembali</span>
             </a>
