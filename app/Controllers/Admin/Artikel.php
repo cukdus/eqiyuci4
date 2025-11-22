@@ -41,7 +41,7 @@ class Artikel extends BaseController
                 ->select('nama_tag')
                 ->orderBy('nama_tag', 'ASC')
                 ->findAll();
-            $tags = array_values(array_filter(array_map(static function($r){
+            $tags = array_values(array_filter(array_map(static function ($r) {
                 $v = (string) ($r['nama_tag'] ?? '');
                 return trim($v) !== '' ? $v : null;
             }, $rows)));
@@ -67,8 +67,12 @@ class Artikel extends BaseController
         $model = model(Berita::class);
 
         $perPage = (int) ($this->request->getGet('per_page') ?? 10);
-        if ($perPage <= 0) { $perPage = 10; }
-        if ($perPage > 50) { $perPage = 50; }
+        if ($perPage <= 0) {
+            $perPage = 10;
+        }
+        if ($perPage > 50) {
+            $perPage = 50;
+        }
         $page = max(1, (int) ($this->request->getGet('page') ?? 1));
         $start = ($page - 1) * $perPage;
         $search = trim((string) ($this->request->getGet('search') ?? ''));
@@ -99,7 +103,7 @@ class Artikel extends BaseController
             ->getResultArray();
 
         // Normalize output
-        $data = array_map(static function(array $r){
+        $data = array_map(static function (array $r) {
             return [
                 'id' => (int) ($r['id'] ?? 0),
                 'judul' => (string) ($r['judul'] ?? ''),
@@ -207,8 +211,8 @@ class Artikel extends BaseController
             $mime = (string) $file->getMimeType();
             $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
             if (in_array($mime, $allowed, true)) {
-                // Izinkan ukuran file mentah hingga 8MB, lalu kompres
-                if ($file->getSize() <= (8 * 1024 * 1024)) {
+                // Batas ukuran file mentah sebelum kompresi: 2MB
+                if ($file->getSize() <= (2 * 1024 * 1024)) {
                     $saved = $this->saveCompressedImage($file, 'uploads/artikel', 1280, 1280);
                     if ($saved) {
                         $data['gambar_utama'] = $saved;
@@ -218,7 +222,10 @@ class Artikel extends BaseController
         }
 
         if (!$model->insert($data)) {
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan artikel.')
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Gagal menyimpan artikel.')
                 ->with('errors', $model->errors());
         }
 
@@ -226,7 +233,9 @@ class Artikel extends BaseController
         $beritaId = $model->getInsertID();
         $tagsInput = (string) $this->request->getPost('tags');
         if ($beritaId && $tagsInput !== '') {
-            $raw = array_filter(array_map('trim', explode(',', $tagsInput)), function($v){ return $v !== ''; });
+            $raw = array_filter(array_map('trim', explode(',', $tagsInput)), function ($v) {
+                return $v !== '';
+            });
             if (!empty($raw)) {
                 $db = \Config\Database::connect();
                 $pivot = $db->table('berita_tag');
@@ -235,7 +244,9 @@ class Artikel extends BaseController
                 foreach ($raw as $nama) {
                     // Normalisasi sederhana: huruf kecil, hapus spasi berlebih
                     $norm = preg_replace('/\s+/', ' ', mb_strtolower($nama));
-                    if ($norm === '') { continue; }
+                    if ($norm === '') {
+                        continue;
+                    }
                     // Cari tag, jika belum ada buat
                     $exists = $tagModel->where('nama_tag', $norm)->first();
                     if (!$exists) {
@@ -257,7 +268,8 @@ class Artikel extends BaseController
             }
         }
 
-        return redirect()->to(base_url('admin/artikel'))
+        return redirect()
+            ->to(base_url('admin/artikel'))
             ->with('message', 'Artikel berhasil ditambahkan');
     }
 
@@ -266,7 +278,8 @@ class Artikel extends BaseController
         $model = model(Berita::class);
         $artikel = $model->find($id);
         if (!$artikel) {
-            return redirect()->to(base_url('admin/artikel'))
+            return redirect()
+                ->to(base_url('admin/artikel'))
                 ->with('error', 'Artikel tidak ditemukan');
         }
 
@@ -276,13 +289,19 @@ class Artikel extends BaseController
 
         // Ambil tag terkait artikel dan gabungkan sebagai string koma
         $db = \Config\Database::connect();
-        $rows = $db->table('berita_tag bt')
+        $rows = $db
+            ->table('berita_tag bt')
             ->select('t.nama_tag')
             ->join('tag t', 't.id = bt.tag_id', 'left')
             ->where('bt.berita_id', $id)
-            ->get()->getResultArray();
-        $tagNames = array_map(static function($r){ return (string) ($r['nama_tag'] ?? ''); }, $rows);
-        $tagsStr = implode(', ', array_filter($tagNames, static function($v){ return trim($v) !== ''; }));
+            ->get()
+            ->getResultArray();
+        $tagNames = array_map(static function ($r) {
+            return (string) ($r['nama_tag'] ?? '');
+        }, $rows);
+        $tagsStr = implode(', ', array_filter($tagNames, static function ($v) {
+            return trim($v) !== '';
+        }));
 
         return view('layout/admin_layout', [
             'title' => 'Edit Artikel',
@@ -299,7 +318,8 @@ class Artikel extends BaseController
         $model = model(Berita::class);
         $original = $model->find($id);
         if (!$original) {
-            return redirect()->to(base_url('admin/artikel'))
+            return redirect()
+                ->to(base_url('admin/artikel'))
                 ->with('error', 'Artikel tidak ditemukan');
         }
 
@@ -322,7 +342,7 @@ class Artikel extends BaseController
         // Normalisasi datetime-local (YYYY-MM-DDTHH:MM) ke format DB (YYYY-MM-DD HH:MM:SS)
         if ($tanggalTerbitRaw) {
             $tanggalTerbit = str_replace('T', ' ', $tanggalTerbitRaw);
-            if (!preg_match('/:\\d{2}$/', $tanggalTerbit)) {
+            if (!preg_match('/:\d{2}$/', $tanggalTerbit)) {
                 $tanggalTerbit .= ':00';
             }
         } else {
@@ -359,7 +379,8 @@ class Artikel extends BaseController
             $mime = (string) $file->getMimeType();
             $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
             if (in_array($mime, $allowed, true)) {
-                if ($file->getSize() <= (8 * 1024 * 1024)) {
+                // Batas ukuran file mentah sebelum kompresi: 2MB
+                if ($file->getSize() <= (2 * 1024 * 1024)) {
                     $saved = $this->saveCompressedImage($file, 'uploads/artikel', 1280, 1280);
                     if ($saved) {
                         $data['gambar_utama'] = $saved;
@@ -386,7 +407,10 @@ class Artikel extends BaseController
         }
 
         if (!$model->update($id, $data)) {
-            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui artikel.')
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui artikel.')
                 ->with('errors', $model->errors());
         }
 
@@ -397,10 +421,14 @@ class Artikel extends BaseController
         $tagModel = model(Tag::class);
 
         $targetTagIds = [];
-        $raw = array_filter(array_map('trim', explode(',', $tagsInput)), static function($v){ return $v !== ''; });
+        $raw = array_filter(array_map('trim', explode(',', $tagsInput)), static function ($v) {
+            return $v !== '';
+        });
         foreach ($raw as $nama) {
             $norm = preg_replace('/\s+/', ' ', mb_strtolower($nama));
-            if ($norm === '') { continue; }
+            if ($norm === '') {
+                continue;
+            }
             $exists = $tagModel->where('nama_tag', $norm)->first();
             if (!$exists) {
                 $tagModel->insert(['nama_tag' => $norm]);
@@ -416,7 +444,9 @@ class Artikel extends BaseController
         // Ambil tag_id yang sudah terhubung
         $existingRows = $pivot->where('berita_id', $id)->get()->getResultArray();
         $pivot->resetQuery();
-        $existingTagIds = array_map(static function($r){ return (int) ($r['tag_id'] ?? 0); }, $existingRows);
+        $existingTagIds = array_map(static function ($r) {
+            return (int) ($r['tag_id'] ?? 0);
+        }, $existingRows);
 
         // Hapus relasi yang tidak ada lagi
         if (!empty($existingTagIds)) {
@@ -438,7 +468,8 @@ class Artikel extends BaseController
             }
         }
 
-        return redirect()->to(base_url('admin/artikel'))
+        return redirect()
+            ->to(base_url('admin/artikel'))
             ->with('message', 'Artikel berhasil diperbarui');
     }
 
@@ -449,26 +480,34 @@ class Artikel extends BaseController
     {
         $file = $this->request->getFile('file');
         if (!$file || !$file->isValid()) {
-            return $this->response->setStatusCode(400)
+            return $this
+                ->response
+                ->setStatusCode(400)
                 ->setJSON(['error' => 'File tidak valid']);
         }
 
         $mime = (string) $file->getMimeType();
         $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
         if (!in_array($mime, $allowed, true)) {
-            return $this->response->setStatusCode(415)
+            return $this
+                ->response
+                ->setStatusCode(415)
                 ->setJSON(['error' => 'Format gambar tidak didukung']);
         }
 
-        // Batas ukuran file mentah hingga 6MB, lalu kompres
-        if ($file->getSize() > (6 * 1024 * 1024)) {
-            return $this->response->setStatusCode(413)
-                ->setJSON(['error' => 'Ukuran gambar terlalu besar (maks 6MB)']);
+        // Batas ukuran file mentah hingga 2MB, lalu kompres
+        if ($file->getSize() > (2 * 1024 * 1024)) {
+            return $this
+                ->response
+                ->setStatusCode(413)
+                ->setJSON(['error' => 'Ukuran gambar terlalu besar (maks 2MB)']);
         }
 
         $saved = $this->saveCompressedImage($file, 'uploads/artikel/konten', 1280, 1280);
         if (!$saved) {
-            return $this->response->setStatusCode(500)
+            return $this
+                ->response
+                ->setStatusCode(500)
                 ->setJSON(['error' => 'Gagal memproses gambar']);
         }
 
@@ -479,8 +518,7 @@ class Artikel extends BaseController
             'path' => $saved,
             'filename' => basename($saved),
         ]);
-
-        }
+    }
 
     /**
      * Kompres dan simpan gambar upload (resize dan re-encode ke WEBP/JPEG/PNG).
@@ -491,7 +529,9 @@ class Artikel extends BaseController
         try {
             $mime = (string) $file->getMimeType();
             $tmp = (string) $file->getTempName();
-            if ($tmp === '' || !is_file($tmp)) { return null; }
+            if ($tmp === '' || !is_file($tmp)) {
+                return null;
+            }
 
             $src = null;
             $outExt = 'jpg';
@@ -507,11 +547,16 @@ class Artikel extends BaseController
             } else {
                 return null;
             }
-            if (!$src) { return null; }
+            if (!$src) {
+                return null;
+            }
 
             $w = imagesx($src);
             $h = imagesy($src);
-            if ($w <= 0 || $h <= 0) { imagedestroy($src); return null; }
+            if ($w <= 0 || $h <= 0) {
+                imagedestroy($src);
+                return null;
+            }
             $scale = min(($maxWidth > 0 ? ($maxWidth / $w) : 1), ($maxHeight > 0 ? ($maxHeight / $h) : 1), 1);
             $newW = max(1, (int) floor($w * $scale));
             $newH = max(1, (int) floor($h * $scale));
@@ -525,7 +570,9 @@ class Artikel extends BaseController
             imagedestroy($src);
 
             $dir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $subdir);
-            if (!is_dir($dir)) { @mkdir($dir, 0755, true); }
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
 
             $base = 'img_' . time() . '_' . bin2hex(random_bytes(4));
             $useWebp = function_exists('imagewebp');
@@ -535,19 +582,24 @@ class Artikel extends BaseController
             if ($useWebp) {
                 $ok = imagewebp($dst, $full, 80);
             } else {
-                if ($finalExt === 'jpg') { $ok = imagejpeg($dst, $full, 75); }
-                elseif ($finalExt === 'png') { $ok = imagepng($dst, $full, 6); }
-                else { $ok = imagejpeg($dst, $full, 75); }
+                if ($finalExt === 'jpg') {
+                    $ok = imagejpeg($dst, $full, 75);
+                } elseif ($finalExt === 'png') {
+                    $ok = imagepng($dst, $full, 6);
+                } else {
+                    $ok = imagejpeg($dst, $full, 75);
+                }
             }
             imagedestroy($dst);
-            if (!$ok) { return null; }
+            if (!$ok) {
+                return null;
+            }
 
             $relative = rtrim(str_replace(['\\'], '/', $subdir), '/') . '/' . basename($full);
             return $relative;
         } catch (\Throwable $e) {
             return null;
         }
-    }
     }
 
     public function duplicate($id)
