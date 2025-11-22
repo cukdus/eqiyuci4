@@ -201,25 +201,17 @@ class Artikel extends BaseController
             'kategori_id' => $kategoriId ?: null,
         ];
 
-        // Proses upload gambar utama jika ada
+        // Proses upload gambar utama dengan kompresi jika ada
         $file = $this->request->getFile('gambar_utama');
         if ($file && $file->isValid() && !$file->hasMoved()) {
-            $mime = $file->getMimeType();
-            $allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+            $mime = (string) $file->getMimeType();
+            $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
             if (in_array($mime, $allowed, true)) {
-                // Batasi ukuran ~2MB
-                if ($file->getSize() <= (2 * 1024 * 1024)) {
-                    $targetDir = FCPATH . 'uploads/artikel';
-                    if (!is_dir($targetDir)) {
-                        @mkdir($targetDir, 0755, true);
-                    }
-                    $newName = $file->getRandomName();
-                    try {
-                        $file->move($targetDir, $newName);
-                        $data['gambar_utama'] = 'uploads/artikel/' . $newName;
-                    } catch (\Throwable $e) {
-                        // Jika gagal memindahkan, abaikan tanpa menggagalkan simpan artikel
-                        // Bisa ditingkatkan dengan logging
+                // Izinkan ukuran file mentah hingga 8MB, lalu kompres
+                if ($file->getSize() <= (8 * 1024 * 1024)) {
+                    $saved = $this->saveCompressedImage($file, 'uploads/artikel', 1280, 1280);
+                    if ($saved) {
+                        $data['gambar_utama'] = $saved;
                     }
                 }
             }
@@ -361,23 +353,16 @@ class Artikel extends BaseController
             'kategori_id' => $kategoriId ?: null,
         ];
 
-        // Proses upload gambar utama jika ada file baru
+        // Proses upload gambar utama dengan kompresi jika ada file baru
         $file = $this->request->getFile('gambar_utama');
         if ($file && $file->isValid() && !$file->hasMoved()) {
-            $mime = $file->getMimeType();
-            $allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+            $mime = (string) $file->getMimeType();
+            $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
             if (in_array($mime, $allowed, true)) {
-                if ($file->getSize() <= (2 * 1024 * 1024)) {
-                    $targetDir = FCPATH . 'uploads/artikel';
-                    if (!is_dir($targetDir)) {
-                        @mkdir($targetDir, 0755, true);
-                    }
-                    $newName = $file->getRandomName();
-                    try {
-                        $file->move($targetDir, $newName);
-                        $data['gambar_utama'] = 'uploads/artikel/' . $newName;
-                    } catch (\Throwable $e) {
-                        // Abaikan kegagalan move
+                if ($file->getSize() <= (8 * 1024 * 1024)) {
+                    $saved = $this->saveCompressedImage($file, 'uploads/artikel', 1280, 1280);
+                    if ($saved) {
+                        $data['gambar_utama'] = $saved;
                     }
                 }
             }
@@ -468,40 +453,101 @@ class Artikel extends BaseController
                 ->setJSON(['error' => 'File tidak valid']);
         }
 
-        $mime = $file->getMimeType();
+        $mime = (string) $file->getMimeType();
         $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
         if (!in_array($mime, $allowed, true)) {
             return $this->response->setStatusCode(415)
                 ->setJSON(['error' => 'Format gambar tidak didukung']);
         }
 
-        // Batas ukuran 3MB
-        if ($file->getSize() > (3 * 1024 * 1024)) {
+        // Batas ukuran file mentah hingga 6MB, lalu kompres
+        if ($file->getSize() > (6 * 1024 * 1024)) {
             return $this->response->setStatusCode(413)
-                ->setJSON(['error' => 'Ukuran gambar terlalu besar (maks 3MB)']);
+                ->setJSON(['error' => 'Ukuran gambar terlalu besar (maks 6MB)']);
         }
 
-        $targetDir = FCPATH . 'uploads/artikel/konten';
-        if (!is_dir($targetDir)) {
-            @mkdir($targetDir, 0755, true);
-        }
-
-        $newName = $file->getRandomName();
-        try {
-            $file->move($targetDir, $newName);
-        } catch (\Throwable $e) {
+        $saved = $this->saveCompressedImage($file, 'uploads/artikel/konten', 1280, 1280);
+        if (!$saved) {
             return $this->response->setStatusCode(500)
-                ->setJSON(['error' => 'Gagal menyimpan gambar']);
+                ->setJSON(['error' => 'Gagal memproses gambar']);
         }
 
-        $relativePath = 'uploads/artikel/konten/' . $newName;
-        $url = base_url($relativePath);
+        $url = base_url($saved);
 
         return $this->response->setJSON([
             'url' => $url,
-            'path' => $relativePath,
-            'filename' => $newName,
+            'path' => $saved,
+            'filename' => basename($saved),
         ]);
+
+        }
+
+    /**
+     * Kompres dan simpan gambar upload (resize dan re-encode ke WEBP/JPEG/PNG).
+     * Mengembalikan path relatif yang bisa diakses publik.
+     */
+    protected function saveCompressedImage(\CodeIgniter\HTTP\Files\UploadedFile $file, string $subdir, int $maxWidth = 1280, int $maxHeight = 1280): ?string
+    {
+        try {
+            $mime = (string) $file->getMimeType();
+            $tmp = (string) $file->getTempName();
+            if ($tmp === '' || !is_file($tmp)) { return null; }
+
+            $src = null;
+            $outExt = 'jpg';
+            if ($mime === 'image/jpeg' || $mime === 'image/jpg') {
+                $src = imagecreatefromjpeg($tmp);
+                $outExt = 'jpg';
+            } elseif ($mime === 'image/png') {
+                $src = imagecreatefrompng($tmp);
+                $outExt = 'png';
+            } elseif ($mime === 'image/gif') {
+                $src = imagecreatefromgif($tmp);
+                $outExt = 'gif';
+            } else {
+                return null;
+            }
+            if (!$src) { return null; }
+
+            $w = imagesx($src);
+            $h = imagesy($src);
+            if ($w <= 0 || $h <= 0) { imagedestroy($src); return null; }
+            $scale = min(($maxWidth > 0 ? ($maxWidth / $w) : 1), ($maxHeight > 0 ? ($maxHeight / $h) : 1), 1);
+            $newW = max(1, (int) floor($w * $scale));
+            $newH = max(1, (int) floor($h * $scale));
+
+            $dst = imagecreatetruecolor($newW, $newH);
+            if ($outExt === 'png' || $outExt === 'gif') {
+                imagealphablending($dst, false);
+                imagesavealpha($dst, true);
+            }
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $w, $h);
+            imagedestroy($src);
+
+            $dir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $subdir);
+            if (!is_dir($dir)) { @mkdir($dir, 0755, true); }
+
+            $base = 'img_' . time() . '_' . bin2hex(random_bytes(4));
+            $useWebp = function_exists('imagewebp');
+            $finalExt = $useWebp ? 'webp' : ($outExt === 'jpg' ? 'jpg' : ($outExt === 'png' ? 'png' : 'jpg'));
+            $full = $dir . DIRECTORY_SEPARATOR . $base . '.' . $finalExt;
+            $ok = false;
+            if ($useWebp) {
+                $ok = imagewebp($dst, $full, 80);
+            } else {
+                if ($finalExt === 'jpg') { $ok = imagejpeg($dst, $full, 75); }
+                elseif ($finalExt === 'png') { $ok = imagepng($dst, $full, 6); }
+                else { $ok = imagejpeg($dst, $full, 75); }
+            }
+            imagedestroy($dst);
+            if (!$ok) { return null; }
+
+            $relative = rtrim(str_replace(['\\'], '/', $subdir), '/') . '/' . basename($full);
+            return $relative;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
     }
 
     public function duplicate($id)
