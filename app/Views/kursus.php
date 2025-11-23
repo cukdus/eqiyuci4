@@ -359,7 +359,12 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
       if (item.badge_type === 'free') cls = 'course-badge badge-free';
       if (item.badge_type === 'new') cls = 'course-badge badge-new';
       if (item.badge_type === 'certificate') cls = 'course-badge badge-certificate';
-      return '<div class="' + cls + '">' + item.badge_text + '</div>';
+      const label = String(item.badge_text || '').trim().toLowerCase();
+      let inner = item.badge_text;
+      if (label === 'hot') inner = '<i class="bi bi-fire"></i>';
+      else if (label === 'sale') inner = '<i class="bi bi-tag"></i>';
+      else if (label === 'nobadge') inner = '<i class="bi bi-star-fill"></i>';
+      return '<div class="' + cls + '">' + inner + '</div>';
     }
 
     function renderItem(item) {
