@@ -381,7 +381,11 @@ h6 {
     margin: 0;
     border-radius: 6px;
     background-color: var(--nav-mobile-background-color);
-    background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('../img/shape.webp');
+    background-image: linear-gradient(
+        rgba(255, 255, 255, 0.7),
+        rgba(255, 255, 255, 0.7)
+      ),
+      url("../img/shape.webp");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -477,7 +481,11 @@ h6 {
     position: fixed;
     overflow: hidden;
     inset: 0;
-    background-image: linear-gradient(rgba(33,37,41,0.8), rgba(33,37,41,0.8)), url('../img/shape.webp');
+    background-image: linear-gradient(
+        rgba(33, 37, 41, 0.8),
+        rgba(33, 37, 41, 0.8)
+      ),
+      url("../img/shape.webp");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -2978,7 +2986,7 @@ section,
   position: absolute;
   top: 15px;
   right: 15px;
-  background-color: #28a745;
+  background-color: #474546;
   color: var(--contrast-color);
   padding: 8px 15px;
   border-radius: 20px;
