@@ -240,7 +240,9 @@
                   const r2 = await sendWa(regId, 'tagihan_dp50_admin');
                   const ok1 = !!(r1.success);
                   const ok2 = !!(r2.success);
-                  alert('Kirim DP50%: Peserta ' + (ok1 ? 'OK' : 'Gagal') + '; Admin ' + (ok2 ? 'OK' : 'Gagal'));
+                  const m1 = r1 && r1.message ? (' (' + r1.message + ')') : '';
+                  const m2 = r2 && r2.message ? (' (' + r2.message + ')') : '';
+                  alert('Kirim DP50%: Peserta ' + (ok1 ? 'OK' : 'Gagal') + m1 + '; Admin ' + (ok2 ? 'OK' : 'Gagal') + m2);
                 } else if (status === 'lunas') {
                   const r = await sendWa(regId, 'tagihan_lunas_peserta');
                   alert('Kirim Lunas: ' + (r.success ? 'OK' : ('Gagal: ' + (r.message || ''))));
