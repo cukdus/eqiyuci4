@@ -68,9 +68,11 @@ class Registrasi extends BaseController
             ->getResultArray();
 
         // Format angka sesuai database bank_transactions: "10353.00"
-        $formatPlain = static function($num): string {
-            if (!is_numeric($num)) { return ''; }
-            return number_format((float)$num, 2, '.', '');
+        $formatPlain = static function ($num): string {
+            if (!is_numeric($num)) {
+                return '';
+            }
+            return number_format((float) $num, 2, '.', '');
         };
 
         // Batasi kolom yang dikirim ke client
@@ -78,23 +80,54 @@ class Registrasi extends BaseController
             // Ambil periode jadwal untuk batasi pencocokan
             $dbLocal = \Config\Database::connect();
             $jadwalId = (int) ($r['jadwal_id'] ?? 0);
-            $mulai = null; $selesai = null;
+            $mulai = null;
+            $selesai = null;
             if ($jadwalId > 0) {
                 $jr = $dbLocal->table('jadwal_kelas')->select('tanggal_mulai, tanggal_selesai')->where('id', $jadwalId)->get()->getRowArray();
                 $mulai = $jr['tanggal_mulai'] ?? null;
                 $selesai = $jr['tanggal_selesai'] ?? null;
             }
-            // Bangun himpunan amount_formatted terbatas periode jadwal
-            $btQB = $dbLocal->table('bank_transactions')->select('amount_formatted');
-            if (!empty($selesai)) {
-                $btQB->where('period <=', $selesai);
-            }
-            // Sesuai kebutuhan: batasi hanya sampai tanggal_selesai (tanpa batas bawah)
-            $bankAmountsRaw = $btQB->get()->getResultArray();
+            // Bangun himpunan amount bank, filter periode di PHP (parse dd/mm/YYYY - dd/mm/YYYY)
+            $btQB = $dbLocal->table('bank_transactions')->select('amount_formatted, credit_total_formatted, period');
+            $bankRows = $btQB->get()->getResultArray();
             $bankAmountSet = [];
-            foreach ($bankAmountsRaw as $ba) {
-                $val = trim((string)($ba['amount_formatted'] ?? ''));
-                if ($val !== '') { $bankAmountSet[$val] = true; }
+            $parsePeriod = static function ($periodStr): array {
+                $s = trim((string) $periodStr);
+                if ($s === '')
+                    return ['start' => null, 'end' => null];
+                $parts = preg_split('/\s*-\s*/', $s);
+                $normalize = static function ($v): ?string {
+                    $v = trim((string) $v);
+                    if ($v === '')
+                        return null;
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v))
+                        return $v;
+                    if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $v, $m)) {
+                        return $m[3] . '-' . $m[2] . '-' . $m[1];
+                    }
+                    if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $v, $m)) {
+                        return $m[3] . '-' . $m[2] . '-' . $m[1];
+                    }
+                    return null;
+                };
+                $start = isset($parts[0]) ? $normalize($parts[0]) : null;
+                $end = isset($parts[1]) ? $normalize($parts[1]) : $start;
+                return ['start' => $start, 'end' => $end];
+            };
+            foreach ($bankRows as $br) {
+                $p = $parsePeriod($br['period'] ?? '');
+                $end = $p['end'];
+                if (!empty($selesai) && ($end === null || $end > $selesai)) {
+                    continue;
+                }
+                $a1 = trim((string) ($br['amount_formatted'] ?? ''));
+                $a2 = trim((string) ($br['credit_total_formatted'] ?? ''));
+                if ($a1 !== '') {
+                    $bankAmountSet[$a1] = true;
+                }
+                if ($a2 !== '') {
+                    $bankAmountSet[$a2] = true;
+                }
             }
 
             $dibayar = $r['biaya_dibayar'] ?? 0;
@@ -103,7 +136,7 @@ class Registrasi extends BaseController
             $formattedTagihan = $formatPlain($tagihan);
             $matchDibayar = ($formattedDibayar !== '' && isset($bankAmountSet[$formattedDibayar]));
             $matchTagihan = ($formattedTagihan !== '' && isset($bankAmountSet[$formattedTagihan]));
-            $dp50 = (is_numeric($dibayar) && is_numeric($tagihan) && (float)$tagihan > 0 && abs(((float)$dibayar) - 0.5 * (float)$tagihan) < 0.01);
+            $dp50 = (is_numeric($dibayar) && is_numeric($tagihan) && (float) $tagihan > 0 && abs(((float) $dibayar) - 0.5 * (float) $tagihan) < 0.01);
             return [
                 'id' => (int) ($r['id'] ?? 0),
                 'nama' => (string) ($r['nama'] ?? ''),
@@ -160,9 +193,11 @@ class Registrasi extends BaseController
             ->orderBy('nama', 'ASC')
             ->findAll();
 
-        $formatPlain = static function($num): string {
-            if (!is_numeric($num)) { return ''; }
-            return number_format((float)$num, 2, '.', '');
+        $formatPlain = static function ($num): string {
+            if (!is_numeric($num)) {
+                return '';
+            }
+            return number_format((float) $num, 2, '.', '');
         };
 
         // Tambahkan flag indikator ke setiap row SSR
@@ -171,20 +206,53 @@ class Registrasi extends BaseController
                 // Batasi pencocokan ke periode jadwal registrasi
                 $dbLocal = \Config\Database::connect();
                 $jadwalId = (int) ($row['jadwal_id'] ?? 0);
-                $mulai = null; $selesai = null;
+                $mulai = null;
+                $selesai = null;
                 if ($jadwalId > 0) {
                     $jr = $dbLocal->table('jadwal_kelas')->select('tanggal_mulai, tanggal_selesai')->where('id', $jadwalId)->get()->getRowArray();
                     $mulai = $jr['tanggal_mulai'] ?? null;
                     $selesai = $jr['tanggal_selesai'] ?? null;
                 }
-                $btQB = $dbLocal->table('bank_transactions')->select('amount_formatted');
-                if (!empty($selesai)) { $btQB->where('period <=', $selesai); }
-                // Batasi hanya sampai tanggal_selesai (tanpa batas bawah)
-                $bankAmountsRaw = $btQB->get()->getResultArray();
+                $btQB = $dbLocal->table('bank_transactions')->select('amount_formatted, credit_total_formatted, period');
+                $bankRows = $btQB->get()->getResultArray();
                 $bankAmountSet = [];
-                foreach ($bankAmountsRaw as $ba) {
-                    $val = trim((string)($ba['amount_formatted'] ?? ''));
-                    if ($val !== '') { $bankAmountSet[$val] = true; }
+                $parsePeriod = static function ($periodStr): array {
+                    $s = trim((string) $periodStr);
+                    if ($s === '')
+                        return ['start' => null, 'end' => null];
+                    $parts = preg_split('/\s*-\s*/', $s);
+                    $normalize = static function ($v): ?string {
+                        $v = trim((string) $v);
+                        if ($v === '')
+                            return null;
+                        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v))
+                            return $v;
+                        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $v, $m)) {
+                            return $m[3] . '-' . $m[2] . '-' . $m[1];
+                        }
+                        if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $v, $m)) {
+                            return $m[3] . '-' . $m[2] . '-' . $m[1];
+                        }
+                        return null;
+                    };
+                    $start = isset($parts[0]) ? $normalize($parts[0]) : null;
+                    $end = isset($parts[1]) ? $normalize($parts[1]) : $start;
+                    return ['start' => $start, 'end' => $end];
+                };
+                foreach ($bankRows as $br) {
+                    $p = $parsePeriod($br['period'] ?? '');
+                    $end = $p['end'];
+                    if (!empty($selesai) && ($end === null || $end > $selesai)) {
+                        continue;
+                    }
+                    $a1 = trim((string) ($br['amount_formatted'] ?? ''));
+                    $a2 = trim((string) ($br['credit_total_formatted'] ?? ''));
+                    if ($a1 !== '') {
+                        $bankAmountSet[$a1] = true;
+                    }
+                    if ($a2 !== '') {
+                        $bankAmountSet[$a2] = true;
+                    }
                 }
                 $dibayar = $row['biaya_dibayar'] ?? 0;
                 $tagihan = $row['biaya_tagihan'] ?? 0;
@@ -195,7 +263,7 @@ class Registrasi extends BaseController
                 $row['paid_match'] = $matchDibayar;
                 $row['paid_match_dibayar'] = $matchDibayar;
                 $row['paid_match_tagihan'] = $matchTagihan;
-                $row['dp50'] = (is_numeric($dibayar) && is_numeric($tagihan) && (float)$tagihan > 0 && abs(((float)$dibayar) - 0.5 * (float)$tagihan) < 0.01);
+                $row['dp50'] = (is_numeric($dibayar) && is_numeric($tagihan) && (float) $tagihan > 0 && abs(((float) $dibayar) - 0.5 * (float) $tagihan) < 0.01);
             }
             unset($row);
         }
@@ -662,7 +730,8 @@ class Registrasi extends BaseController
                 ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
                 ->where('r.id', $id)
                 ->where('r.deleted_at', null)
-                ->get()->getRowArray();
+                ->get()
+                ->getRowArray();
 
             if (!$row) {
                 return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Registrasi tidak ditemukan']);
@@ -736,7 +805,7 @@ class Registrasi extends BaseController
                 if ($adminPhone === '') {
                     // tetap kembalikan hasil peserta, tapi beri pesan admin belum dikonfig
                     $combinedSuccess = (bool) ($resPeserta['success'] ?? false);
-                    $msg = ($resPeserta['success'] ?? false) ? 'Peserta terkirim; admin belum dikonfigurasi' : ('Gagal peserta: ' . ($resPeserta['message'] ?? '')); 
+                    $msg = ($resPeserta['success'] ?? false) ? 'Peserta terkirim; admin belum dikonfigurasi' : ('Gagal peserta: ' . ($resPeserta['message'] ?? ''));
                     return $this->response->setStatusCode($combinedSuccess ? 200 : 400)->setJSON(['success' => $combinedSuccess, 'message' => $msg]);
                 }
                 $messageAdmin = $ws->renderTemplate($templateAdmin, $payload);
@@ -750,7 +819,9 @@ class Registrasi extends BaseController
                 // Kirim ke peserta: tagihan DP50%
                 $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'tagihan_dp50_peserta')->first();
                 $template = '';
-                if ($tplRow && ($tplRow['enabled'] ?? false)) { $template = (string) ($tplRow['template'] ?? ''); }
+                if ($tplRow && ($tplRow['enabled'] ?? false)) {
+                    $template = (string) ($tplRow['template'] ?? '');
+                }
                 if ($template === '') {
                     $template = 'Halo {{nama}}, pengingat: Anda masih DP 50% untuk kelas {{nama_kelas}} mulai {{tanggal_mulai}}. Sisa bayar: Rp {{sisa_bayar}}.';
                 }
@@ -774,7 +845,9 @@ class Registrasi extends BaseController
                 // Kirim ke admin: tagihan DP50%
                 $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'tagihan_dp50_admin')->first();
                 $template = '';
-                if ($tplRow && ($tplRow['enabled'] ?? false)) { $template = (string) ($tplRow['template'] ?? ''); }
+                if ($tplRow && ($tplRow['enabled'] ?? false)) {
+                    $template = (string) ($tplRow['template'] ?? '');
+                }
                 if ($template === '') {
                     $template = '[ADMIN] Peserta {{nama}} ({{phone}}) DP 50%. Kelas {{nama_kelas}} mulai {{tanggal_mulai}}. Sisa: Rp {{sisa_bayar}}.';
                 }
@@ -806,7 +879,9 @@ class Registrasi extends BaseController
                 // Kirim ke peserta: status lunas
                 $tplRow = model(\App\Models\WahaTemplate::class)->where('key', 'tagihan_lunas_peserta')->first();
                 $template = '';
-                if ($tplRow && ($tplRow['enabled'] ?? false)) { $template = (string) ($tplRow['template'] ?? ''); }
+                if ($tplRow && ($tplRow['enabled'] ?? false)) {
+                    $template = (string) ($tplRow['template'] ?? '');
+                }
                 if ($template === '') {
                     $template = 'Halo {{nama}}, pengingat H-3: kelas {{nama_kelas}} mulai {{tanggal_mulai}}. Pembayaran Anda sudah lunas. Sampai jumpa!';
                 }
