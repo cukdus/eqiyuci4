@@ -211,9 +211,22 @@ class Artikel extends BaseController
             $mime = (string) $file->getMimeType();
             $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (in_array($mime, $allowed, true)) {
-                // Batas ukuran file mentah sebelum kompresi: 2MB
                 if ($file->getSize() <= (2 * 1024 * 1024)) {
                     $saved = $this->saveCompressedImage($file, 'uploads/artikel', 1280, 1280);
+                    if (!$saved) {
+                        $map = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+                        $ext = $map[$mime] ?? 'jpg';
+                        $dir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'artikel';
+                        if (!is_dir($dir)) {
+                            @mkdir($dir, 0755, true);
+                        }
+                        $base = time() . '_' . bin2hex(random_bytes(8));
+                        $full = $dir . DIRECTORY_SEPARATOR . $base . '.' . $ext;
+                        @copy((string) $file->getTempName(), $full);
+                        if (is_file($full)) {
+                            $saved = 'uploads/artikel/' . $base . '.' . $ext;
+                        }
+                    }
                     if ($saved) {
                         $data['gambar_utama'] = $saved;
                     }
@@ -379,9 +392,22 @@ class Artikel extends BaseController
             $mime = (string) $file->getMimeType();
             $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (in_array($mime, $allowed, true)) {
-                // Batas ukuran file mentah sebelum kompresi: 2MB
                 if ($file->getSize() <= (2 * 1024 * 1024)) {
                     $saved = $this->saveCompressedImage($file, 'uploads/artikel', 1280, 1280);
+                    if (!$saved) {
+                        $map = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+                        $ext = $map[$mime] ?? 'jpg';
+                        $dir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'artikel';
+                        if (!is_dir($dir)) {
+                            @mkdir($dir, 0755, true);
+                        }
+                        $base = time() . '_' . bin2hex(random_bytes(8));
+                        $full = $dir . DIRECTORY_SEPARATOR . $base . '.' . $ext;
+                        @copy((string) $file->getTempName(), $full);
+                        if (is_file($full)) {
+                            $saved = 'uploads/artikel/' . $base . '.' . $ext;
+                        }
+                    }
                     if ($saved) {
                         $data['gambar_utama'] = $saved;
                     }
