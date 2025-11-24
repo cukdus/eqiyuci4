@@ -90,15 +90,23 @@ class WahaService
         try {
             $client = service('curlrequest');
             /** @var CURLRequest $client */
-            $resp = $client->post($this->baseUrl . $this->sendPath, [
-                'headers' => $this->defaultHeaders(),
-                'json' => $payload,
+            $isLegacy = (stripos($this->sendPath, 'sendText') !== false);
+            $headers = $this->defaultHeaders();
+            $options = [
+                'headers' => $headers,
                 'timeout' => 10,
                 'curl' => [
                     CURLOPT_SSL_VERIFYPEER => $this->sslVerify,
                     CURLOPT_SSL_VERIFYHOST => $this->sslVerify ? 2 : 0,
                 ],
-            ]);
+            ];
+            if ($isLegacy) {
+                $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+                $options['body'] = http_build_query($payload);
+            } else {
+                $options['json'] = $payload;
+            }
+            $resp = $client->post($this->baseUrl . $this->sendPath, $options);
             $ok = $resp->getStatusCode() >= 200 && $resp->getStatusCode() < 300;
             $body = (string) $resp->getBody();
             if ($ok) {
@@ -116,7 +124,10 @@ class WahaService
                         $legacy['session'] = 'default';
                     }
                     $url = $this->baseUrl . $this->fallbackSendPath;
-                    $fb = $this->postUsingCurl($url, $this->defaultHeaders(), json_encode($legacy, JSON_UNESCAPED_UNICODE));
+                    $fbHeaders = $this->defaultHeaders();
+                    $fbHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
+                    $fbBody = http_build_query($legacy);
+                    $fb = $this->postUsingCurl($url, $fbHeaders, $fbBody);
                     return $fb;
                 }
             }
@@ -126,7 +137,14 @@ class WahaService
             // Fallback: gunakan cURL langsung untuk memaksa non-SSL verify bila diizinkan
             if (!$this->sslVerify && stripos($e->getMessage(), 'SSL certificate') !== false) {
                 $url = $this->baseUrl . $this->sendPath;
-                $fallback = $this->postUsingCurl($url, $this->defaultHeaders(), json_encode($payload));
+                $isLegacy = (stripos($this->sendPath, 'sendText') !== false);
+                $hdrs = $this->defaultHeaders();
+                if ($isLegacy) {
+                    $hdrs['Content-Type'] = 'application/x-www-form-urlencoded';
+                    $fallback = $this->postUsingCurl($url, $hdrs, http_build_query($payload));
+                } else {
+                    $fallback = $this->postUsingCurl($url, $hdrs, json_encode($payload));
+                }
                 return $fallback;
             }
             return ['success' => false, 'message' => 'Exception: ' . $e->getMessage()];
