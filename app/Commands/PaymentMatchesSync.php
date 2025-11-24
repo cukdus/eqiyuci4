@@ -120,15 +120,25 @@ class PaymentMatchesSync extends BaseCommand
                 ->groupEnd();
             $bankTxs = $btQB->get()->getResultArray();
 
-            if (!empty($selesai) || !empty($mulai)) {
-                $bankTxs = array_values(array_filter($bankTxs, function ($bt) use ($mulai, $selesai, $parsePeriod) {
+            // Terapkan filter periode: default hanya batas atas (<= tanggal_selesai jadwal).
+            // Jika --from/--to diberikan, gunakan keduanya.
+            if (!empty($from) || !empty($to) || !empty($selesai)) {
+                $bankTxs = array_values(array_filter($bankTxs, function ($bt) use ($from, $to, $selesai, $parsePeriod) {
                     $p = $parsePeriod($bt['period'] ?? '');
                     $start = $p['start'];
                     $end = $p['end'];
-                    if (!empty($mulai) && ($start === null || $start < $mulai))
-                        return false;
-                    if (!empty($selesai) && ($end === null || $end > $selesai))
-                        return false;
+                    if (!empty($from)) {
+                        if ($start === null || $start < $from)
+                            return false;
+                    }
+                    if (!empty($to)) {
+                        if ($end === null || $end > $to)
+                            return false;
+                    }
+                    if (empty($to) && !empty($selesai)) {
+                        if ($end === null || $end > $selesai)
+                            return false;
+                    }
                     return true;
                 }));
             }
@@ -142,7 +152,9 @@ class PaymentMatchesSync extends BaseCommand
                 }, $bankTxs)), 'white');
             }
             if (empty($bankTxs)) {
-                $periodLabel = (!empty($mulai) || !empty($selesai)) ? ('[' . ($mulai ?: '?') . '..' . ($selesai ?: '?') . ']') : '(tanpa filter periode)';
+                $periodLabel = (!empty($from) || !empty($to) || !empty($selesai))
+                    ? ('[' . ($from ?: ($mulai ?: '?')) . '..' . (($to ?: $selesai) ?: '?') . ']')
+                    : '(tanpa filter periode)';
                 CLI::write("[SKIP] R#$rid tidak ada mutasi cocok dalam periode $periodLabel", 'yellow');
                 $countSkipped++;
                 continue;
