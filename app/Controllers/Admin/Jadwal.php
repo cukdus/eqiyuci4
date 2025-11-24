@@ -162,6 +162,9 @@ class Jadwal extends BaseController
         // Jangan tampilkan data registrasi yang sudah dihapus (soft delete)
         $builder->where('r.deleted_at IS NULL', null, false);
 
+        // Sembunyikan peserta untuk kelas dengan kategori kursusonline
+        $builder->where("COALESCE(LOWER(k.kategori), '') != 'kursusonline'", null, false);
+
         // Default: sembunyikan jadwal yang sudah berakhir, tapi tetap tampilkan peserta tanpa jadwal
         // Jika pengguna memang melakukan pencarian/filter eksplisit (filtered=true), tampilkan semuanya sesuai filter
         if (!$isFiltered) {
