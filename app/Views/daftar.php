@@ -77,7 +77,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                     </div>
                   </div>
                   <div class="row mb-4">
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                       <div class="form-group">
                         <label for="location" class="form-label"
                           >Lokasi kelas *</label
@@ -110,7 +110,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                       </div>
                     </div>
 
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                       <div class="form-group">
                         <label for="schedule" class="form-label"
                           >Pilih Jadwal *</label
@@ -145,7 +145,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                   </div>
 
                   <div class="row mb-4">
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                       <div class="form-group">
                         <label for="location" class="form-label"
                           >Voucher *</label
@@ -177,7 +177,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
                         </div>
                       </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                       <div class="form-group">
                         <label for="schedule" class="form-label"
                           >Model Pembayaran *</label
