@@ -77,12 +77,8 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
               </div>
               <div class="filter-group">
                 <label class="filter-label">Jadwal Bulan</label>
-                <select class="form-select">
+                <select class="form-select" id="filterMonth">
                   <option value="">Semua</option>
-                  <option value="Januari">Januari</option>
-                  <option value="Februari">Februari</option>
-                  <option value="Maret">Maret</option>
-                  <option value="April">April</option>
                 </select>
               </div>
               <div class="filter-group">
@@ -224,17 +220,58 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
     function getFilters(){
       const selects = document.querySelectorAll('.filter-widget .form-select');
       const kelasText = selects[0] ? selects[0].value : '';
-      const monthText = selects[1] ? selects[1].value : '';
+      const monthVal = selects[1] ? selects[1].value : '';
       const kota = selects[2] ? selects[2].value : '';
       const now = new Date();
-      const month = monthMap[monthText] || (now.getMonth() + 1);
-      const year = now.getFullYear();
+      let month = now.getMonth() + 1;
+      let year = now.getFullYear();
+      if (monthVal) {
+        const m = monthVal.match(/^([0-9]{4})-([0-9]{2})$/);
+        if (m) {
+          year = parseInt(m[1], 10);
+          month = parseInt(m[2], 10);
+        } else {
+          month = monthMap[monthVal] || month;
+        }
+      }
       return { month, year, kelas: kelasText, lokasi: kota };
     }
 
     function monthNameFull(m){
       const arr = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       return arr[m-1] || '';
+    }
+    async function populateMonthOptions(){
+      const sel = document.getElementById('filterMonth');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">Semua</option>';
+      const now = new Date();
+      const curY = now.getFullYear();
+      const curM = now.getMonth() + 1;
+      const addOpt = (y, m) => {
+        const opt = document.createElement('option');
+        opt.value = `${y}-${String(m).padStart(2,'0')}`;
+        opt.textContent = `${monthNameFull(m)} ${y}`;
+        sel.appendChild(opt);
+      };
+      addOpt(curY, curM);
+      try {
+        const usp = new URLSearchParams({ limit: 100 });
+        const res = await fetch(API_UPCOMING + '?' + usp.toString(), { headers: { 'Accept': 'application/json' } });
+        const json = await res.json();
+        const rows = (json && json.ok && Array.isArray(json.data)) ? json.data : [];
+        const seen = new Set([`${curY}-${String(curM).padStart(2,'0')}`]);
+        rows.forEach(it => {
+          const d = new Date(it.tanggal_mulai || it.tanggal_selesai || '');
+          if (isNaN(d.getTime())) return;
+          const y = d.getFullYear();
+          const m = d.getMonth() + 1;
+          const key = `${y}-${String(m).padStart(2,'0')}`;
+          if (!seen.has(key)) { seen.add(key); addOpt(y, m); }
+        });
+      } catch (e) {
+        console.warn('Gagal memuat bulan jadwal:', e);
+      }
     }
     function prevMonth(year, month){
       month -= 1; if (month < 1) { month = 12; year -= 1; }
@@ -519,6 +556,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
     }
 
     // Init saat halaman dibuka
+    populateMonthOptions();
     initInfiniteScroll();
     loadUpcoming();
     // Inisialisasi bulan/tahun mobile mengikuti filter (clamp ke saat ini)
