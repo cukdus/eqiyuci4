@@ -17,7 +17,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
       <h1 class="mb-2 mb-lg-0">Detail Kursus</h1>
       <nav class="breadcrumbs">
         <ol>
-          <li><a href="index.php">Home</a></li>
+          <li><a href="<?= base_url() ?>">Beranda</a></li>
           <li class="current">Detail Kursus</li>
         </ol>
       </nav>
@@ -253,7 +253,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
   // Share buttons functionality: open native apps on mobile, fallback to web share
   (function(){
     var title = '<?= esc($kelas['nama_kelas'] ?? 'Kursus Eqiyu Indonesia') ?>';
-    var detailSlug = '<?= esc((string) (isset($kelas['slug']) && trim((string)$kelas['slug']) !== '' ? $kelas['slug'] : ($kelas['kode_kelas'] ?? ''))) ?>';
+    var detailSlug = '<?= esc((string) (isset($kelas['slug']) && trim((string) $kelas['slug']) !== '' ? $kelas['slug'] : ($kelas['kode_kelas'] ?? ''))) ?>';
     var pageUrl = '<?= esc(base_url('kursus')) ?>' + '/' + detailSlug;
     var shareText = 'Lihat kursus "' + title + '" di Eqiyu Indonesia';
 
