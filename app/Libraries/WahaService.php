@@ -12,12 +12,11 @@ class WahaService
     protected LoggerInterface $logger;
     protected bool $sslVerify;
     protected string $sendPath;
-    protected ?string $fallbackSendPath;
     protected string $defaultCountryCode;
 
     public function __construct(?LoggerInterface $logger = null)
     {
-        $this->baseUrl = rtrim(trim((string) (env('WAHA_BASE_URL') ?? ''), " \t\n\r\0\v\"'`"), '/');
+        $this->baseUrl = rtrim((string) (env('WAHA_BASE_URL') ?? ''), '/');
         // Sanitize token: trim surrounding quotes and whitespace
         $rawToken = env('WAHA_API_TOKEN');
         $this->apiToken = is_string($rawToken) ? trim($rawToken, " \t\n\r\0\v\"'") : $rawToken;
@@ -26,9 +25,7 @@ class WahaService
         $sslEnv = filter_var(env('WAHA_SSL_VERIFY'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         $this->sslVerify = $sslEnv !== null ? $sslEnv : false;
         // Allow configurable send path to support different WAHA servers
-        $this->sendPath = trim((string) (env('WAHA_SEND_PATH') ?? '/messages/send'));
-        $fb = env('WAHA_SEND_PATH_FALLBACK');
-        $this->fallbackSendPath = is_string($fb) ? trim($fb) : '/api/sendText';
+        $this->sendPath = (string) (env('WAHA_SEND_PATH') ?? '/messages/send');
         // Negara default untuk normalisasi nomor (mis. Indonesia = 62)
         $cc = (string) (env('WAHA_DEFAULT_COUNTRY_CODE') ?? '62');
         $this->defaultCountryCode = preg_replace('/[^0-9]/', '', $cc) ?: '62';
@@ -90,46 +87,21 @@ class WahaService
         try {
             $client = service('curlrequest');
             /** @var CURLRequest $client */
-            $isLegacy = (stripos($this->sendPath, 'sendText') !== false);
-            $headers = $this->defaultHeaders();
-            $options = [
-                'headers' => $headers,
+            $resp = $client->post($this->baseUrl . $this->sendPath, [
+                'headers' => $this->defaultHeaders(),
+                'json' => $payload,
                 'timeout' => 10,
                 'curl' => [
                     CURLOPT_SSL_VERIFYPEER => $this->sslVerify,
                     CURLOPT_SSL_VERIFYHOST => $this->sslVerify ? 2 : 0,
                 ],
-            ];
-            if ($isLegacy) {
-                unset($options['headers']['Content-Type']);
-                $options['form_params'] = $payload;
-            } else {
-                $options['json'] = $payload;
-            }
-            $resp = $client->post($this->baseUrl . $this->sendPath, $options);
+            ]);
             $ok = $resp->getStatusCode() >= 200 && $resp->getStatusCode() < 300;
             $body = (string) $resp->getBody();
             if ($ok) {
                 $this->logger->info('WAHA sendMessage success', ['to' => $to]);
             } else {
                 $this->logger->warning('WAHA sendMessage failed', ['to' => $to, 'status' => $resp->getStatusCode(), 'body' => $body]);
-                $needFallback = (stripos($body, 'Failed to parse JSON') !== false) || ($resp->getStatusCode() >= 400 && $resp->getStatusCode() < 500);
-                if ($needFallback && is_string($this->fallbackSendPath) && $this->fallbackSendPath !== '') {
-                    $jid = str_ends_with($normalizedTo, '@c.us') || str_ends_with($normalizedTo, '@g.us') ? $normalizedTo : ($normalizedTo . '@c.us');
-                    $session = env('WAHA_SESSION');
-                    $legacy = ['chatId' => $jid, 'text' => $text, 'message' => $text];
-                    if ($session) {
-                        $legacy['session'] = $session;
-                    } else {
-                        $legacy['session'] = 'default';
-                    }
-                    $url = $this->baseUrl . $this->fallbackSendPath;
-                    $fbHeaders = $this->defaultHeaders();
-                    $fbHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
-                    $fbBody = http_build_query($legacy);
-                    $fb = $this->postUsingCurl($url, $fbHeaders, $fbBody);
-                    return $fb;
-                }
             }
             return ['success' => $ok, 'message' => $ok ? 'sent' : ('HTTP ' . $resp->getStatusCode()), 'body' => $body];
         } catch (\Throwable $e) {
@@ -137,14 +109,7 @@ class WahaService
             // Fallback: gunakan cURL langsung untuk memaksa non-SSL verify bila diizinkan
             if (!$this->sslVerify && stripos($e->getMessage(), 'SSL certificate') !== false) {
                 $url = $this->baseUrl . $this->sendPath;
-                $isLegacy = (stripos($this->sendPath, 'sendText') !== false);
-                $hdrs = $this->defaultHeaders();
-                if ($isLegacy) {
-                    $hdrs['Content-Type'] = 'application/x-www-form-urlencoded';
-                    $fallback = $this->postUsingCurl($url, $hdrs, http_build_query($payload));
-                } else {
-                    $fallback = $this->postUsingCurl($url, $hdrs, json_encode($payload));
-                }
+                $fallback = $this->postUsingCurl($url, $this->defaultHeaders(), json_encode($payload));
                 return $fallback;
             }
             return ['success' => false, 'message' => 'Exception: ' . $e->getMessage()];
@@ -194,32 +159,20 @@ class WahaService
         $session = env('WAHA_SESSION');
         // Legacy endpoint: expects chatId + '@c.us'
         if (stripos($this->sendPath, 'sendText') !== false) {
+            // If caller already provides JID, pass-through
             if (str_ends_with($to, '@c.us') || str_ends_with($to, '@g.us')) {
-                $out = [
+                return [
                     'chatId' => $to,
                     'text' => $text,
-                    'message' => $text,
+                    'session' => $session ?: 'default',
                 ];
-                if ($session) {
-                    $out['session'] = $session;
-                } else {
-                    $out['session'] = 'default';
-                }
-                return $out;
             }
-            $chatId = ltrim($to, '+');
-            $chatId = (str_ends_with($chatId, '@c.us') || str_ends_with($chatId, '@g.us')) ? $chatId : ($chatId . '@c.us');
-            $out = [
-                'chatId' => $chatId,
+            $chatId = (str_ends_with($to, '@c.us') || str_ends_with($to, '@g.us')) ? $to : ltrim($to, '+');
+            return [
+                'chatId' => str_ends_with($chatId, '@c.us') || str_ends_with($chatId, '@g.us') ? $chatId : ($chatId . '@c.us'),
                 'text' => $text,
-                'message' => $text,
+                'session' => $session ?: 'default',
             ];
-            if ($session) {
-                $out['session'] = $session;
-            } else {
-                $out['session'] = 'default';
-            }
-            return $out;
         }
         // Default modern endpoint: support either msisdn or full JID
         if (str_ends_with($to, '@c.us') || str_ends_with($to, '@g.us')) {
