@@ -12,6 +12,7 @@ class WahaService
     protected LoggerInterface $logger;
     protected bool $sslVerify;
     protected string $sendPath;
+    protected ?string $fallbackSendPath;
     protected string $defaultCountryCode;
 
     public function __construct(?LoggerInterface $logger = null)
@@ -26,6 +27,8 @@ class WahaService
         $this->sslVerify = $sslEnv !== null ? $sslEnv : false;
         // Allow configurable send path to support different WAHA servers
         $this->sendPath = (string) (env('WAHA_SEND_PATH') ?? '/messages/send');
+        $fb = env('WAHA_SEND_PATH_FALLBACK');
+        $this->fallbackSendPath = is_string($fb) ? trim($fb) : '/api/sendText';
         // Negara default untuk normalisasi nomor (mis. Indonesia = 62)
         $cc = (string) (env('WAHA_DEFAULT_COUNTRY_CODE') ?? '62');
         $this->defaultCountryCode = preg_replace('/[^0-9]/', '', $cc) ?: '62';
@@ -102,6 +105,18 @@ class WahaService
                 $this->logger->info('WAHA sendMessage success', ['to' => $to]);
             } else {
                 $this->logger->warning('WAHA sendMessage failed', ['to' => $to, 'status' => $resp->getStatusCode(), 'body' => $body]);
+                $needFallback = (stripos($body, 'Failed to parse JSON') !== false) || ($resp->getStatusCode() >= 400 && $resp->getStatusCode() < 500);
+                if ($needFallback && is_string($this->fallbackSendPath) && $this->fallbackSendPath !== '') {
+                    $jid = str_ends_with($normalizedTo, '@c.us') || str_ends_with($normalizedTo, '@g.us') ? $normalizedTo : ($normalizedTo . '@c.us');
+                    $session = env('WAHA_SESSION');
+                    $legacy = ['chatId' => $jid, 'text' => $text];
+                    if ($session) {
+                        $legacy['session'] = $session;
+                    }
+                    $url = $this->baseUrl . $this->fallbackSendPath;
+                    $fb = $this->postUsingCurl($url, $this->defaultHeaders(), json_encode($legacy));
+                    return $fb;
+                }
             }
             return ['success' => $ok, 'message' => $ok ? 'sent' : ('HTTP ' . $resp->getStatusCode()), 'body' => $body];
         } catch (\Throwable $e) {
@@ -217,7 +232,9 @@ class WahaService
         // Hapus spasi, tanda baca selain '+' lalu buang '+'
         $t = preg_replace('/[^0-9+]/', '', $t) ?? '';
         $t = ltrim($t, '+');
-        if ($t === '') { return $t; }
+        if ($t === '') {
+            return $t;
+        }
         // 08xxxxx -> 62xxxxxx
         if (str_starts_with($t, '0')) {
             return $this->defaultCountryCode . substr($t, 1);
