@@ -43,6 +43,30 @@ class PaymentMatchesSync extends BaseCommand
             return is_numeric($s) ? (float) $s : 0.0;
         };
 
+        $parsePeriod = static function ($periodStr): array {
+            $s = trim((string) $periodStr);
+            if ($s === '')
+                return ['start' => null, 'end' => null];
+            $parts = preg_split('/\s*-\s*/', $s);
+            $normalize = static function ($v): ?string {
+                $v = trim((string) $v);
+                if ($v === '')
+                    return null;
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v))
+                    return $v;
+                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $v, $m)) {
+                    return $m[3] . '-' . $m[2] . '-' . $m[1];
+                }
+                if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $v, $m)) {
+                    return $m[3] . '-' . $m[2] . '-' . $m[1];
+                }
+                return null;
+            };
+            $start = isset($parts[0]) ? $normalize($parts[0]) : null;
+            $end = isset($parts[1]) ? $normalize($parts[1]) : $start;
+            return ['start' => $start, 'end' => $end];
+        };
+
         $rQB = $db
             ->table('registrasi r')
             ->select('r.id, r.nama, r.email, r.biaya_dibayar, r.biaya_tagihan, r.jadwal_id, k.nama_kelas')
@@ -87,36 +111,34 @@ class PaymentMatchesSync extends BaseCommand
             $formattedTagihan = $formatPlain($tagihan);
             $dp50 = (is_numeric($dibayar) && is_numeric($tagihan) && (float) $tagihan > 0 && abs(((float) $dibayar) - 0.5 * (float) $tagihan) < 0.01);
 
-            // Bank transactions: gunakan kolom kredit (credit_total_formatted)
             $btQB = $db->table('bank_transactions')->select('id, amount_formatted, credit_total_formatted, period');
-            // Default: hanya batas atas (<= tanggal_selesai); batas bawah dipakai jika --from diberikan
-            if (!empty($selesai)) {
-                $btQB->where('period <=', $selesai);
-            }
-            if (!empty($from)) {
-                $btQB->where('period >=', $from);
-            }
             $nums = array_values(array_filter([$formattedDibayar, $formattedTagihan]));
-            if (!empty($nums)) {
-                $btQB->groupStart();
-                foreach ($nums as $i => $val) {
-                    $condAmt = "CAST(REPLACE(amount_formatted, ',', '') AS DECIMAL(18,2)) = " . $db->escape($val);
-                    $condCred = "CAST(REPLACE(credit_total_formatted, ',', '') AS DECIMAL(18,2)) = " . $db->escape($val);
-                    if ($i === 0) {
-                        $btQB->where($condAmt, null, false)->orWhere($condCred, null, false);
-                    } else {
-                        $btQB->orWhere($condAmt, null, false)->orWhere($condCred, null, false);
-                    }
-                }
-                $btQB->groupEnd();
-            }
+            $btQB
+                ->groupStart()
+                ->whereIn('credit_total_formatted', $nums)
+                ->orWhereIn('amount_formatted', $nums)
+                ->groupEnd();
             $bankTxs = $btQB->get()->getResultArray();
+
+            if (!empty($selesai) || !empty($mulai)) {
+                $bankTxs = array_values(array_filter($bankTxs, function ($bt) use ($mulai, $selesai, $parsePeriod) {
+                    $p = $parsePeriod($bt['period'] ?? '');
+                    $start = $p['start'];
+                    $end = $p['end'];
+                    if (!empty($mulai) && ($start === null || $start < $mulai))
+                        return false;
+                    if (!empty($selesai) && ($end === null || $end > $selesai))
+                        return false;
+                    return true;
+                }));
+            }
 
             $countProcessed++;
             if ($verbose) {
                 CLI::write("[INFO] R#$rid jadwal=($mulai .. $selesai) dibayar={$formattedDibayar} tagihan={$formattedTagihan}", 'white');
-                CLI::write('       Kandidat BT: ' . implode(', ', array_map(function ($bt) {
-                    return 'BT#' . $bt['id'] . '=' . (($bt['credit_total_formatted'] ?? '')) . '|' . (($bt['amount_formatted'] ?? '')) . '@' . $bt['period'];
+                CLI::write('       Kandidat BT: ' . implode(', ', array_map(function ($bt) use ($parsePeriod) {
+                    $p = $parsePeriod($bt['period'] ?? '');
+                    return 'BT#' . $bt['id'] . '=' . (($bt['credit_total_formatted'] ?? '')) . '|' . (($bt['amount_formatted'] ?? '')) . '@' . $bt['period'] . ' [' . ($p['start'] ?? '?') . '..' . ($p['end'] ?? '?') . ']';
                 }, $bankTxs)), 'white');
             }
             if (empty($bankTxs)) {
