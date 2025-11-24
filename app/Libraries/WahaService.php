@@ -101,8 +101,8 @@ class WahaService
                 ],
             ];
             if ($isLegacy) {
-                $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
-                $options['body'] = http_build_query($payload);
+                unset($options['headers']['Content-Type']);
+                $options['form_params'] = $payload;
             } else {
                 $options['json'] = $payload;
             }
