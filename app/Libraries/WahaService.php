@@ -17,7 +17,7 @@ class WahaService
 
     public function __construct(?LoggerInterface $logger = null)
     {
-        $this->baseUrl = rtrim((string) (env('WAHA_BASE_URL') ?? ''), '/');
+        $this->baseUrl = rtrim(trim((string) (env('WAHA_BASE_URL') ?? ''), " \t\n\r\0\v\"'`"), '/');
         // Sanitize token: trim surrounding quotes and whitespace
         $rawToken = env('WAHA_API_TOKEN');
         $this->apiToken = is_string($rawToken) ? trim($rawToken, " \t\n\r\0\v\"'") : $rawToken;
@@ -26,7 +26,7 @@ class WahaService
         $sslEnv = filter_var(env('WAHA_SSL_VERIFY'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         $this->sslVerify = $sslEnv !== null ? $sslEnv : false;
         // Allow configurable send path to support different WAHA servers
-        $this->sendPath = (string) (env('WAHA_SEND_PATH') ?? '/messages/send');
+        $this->sendPath = trim((string) (env('WAHA_SEND_PATH') ?? '/messages/send'));
         $fb = env('WAHA_SEND_PATH_FALLBACK');
         $this->fallbackSendPath = is_string($fb) ? trim($fb) : '/api/sendText';
         // Negara default untuk normalisasi nomor (mis. Indonesia = 62)
@@ -109,12 +109,14 @@ class WahaService
                 if ($needFallback && is_string($this->fallbackSendPath) && $this->fallbackSendPath !== '') {
                     $jid = str_ends_with($normalizedTo, '@c.us') || str_ends_with($normalizedTo, '@g.us') ? $normalizedTo : ($normalizedTo . '@c.us');
                     $session = env('WAHA_SESSION');
-                    $legacy = ['chatId' => $jid, 'text' => $text];
+                    $legacy = ['chatId' => $jid, 'text' => $text, 'message' => $text];
                     if ($session) {
                         $legacy['session'] = $session;
+                    } else {
+                        $legacy['session'] = 'default';
                     }
                     $url = $this->baseUrl . $this->fallbackSendPath;
-                    $fb = $this->postUsingCurl($url, $this->defaultHeaders(), json_encode($legacy));
+                    $fb = $this->postUsingCurl($url, $this->defaultHeaders(), json_encode($legacy, JSON_UNESCAPED_UNICODE));
                     return $fb;
                 }
             }
@@ -174,20 +176,32 @@ class WahaService
         $session = env('WAHA_SESSION');
         // Legacy endpoint: expects chatId + '@c.us'
         if (stripos($this->sendPath, 'sendText') !== false) {
-            // If caller already provides JID, pass-through
             if (str_ends_with($to, '@c.us') || str_ends_with($to, '@g.us')) {
-                return [
+                $out = [
                     'chatId' => $to,
                     'text' => $text,
-                    'session' => $session ?: 'default',
+                    'message' => $text,
                 ];
+                if ($session) {
+                    $out['session'] = $session;
+                } else {
+                    $out['session'] = 'default';
+                }
+                return $out;
             }
-            $chatId = (str_ends_with($to, '@c.us') || str_ends_with($to, '@g.us')) ? $to : ltrim($to, '+');
-            return [
-                'chatId' => str_ends_with($chatId, '@c.us') || str_ends_with($chatId, '@g.us') ? $chatId : ($chatId . '@c.us'),
+            $chatId = ltrim($to, '+');
+            $chatId = (str_ends_with($chatId, '@c.us') || str_ends_with($chatId, '@g.us')) ? $chatId : ($chatId . '@c.us');
+            $out = [
+                'chatId' => $chatId,
                 'text' => $text,
-                'session' => $session ?: 'default',
+                'message' => $text,
             ];
+            if ($session) {
+                $out['session'] = $session;
+            } else {
+                $out['session'] = 'default';
+            }
+            return $out;
         }
         // Default modern endpoint: support either msisdn or full JID
         if (str_ends_with($to, '@c.us') || str_ends_with($to, '@g.us')) {
