@@ -226,6 +226,7 @@
               e.preventDefault();
               const regId = btnWa.getAttribute('data-id');
               const status = (btnWa.getAttribute('data-status') || '').toLowerCase();
+              const statusNorm = status.replace(/\s+/g, '');
               async function sendWa(regId, key) {
                 const url = '<?= base_url('admin/registrasi') ?>/' + encodeURIComponent(regId) + '/send-registrasi-waha';
                 const formData = new URLSearchParams();
@@ -235,13 +236,13 @@
                 return resp.json();
               }
               try {
-                if (status === 'dp 50%' || status === 'dp50%' || status === 'dp50') {
+                if (statusNorm.includes('dp50')) {
                   const r1 = await sendWa(regId, 'tagihan_dp50_peserta');
                   const r2 = await sendWa(regId, 'tagihan_dp50_admin');
                   const ok1 = !!(r1.success);
                   const ok2 = !!(r2.success);
                   alert('Kirim DP50%: Peserta ' + (ok1 ? 'OK' : 'Gagal') + '; Admin ' + (ok2 ? 'OK' : 'Gagal'));
-                } else if (status === 'lunas') {
+                } else if (statusNorm === 'lunas' || statusNorm.includes('lunas')) {
                   const r = await sendWa(regId, 'tagihan_lunas_peserta');
                   alert('Kirim Lunas: ' + (r.success ? 'OK' : ('Gagal: ' + (r.message || ''))));
                 } else {

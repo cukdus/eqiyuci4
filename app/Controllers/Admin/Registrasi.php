@@ -740,9 +740,7 @@ class Registrasi extends BaseController
             $payload = $this->buildTemplatePayload($row, $db);
 
             $ws = new \App\Libraries\WahaService();
-            if (!$ws->isConfigured()) {
-                return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'WAHA belum dikonfigurasi']);
-            }
+            $wahaNotConfigured = !$ws->isConfigured();
             // Tentukan key template: default peserta
             $reqJson = $this->request->getJSON(true) ?? [];
             $key = (string) ($reqJson['key'] ?? ($this->request->getPost('key') ?? 'registrasi_peserta'));
@@ -763,6 +761,7 @@ class Registrasi extends BaseController
                     $adminPhone = (string) ($cfg['value'] ?? '');
                 }
                 if ($adminPhone === '') {
+                    $this->upsertWahaLog($id, 'tagihan_dp50_admin', 'admin', '', '', 'failed', 'admin_phone_missing');
                     return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Nomor admin belum dikonfigurasi']);
                 }
                 $message = $ws->renderTemplate($template, $payload);
