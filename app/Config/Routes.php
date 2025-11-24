@@ -69,6 +69,7 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     // Artikel: Edit & Update
     $routes->get('artikel/(:num)/edit', 'Admin\Artikel::edit/$1');
     $routes->post('artikel/(:num)/update', 'Admin\Artikel::update/$1');
+    $routes->post('artikel/(:num)/delete-main', 'Admin\Artikel::deleteMainImage/$1');
     // Artikel: Summernote Image Upload
     $routes->post('artikel/upload-image', 'Admin\Artikel::uploadImage');
     // Artikel: Kategori

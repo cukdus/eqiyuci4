@@ -75,8 +75,11 @@
                 <input type="file" class="form-control" id="gambar_utama" name="gambar_utama" accept="image/*">
                 <small class="text-muted">Biarkan kosong jika tidak ingin mengubah gambar. Format: JPG/PNG, ukuran maks 2MB.</small>
                 <?php if (!empty($article['gambar_utama'])): ?>
-                  <div class="mb-2">
-                    <img src="<?= base_url($article['gambar_utama']) ?>" alt="Gambar Utama" style="max-height: 140px;" class="border rounded">
+                  <div class="mb-2 position-relative d-inline-block" id="mainImageWrapper">
+                    <img id="mainImagePrev" src="<?= base_url($article['gambar_utama']) ?>" alt="Gambar Utama" style="max-height: 140px; object-fit: cover;" class="border rounded">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" id="btnDeleteMainImage" title="Hapus Gambar">
+                      <i class="bi bi-trash"></i>
+                    </button>
                   </div>
                 <?php endif; ?>
                 <div id="cropPreview" class="mt-2"></div>
@@ -245,6 +248,31 @@
           if (bsModal) { bsModal.hide(); } else { hideFallbackModal(); }
         }, 'image/jpeg', quality);
       });
+      const delBtn = document.getElementById('btnDeleteMainImage');
+      if (delBtn) {
+        delBtn.addEventListener('click', async function(){
+          if (!confirm('Hapus gambar utama?')) return;
+          const url = '<?= base_url('admin/artikel/' . (int) $article['id'] . '/delete-main') ?>';
+          const csrfName = '<?= csrf_token() ?>';
+          const csrfHash = '<?= csrf_hash() ?>';
+          try {
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: encodeURI(csrfName) + '=' + encodeURI(csrfHash)
+            });
+            const json = await res.json();
+            if (json && json.ok) {
+              const wrap = document.getElementById('mainImageWrapper');
+              if (wrap) wrap.remove();
+            } else {
+              alert('Gagal menghapus gambar');
+            }
+          } catch (e) {
+            alert('Gagal menghapus gambar');
+          }
+        });
+      }
     })();
   </script>
 </section>

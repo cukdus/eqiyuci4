@@ -209,7 +209,7 @@ class Artikel extends BaseController
         $file = $this->request->getFile('gambar_utama');
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $mime = (string) $file->getMimeType();
-            $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (in_array($mime, $allowed, true)) {
                 // Batas ukuran file mentah sebelum kompresi: 2MB
                 if ($file->getSize() <= (2 * 1024 * 1024)) {
@@ -377,7 +377,7 @@ class Artikel extends BaseController
         $file = $this->request->getFile('gambar_utama');
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $mime = (string) $file->getMimeType();
-            $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            $allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (in_array($mime, $allowed, true)) {
                 // Batas ukuran file mentah sebelum kompresi: 2MB
                 if ($file->getSize() <= (2 * 1024 * 1024)) {
@@ -544,6 +544,9 @@ class Artikel extends BaseController
             } elseif ($mime === 'image/gif') {
                 $src = imagecreatefromgif($tmp);
                 $outExt = 'gif';
+            } elseif ($mime === 'image/webp' && function_exists('imagecreatefromwebp')) {
+                $src = imagecreatefromwebp($tmp);
+                $outExt = 'jpg';
             } else {
                 return null;
             }
@@ -632,5 +635,31 @@ class Artikel extends BaseController
             return redirect()->back()->with('error', 'Gagal menghapus artikel');
         }
         return redirect()->to(site_url('admin/artikel'))->with('message', 'Artikel berhasil dihapus');
+    }
+
+    public function deleteMainImage($id)
+    {
+        $this->response->setContentType('application/json');
+        $me = service('authentication')->user();
+        if (!$me) {
+            return $this->response->setStatusCode(401)->setJSON(['ok' => false, 'error' => 'Unauthorized']);
+        }
+        $model = model(Berita::class);
+        $row = $model->find($id);
+        if (!$row) {
+            return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'error' => 'Not found']);
+        }
+        $path = (string) ($row['gambar_utama'] ?? '');
+        if ($path !== '') {
+            $full = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path);
+            if (is_file($full)) {
+                @unlink($full);
+            }
+        }
+        $ok = $model->update($id, ['gambar_utama' => null]);
+        if (!$ok) {
+            return $this->response->setStatusCode(500)->setJSON(['ok' => false, 'error' => 'Gagal menghapus gambar']);
+        }
+        return $this->response->setJSON(['ok' => true]);
     }
 }
