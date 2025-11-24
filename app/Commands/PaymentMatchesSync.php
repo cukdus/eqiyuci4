@@ -97,11 +97,19 @@ class PaymentMatchesSync extends BaseCommand
                 $btQB->where('period >=', $from);
             }
             $nums = array_values(array_filter([$formattedDibayar, $formattedTagihan]));
-            $btQB
-                ->groupStart()
-                ->whereIn('credit_total_formatted', $nums)
-                ->orWhereIn('amount_formatted', $nums)
-                ->groupEnd();
+            if (!empty($nums)) {
+                $btQB->groupStart();
+                foreach ($nums as $i => $val) {
+                    $condAmt = "CAST(REPLACE(amount_formatted, ',', '') AS DECIMAL(18,2)) = " . $db->escape($val);
+                    $condCred = "CAST(REPLACE(credit_total_formatted, ',', '') AS DECIMAL(18,2)) = " . $db->escape($val);
+                    if ($i === 0) {
+                        $btQB->where($condAmt, null, false)->orWhere($condCred, null, false);
+                    } else {
+                        $btQB->orWhere($condAmt, null, false)->orWhere($condCred, null, false);
+                    }
+                }
+                $btQB->groupEnd();
+            }
             $bankTxs = $btQB->get()->getResultArray();
 
             $countProcessed++;
