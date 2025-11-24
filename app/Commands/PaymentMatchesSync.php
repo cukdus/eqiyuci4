@@ -142,7 +142,8 @@ class PaymentMatchesSync extends BaseCommand
                 }, $bankTxs)), 'white');
             }
             if (empty($bankTxs)) {
-                CLI::write("[SKIP] R#$rid tidak ada mutasi cocok dalam periode (<= $selesai)", 'yellow');
+                $periodLabel = (!empty($mulai) || !empty($selesai)) ? ('[' . ($mulai ?: '?') . '..' . ($selesai ?: '?') . ']') : '(tanpa filter periode)';
+                CLI::write("[SKIP] R#$rid tidak ada mutasi cocok dalam periode $periodLabel", 'yellow');
                 $countSkipped++;
                 continue;
             }
