@@ -77,18 +77,18 @@ class PaymentMatchesSync extends BaseCommand
             $formattedTagihan = $formatPlain($tagihan);
             $dp50 = (is_numeric($dibayar) && is_numeric($tagihan) && (float)$tagihan > 0 && abs(((float)$dibayar) - 0.5 * (float)$tagihan) < 0.01);
 
-            // Bank transactions: pilih kolom yang tersedia (tanpa 'amount')
-            $btQB = $db->table('bank_transactions')->select('id, amount_formatted, period');
+            // Bank transactions: gunakan kolom kredit (credit_total_formatted)
+            $btQB = $db->table('bank_transactions')->select('id, credit_total_formatted, period');
             // Default: hanya batas atas (<= tanggal_selesai); batas bawah dipakai jika --from diberikan
             if (!empty($selesai)) { $btQB->where('period <=', $selesai); }
             if (!empty($from)) { $btQB->where('period >=', $from); }
-            $btQB->whereIn('amount_formatted', array_values(array_filter([$formattedDibayar, $formattedTagihan])));
+            $btQB->whereIn('credit_total_formatted', array_values(array_filter([$formattedDibayar, $formattedTagihan])));
             $bankTxs = $btQB->get()->getResultArray();
 
             $countProcessed++;
             if ($verbose) {
                 CLI::write("[INFO] R#$rid jadwal=($mulai .. $selesai) dibayar={$formattedDibayar} tagihan={$formattedTagihan}", 'white');
-                CLI::write("       Kandidat BT: " . implode(', ', array_map(function($bt){return 'BT#'.$bt['id'].'='.$bt['amount_formatted'].'@'.$bt['period'];}, $bankTxs)), 'white');
+                CLI::write("       Kandidat BT: " . implode(', ', array_map(function($bt){return 'BT#'.$bt['id'].'='.$bt['credit_total_formatted'].'@'.$bt['period'];}, $bankTxs)), 'white');
             }
             if (empty($bankTxs)) {
                 CLI::write("[SKIP] R#$rid tidak ada mutasi cocok dalam periode (<= $selesai)", 'yellow');
@@ -98,7 +98,7 @@ class PaymentMatchesSync extends BaseCommand
 
             foreach ($bankTxs as $bt) {
                 $type = null;
-                if ($formattedDibayar !== '' && $bt['amount_formatted'] === $formattedDibayar) {
+                if ($formattedDibayar !== '' && (string)$bt['credit_total_formatted'] === $formattedDibayar) {
                     if ($dibayar == $tagihan) {
                         $type = 'full';
                     } elseif ($dp50) {
@@ -106,7 +106,7 @@ class PaymentMatchesSync extends BaseCommand
                     } else {
                         $type = 'dibayar';
                     }
-                } elseif ($formattedTagihan !== '' && $bt['amount_formatted'] === $formattedTagihan) {
+                } elseif ($formattedTagihan !== '' && (string)$bt['credit_total_formatted'] === $formattedTagihan) {
                     $type = 'pelunasan';
                 }
 
@@ -128,13 +128,13 @@ class PaymentMatchesSync extends BaseCommand
                     'registrasi_id' => $rid,
                     'bank_transaction_id' => (int) $bt['id'],
                     'type' => $type,
-                    'amount_formatted' => (string) $bt['amount_formatted'],
-                    'amount_numeric' => $toNumeric($bt['amount_formatted'] ?? ''),
+                    'amount_formatted' => (string) ($bt['credit_total_formatted'] ?? ''),
+                    'amount_numeric' => $toNumeric($bt['credit_total_formatted'] ?? ''),
                     'period' => (string) ($bt['period'] ?? null),
                     'matched_at' => date('Y-m-d H:i:s'),
                     'notes' => "Auto-sync by CLI",
                 ]);
-                CLI::write("[ADD ] R#$rid + BT#{$bt['id']} ($type) amount={$bt['amount_formatted']} period={$bt['period']}", 'green');
+                CLI::write("[ADD ] R#$rid + BT#{$bt['id']} ($type) amount={$bt['credit_total_formatted']} period={$bt['period']}", 'green');
                 $countInserted++;
             }
         }
