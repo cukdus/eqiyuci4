@@ -176,6 +176,7 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     $routes->get('setting/waha', 'Admin\Setting::waha');
     // Setting: Transaksi submenu
     $routes->get('setting/transaksi', 'Admin\Setting::transaksi');
+    $routes->get('setting/transaksi.json', 'Admin\Setting::transaksiJson');
     // Setting: Payment Matches Audit
     $routes->get('setting/payment-matches', 'Admin\PaymentMatches::index');
     $routes->post('setting/payment-matches', 'Admin\PaymentMatches::index');
