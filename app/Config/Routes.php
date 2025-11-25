@@ -179,6 +179,7 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     // Setting: Payment Matches Audit
     $routes->get('setting/payment-matches', 'Admin\PaymentMatches::index');
     $routes->post('setting/payment-matches', 'Admin\PaymentMatches::index');
+    $routes->get('setting/payment-matches.json', 'Admin\PaymentMatches::listJson');
     // Import Mutasi BCA (manual trigger)
     $routes->post('setting/import-bca', 'Admin\Setting::imporBca');
     // WAHA management
@@ -211,4 +212,5 @@ $routes->group('admin', ['filter' => ['login', 'idle']], function ($routes) {
     // Audit Payment Matches
     $routes->get('payment-matches', 'Admin\PaymentMatches::index');
     $routes->post('payment-matches', 'Admin\PaymentMatches::index');
+    $routes->get('payment-matches.json', 'Admin\PaymentMatches::listJson');
 });
