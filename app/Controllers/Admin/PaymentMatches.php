@@ -27,9 +27,10 @@ class PaymentMatches extends BaseController
 
         $db = Database::connect();
         $qb = $db->table('payment_matches pm')
-            ->select('pm.*, r.nama as registrasi_nama, r.email as registrasi_email, k.nama_kelas, bt.amount_formatted as bank_amount, bt.period as bank_period')
+            ->select('pm.*, r.nama as registrasi_nama, r.email as registrasi_email, k.nama_kelas, jk.tanggal_mulai as jadwal_mulai, jk.tanggal_selesai as jadwal_selesai, jk.lokasi as jadwal_lokasi, bt.amount_formatted as bank_amount, bt.period as bank_period')
             ->join('registrasi r', 'r.id = pm.registrasi_id', 'left')
             ->join('kelas k', 'k.kode_kelas = r.kode_kelas', 'left')
+            ->join('jadwal_kelas jk', 'jk.id = r.jadwal_id', 'left')
             ->join('bank_transactions bt', 'bt.id = pm.bank_transaction_id', 'left')
             ->orderBy('pm.matched_at', 'DESC');
 

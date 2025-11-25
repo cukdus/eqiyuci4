@@ -55,10 +55,9 @@
                     <th style="width: 52px;">#</th>
                     <th>Registrasi</th>
                     <th>Kelas</th>
+                    <th>Jadwal Kelas</th>
                     <th>Tipe</th>
                     <th>Amount</th>
-                    <th>Periode</th>
-                    <th>Matched At</th>
                     <th>Bank Tx</th>
                     <th>Catatan</th>
                   </tr>
@@ -83,10 +82,23 @@
                         <div class="small text-muted"><?= esc($r['registrasi_email'] ?? ''); ?></div>
                       </td>
                       <td><?= esc($r['nama_kelas'] ?? ''); ?></td>
+                      <td class="text-nowrap">
+                        <?php
+                          $jm = $r['jadwal_mulai'] ?? null;
+                          $js = $r['jadwal_selesai'] ?? null;
+                          $jl = $r['jadwal_lokasi'] ?? '';
+                          $fmt = function($d){
+                            if(!$d) return '';
+                            $t = strtotime($d);
+                            if($t===false) return (string)$d;
+                            return date('d/m/Y',$t);
+                          };
+                          $label = ($jm ? $fmt($jm) : '-') . ($js ? (' s/d ' . $fmt($js)) : '') . ($jl ? (' - ' . ucfirst((string)$jl)) : '');
+                          echo esc($label);
+                        ?>
+                      </td>
                       <td><span class="badge <?= $badge; ?>"><?= esc(ucfirst($r['type'] ?? '')); ?></span></td>
                       <td class="text-nowrap"><?= esc($r['amount_formatted'] ?? $r['bank_amount'] ?? ''); ?></td>
-                      <td class="text-nowrap"><?= esc($r['period'] ?? $r['bank_period'] ?? ''); ?></td>
-                      <td class="text-nowrap"><?= esc($r['matched_at'] ?? ''); ?></td>
                       <td class="text-nowrap">BT#<?= esc((string)($r['bank_transaction_id'] ?? '')); ?></td>
                       <td><?= esc($r['notes'] ?? ''); ?></td>
                     </tr>
