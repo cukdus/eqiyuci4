@@ -26,17 +26,21 @@ $root = dirname(__DIR__);
 $writable = $root . DIRECTORY_SEPARATOR . 'writable';
 $cookieDir = $writable . DIRECTORY_SEPARATOR . 'cookies';
 if (!is_dir($cookieDir)) {
-    @mkdir($cookieDir, 0755, true);
+    @mkdir($cookieDir, 0775, true);
+    @chmod($cookieDir, 0775);
 }
 $cookie = $cookieDir . DIRECTORY_SEPARATOR . 'klikbca_m.cookie';
 @touch($cookie);
+@chmod($cookie, 0664);
 $hasilDir = $writable . DIRECTORY_SEPARATOR . 'klikbca' . DIRECTORY_SEPARATOR . 'hasil';
 if (!is_dir($hasilDir)) {
-    @mkdir($hasilDir, 0755, true);
+    @mkdir($hasilDir, 0775, true);
+    @chmod($hasilDir, 0775);
 }
 $htmlDir = $writable . DIRECTORY_SEPARATOR . 'klikbca' . DIRECTORY_SEPARATOR . 'html';
 if (!is_dir($htmlDir)) {
-    @mkdir($htmlDir, 0755, true);
+    @mkdir($htmlDir, 0775, true);
+    @chmod($htmlDir, 0775);
 }
 
 // CA bundle optional via ENV
@@ -148,6 +152,7 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt', [
     CURLOPT_POSTFIELDS => ''
 ], 'https://m.klikbca.com/authentication.do?value(actions)=menu', 'same-origin');
 @file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acct_stmt_form.html', (string) ($o['out'] ?? ''));
+@chmod($htmlDir . DIRECTORY_SEPARATOR . 'acct_stmt_form.html', 0664);
 
 $st = time();
 $sd = date('d', $st);
@@ -183,6 +188,7 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acctstmtview', [
     CURLOPT_POSTFIELDS => http_build_query($posts)
 ], 'https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt', 'same-origin');
 @file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acctstmtview.html', (string) ($o['out'] ?? ''));
+@chmod($htmlDir . DIRECTORY_SEPARATOR . 'acctstmtview.html', 0664);
 
 $getRowVal = function ($html, $label) {
     $re = '/<td[^>]*>\s*' . preg_quote($label, '/') . '\s*<\/td>\s*<td[^>]*>:\s*<\/td>\s*<td[^>]*>(.*?)<\/td>/is';
@@ -341,6 +347,7 @@ $mutasiJson = [
     'summary' => $summary
 ];
 file_put_contents($hasilDir . DIRECTORY_SEPARATOR . 'mutasirekening.json', json_encode($mutasiJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION));
+@chmod($hasilDir . DIRECTORY_SEPARATOR . 'mutasirekening.json', 0664);
 
 $logout = go('https://m.klikbca.com/authentication.do?value(actions)=logout', [
     CURLOPT_POST => true,
