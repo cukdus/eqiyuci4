@@ -34,6 +34,22 @@ class BankScrape extends BaseCommand
         if (!($resT['success'] ?? false) && !$runParser) {
             $resT = $importer->importFromJson(true, $json, ($parser !== '' ? $parser : null), $today, $today);
         }
+        // Fallback: if today returns no transactions, try range [yesterday..today]
+        if ((($resT['success'] ?? false) && (int)($resT['inserted'] ?? 0) === 0) || !($resT['success'] ?? true)) {
+            $resRange = $importer->importFromJson($runParser, $json, ($parser !== '' ? $parser : null), $yesterday, $today);
+            if (!($resRange['success'] ?? false) && !$runParser) {
+                $resRange = $importer->importFromJson(true, $json, ($parser !== '' ? $parser : null), $yesterday, $today);
+            }
+            // Merge range result into today result if better
+            if (($resRange['success'] ?? false)) {
+                $resT = [
+                    'success' => true,
+                    'inserted' => (int)($resT['inserted'] ?? 0) + (int)($resRange['inserted'] ?? 0),
+                    'skipped' => (int)($resT['skipped'] ?? 0) + (int)($resRange['skipped'] ?? 0),
+                    'message' => ($resT['message'] ?? 'Tidak ada transaksi hari ini') . '; Fallback range applied',
+                ];
+            }
+        }
 
         if (!($resY['success'] ?? false) && !($resT['success'] ?? false)) {
             CLI::error('Scrape/impor gagal: ' . ($resT['message'] ?? $resY['message'] ?? 'unknown error'));
