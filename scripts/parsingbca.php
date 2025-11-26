@@ -150,39 +150,18 @@ $o = go('https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt', [
 @file_put_contents($htmlDir . DIRECTORY_SEPARATOR . 'acct_stmt_form.html', (string) ($o['out'] ?? ''));
 
 $st = time();
-// Optional CLI args: --start=YYYY-MM-DD --end=YYYY-MM-DD
-$cliArgs = isset($argv) && is_array($argv) ? $argv : [];
-$parseArg = function(string $key) use ($cliArgs): ?string {
-    foreach ($cliArgs as $arg) {
-        if (strpos($arg, '--' . $key . '=') === 0) {
-            $val = substr($arg, strlen('--' . $key . '='));
-            $val = trim($val, " \t\n\r\0\v\"'");
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $val)) return $val;
-        }
-    }
-    return null;
-};
-$startOpt = $parseArg('start');
-$endOpt = $parseArg('end');
-if ($startOpt) { $st = strtotime($startOpt) ?: $st; }
-// end date defaults to start date when provided
-$et = $st;
-if ($endOpt) { $et = strtotime($endOpt) ?: $et; }
 $sd = date('d', $st);
 $sm = date('m', $st);
 $sy = date('Y', $st);
-$ed = date('d', $et);
-$em = date('m', $et);
-$ey = date('Y', $et);
 $posts = [
     'r1' => '1',
     'value(D1)' => '0',
     'value(startDt)' => $sd,
     'value(startMt)' => $sm,
     'value(startYr)' => $sy,
-    'value(endDt)' => $ed,
-    'value(endMt)' => $em,
-    'value(endYr)' => $ey
+    'value(endDt)' => $sd,
+    'value(endMt)' => $sm,
+    'value(endYr)' => $sy
 ];
 if (preg_match_all('/<input.+>/Us', $o['out'], $m)) {
     foreach ($m[0] as $v) {

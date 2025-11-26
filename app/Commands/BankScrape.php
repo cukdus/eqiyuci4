@@ -19,52 +19,20 @@ class BankScrape extends BaseCommand
         $json = (string) (CLI::getOption('json') ?? '');
         $parser = (string) (CLI::getOption('parser') ?? '');
         $runParser = ($skip === null);
-
-        // Always import YESTERDAY then TODAY to cover overnight transactions
-        $today = date('Y-m-d');
-        $yesterday = date('Y-m-d', strtotime('-1 day'));
-
-        // Import yesterday
-        $resY = $importer->importFromJson($runParser, $json, ($parser !== '' ? $parser : null), $yesterday, $yesterday);
-        if (!($resY['success'] ?? false) && !$runParser) {
-            $resY = $importer->importFromJson(true, $json, ($parser !== '' ? $parser : null), $yesterday, $yesterday);
-        }
-        // Import today
-        $resT = $importer->importFromJson($runParser, $json, ($parser !== '' ? $parser : null), $today, $today);
-        if (!($resT['success'] ?? false) && !$runParser) {
-            $resT = $importer->importFromJson(true, $json, ($parser !== '' ? $parser : null), $today, $today);
-        }
-        // Fallback: if today returns no transactions, try range [yesterday..today]
-        if ((($resT['success'] ?? false) && (int)($resT['inserted'] ?? 0) === 0) || !($resT['success'] ?? true)) {
-            $resRange = $importer->importFromJson($runParser, $json, ($parser !== '' ? $parser : null), $yesterday, $today);
-            if (!($resRange['success'] ?? false) && !$runParser) {
-                $resRange = $importer->importFromJson(true, $json, ($parser !== '' ? $parser : null), $yesterday, $today);
-            }
-            // Merge range result into today result if better
-            if (($resRange['success'] ?? false)) {
-                $resT = [
-                    'success' => true,
-                    'inserted' => (int)($resT['inserted'] ?? 0) + (int)($resRange['inserted'] ?? 0),
-                    'skipped' => (int)($resT['skipped'] ?? 0) + (int)($resRange['skipped'] ?? 0),
-                    'message' => ($resT['message'] ?? 'Tidak ada transaksi hari ini') . '; Fallback range applied',
-                ];
-            }
+        $result = $importer->importFromJson($runParser, $json, ($parser !== '' ? $parser : null));
+        if (!($result['success'] ?? false) && !$runParser) {
+            $result = $importer->importFromJson(true, $json, ($parser !== '' ? $parser : null));
         }
 
-        if (!($resY['success'] ?? false) && !($resT['success'] ?? false)) {
-            CLI::error('Scrape/impor gagal: ' . ($resT['message'] ?? $resY['message'] ?? 'unknown error'));
+        if (!($result['success'] ?? false)) {
+            CLI::error('Scrape/impor gagal: ' . ($result['message'] ?? 'unknown error'));
             return;
         }
 
-        if (isset($resY['message']) && is_string($resY['message']) && $resY['message'] !== '') {
-            CLI::write('[Yesterday] ' . $resY['message']);
-        }
-        if (isset($resT['message']) && is_string($resT['message']) && $resT['message'] !== '') {
-            CLI::write('[Today] ' . $resT['message']);
+        if (isset($result['message']) && is_string($result['message']) && $result['message'] !== '') {
+            CLI::write($result['message']);
         }
 
-        $inserted = (int) ($resY['inserted'] ?? 0) + (int) ($resT['inserted'] ?? 0);
-        $skipped = (int) ($resY['skipped'] ?? 0) + (int) ($resT['skipped'] ?? 0);
-        CLI::write("Scrape & impor selesai. Inserted: {$inserted}, Skipped (duplikat): {$skipped}");
+        CLI::write("Scrape & impor selesai. Inserted: {$result['inserted']}, Skipped (duplikat): {$result['skipped']}");
     }
 }

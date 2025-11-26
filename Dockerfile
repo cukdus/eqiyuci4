@@ -27,7 +27,7 @@ COPY docker/php.ini /usr/local/etc/php/php.ini
 
 # Supervisor & cron
 COPY docker/cron /etc/cron.d/app-cron
-RUN chmod 0644 /etc/cron.d/app-cron && echo "" >> /etc/cron.d/app-cron
+RUN chmod 0644 /etc/cron.d/app-cron && crontab /etc/cron.d/app-cron
 
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -49,7 +49,7 @@ RUN if [ -f /var/www/html/composer.json ]; then \
     composer install --no-dev --prefer-dist --no-interaction --no-progress; \
   fi
 
-RUN mkdir -p /var/www/html/writable /var/www/html/writable/logs /var/www/html/writable/klikbca/hasil /var/www/html/writable/klikbca/html /var/www/html/writable/cookies && \
+RUN mkdir -p /var/www/html/writable /var/www/html/writable/logs && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/writable
 

@@ -12,7 +12,7 @@ class BcaImporter
      * @param string|null $scriptPath Path skrip parsingbca.php (jika runParser=true)
      * @return array [success=>bool, inserted=>int, skipped=>int, message=>string]
      */
-    public function importFromJson(bool $runParser = false, string $jsonPath = '', ?string $scriptPath = null, ?string $startDate = null, ?string $endDate = null): array
+    public function importFromJson(bool $runParser = false, string $jsonPath = '', ?string $scriptPath = null): array
     {
         // Resolve defaults for Docker/Linux or Windows via ENV and OS detection
         // Defaults strictly inside the application
@@ -50,10 +50,7 @@ class BcaImporter
             if (!$isAllowed((string)$scriptPath)) {
                 return ['success' => false, 'inserted' => 0, 'skipped' => 0, 'message' => 'Path script parser di luar aplikasi tidak diizinkan'];
             }
-            $args = [];
-            if ($startDate) { $args[] = '--start=' . escapeshellarg($startDate); }
-            if ($endDate) { $args[] = '--end=' . escapeshellarg($endDate); }
-            $cmd = 'php ' . escapeshellarg((string)$scriptPath) . (count($args) ? (' ' . implode(' ', $args)) : '') . ' 2>&1';
+            $cmd = 'php ' . escapeshellarg((string)$scriptPath) . ' 2>&1';
             $parserOut = (string) @shell_exec($cmd);
             $logFile = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'klikbca.log';
             $ts = date('Y-m-d H:i:s');

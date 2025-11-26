@@ -199,54 +199,6 @@ class Setting extends BaseController
         ]);
     }
 
-    public function transaksiJson()
-    {
-        $me = service('authentication')->user();
-        if (!$me) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-        }
-        $authz = service('authorization');
-        if (!$authz->inGroup('admin', $me->id)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Forbidden'])->setStatusCode(403);
-        }
-
-        $req = $this->request;
-        $month = (int) ($req->getGet('month') ?? 0);
-        $year = (int) ($req->getGet('year') ?? 0);
-        $page = (int) ($req->getGet('page') ?? 1);
-        $perPage = (int) ($req->getGet('perPage') ?? 10);
-        if ($page < 1) $page = 1;
-        $allowedPer = [10,20,50,100];
-        if (!in_array($perPage, $allowedPer, true)) $perPage = 10;
-        $offset = ($page - 1) * $perPage;
-
-        $tm = model(BankTransaction::class);
-        $db = \Config\Database::connect();
-        $qb = $db->table('bank_transactions')->select('*');
-        if ($month >= 1 && $month <= 12 && $year >= 2000) {
-            $startDate = sprintf('%04d-%02d-01', $year, $month);
-            $endDate = date('Y-m-t', strtotime($startDate));
-            $qb->where('created_at >=', $startDate . ' 00:00:00');
-            $qb->where('created_at <=', $endDate . ' 23:59:59');
-        }
-
-        $countQB = clone $qb;
-        $total = (int) $countQB->countAllResults();
-        $rows = $qb->orderBy('created_at', 'DESC')->limit($perPage, $offset)->get()->getResultArray();
-
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $rows,
-            'meta' => [
-                'page' => $page,
-                'per_page' => $perPage,
-                'total' => $total,
-                'total_pages' => max(1, (int) ceil($total / $perPage)),
-                'filters' => [ 'month' => $month, 'year' => $year ],
-            ],
-        ]);
-    }
-
     public function imporBca()
     {
         $me = service('authentication')->user();
