@@ -14,6 +14,12 @@ $routes->get('info/(:segment)', 'Home::infoDetail/$1');
 $routes->get('blog-details.php', 'Home::infoDetail');
 $routes->get('kontak', 'Home::kontak');
 $routes->get('jadwal', 'Home::jadwal');
+$routes->get('terms', static function () {
+    return view('terms');
+});
+$routes->get('privacy', static function () {
+    return view('privacy');
+});
 $routes->match(['GET', 'POST'], 'sertifikat', 'Home::sertifikat');
 // Endpoint JSON untuk cek sertifikat
 $routes->get('api/sertifikat', 'Home::sertifikatJson');
