@@ -20,7 +20,7 @@ RUN a2enmod rewrite headers
 
 # Install PHP extensions
 RUN docker-php-ext-configure intl && \
-    docker-php-ext-install pdo pdo_mysql mysqli intl gd zip curl mbstring dom
+    docker-php-ext-install pdo pdo_mysql mysqli intl gd zip curl mbstring xml
 
 # Copy php.ini
 COPY docker/php.ini /usr/local/etc/php/php.ini
