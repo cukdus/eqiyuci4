@@ -122,11 +122,14 @@ class WahaService
      */
     public function renderTemplate(string $template, array $data): string
     {
-        $rendered = $template;
-        foreach ($data as $key => $val) {
-            $rendered = str_replace('{{' . $key . '}}', (string) $val, $rendered);
+        $map = [];
+        foreach ($data as $k => $v) {
+            $map[strtolower((string) $k)] = (string) $v;
         }
-        return $rendered;
+        return preg_replace_callback('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', static function ($m) use ($map) {
+            $key = strtolower((string) ($m[1] ?? ''));
+            return $map[$key] ?? '';
+        }, $template) ?? $template;
     }
 
     protected function defaultHeaders(): array

@@ -57,8 +57,8 @@ class ReminderSendLulus extends BaseCommand
             $endDate = date('Y-m-d', strtotime($tglMulai . ' +' . ($durasi - 1) . ' days'));
             if ($endDate !== $forDate) { $countSkip++; continue; }
 
-            $certRow = $db->table('sertifikat')->select('nomor_sertifikat')->where('registrasi_id', $rid)->orderBy('created_at', 'DESC')->get()->getRowArray();
-            $noSertifikat = (string)($certRow['nomor_sertifikat'] ?? '');
+            $certRow = $db->table('sertifikat')->select('no_sertifikat')->where('registrasi_id', $rid)->orderBy('created_at', 'DESC')->get()->getRowArray();
+            $noSertifikat = (string)($certRow['no_sertifikat'] ?? '');
 
             $msg = $waha->renderTemplate($tplLulus, [
                 'nama' => $nama,
