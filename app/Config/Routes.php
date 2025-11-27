@@ -14,10 +14,23 @@ $routes->get('info/(:segment)', 'Home::infoDetail/$1');
 $routes->get('blog-details.php', 'Home::infoDetail');
 $routes->get('kontak', 'Home::kontak');
 $routes->get('jadwal', 'Home::jadwal');
-$routes->get('r', static function () {
+$routes->get('terms', static function () {
     return view('terms');
 });
 $routes->get('privacy', static function () {
+    return view('privacy');
+});
+// Legacy/static routes for compatibility
+$routes->get('terms.php', static function () {
+    return view('terms');
+});
+$routes->get('terms-of-service', static function () {
+    return view('terms');
+});
+$routes->get('privacy.php', static function () {
+    return view('privacy');
+});
+$routes->get('privacy-policy', static function () {
     return view('privacy');
 });
 $routes->match(['GET', 'POST'], 'sertifikat', 'Home::sertifikat');
