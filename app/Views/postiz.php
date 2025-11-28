@@ -16,6 +16,10 @@ $this->setVar('activePage', 'index');
         <h1 class="mb-3">Kelola Sosial Media Anda dengan Postiz</h1>
         <p class="mb-4">Tools untuk menjadwalkan, mempublikasikan, dan mengelola konten lintas platform secara mudah.</p>
         <a href="https://posting.eqiyu.id/" class="btn btn-primary">Mulai Sekarang</a>
+        <div class="mt-4">
+        <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
+        <a href="<?= base_url('privacy') ?>">Privacy</a>
+      </div>
       </div>
     </div>
   </section>
@@ -45,10 +49,7 @@ $this->setVar('activePage', 'index');
           </div>
         </div>
       </div>
-      <div class="mt-4">
-        <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
-        <a href="<?= base_url('privacy') ?>">Privacy</a>
-      </div>
+      
     </div>
   </section>
 
