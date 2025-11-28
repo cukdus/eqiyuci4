@@ -28,36 +28,111 @@ $this->setVar('activePage', 'index');
     </div>
   </section>
 
-  <section id="about" class="section">
-    <div class="container" data-aos="fade-up" data-aos-delay="100">
+  <section id="about" class="about section light-background">
+    <div class="container section-title aos-init aos-animate" data-aos="fade-up">
+      <h2>Fasilitas</h2>
+    </div>
+    <div class="container aos-init aos-animate" data-aos="fade-up" data-aos-delay="100">
       <div class="row gy-4">
-        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-            <div class="mission-card">
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="200">
+          <div class="mission-card">
             <div class="icon-box">
               <i class="bi bi-award"></i>
             </div>
-            <h3>Jadwal otomatis</h3>
+            <h3>Sertifikat Resmi</h3>
             <p>
-              Atur kalender konten dan publikasi otomatis sesuai jadwal yang Anda tentukan.
+              Sertifikat yang dapat Anda dapatkan setelah menyelesaikan
+              program pelatihan di EQIYU INDONESIA. Dan bisa di check
+              validasi di website resmi EQIYU INDONESIA.
             </p>
           </div>
         </div>
-        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
-          <div class="mission-card h-100">
-            <div class="icon-box"><i class="bi bi-share"></i></div>
-            <h3>Integrasi TikTok, Instagram, Facebook</h3>
-            <p>Kelola dan distribusikan konten ke beberapa platform sekaligus dari satu tempat.</p>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="300">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <h3>Softcopy Modul</h3>
+            <p>
+              Materi pelatihan lengkap dalam bentuk digital, sehingga Anda
+              dapat belajar kembali kapan saja dan di mana saja. Dan dapat
+              di download ulang kapan pun.
+            </p>
           </div>
         </div>
-        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="400">
-          <div class="mission-card h-100">
-            <div class="icon-box"><i class="bi bi-shield-check"></i></div>
-            <h3>Workflow aman & efisien</h3>
-            <p>Proses terstruktur dengan kontrol akses untuk menjaga keamanan dan produktivitas tim.</p>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-journal-text"></i>
+            </div>
+            <h3>Recipe Beverage</h3>
+            <p>
+              Kumpulan resep minuman spesial yang bisa langsung Anda
+              praktikkan dan kembangkan untuk bisnis atau kreasi pribadi.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-egg-fried"></i>
+            </div>
+            <h3>Makan Siang</h3>
+            <p>
+              Menikmati sajian makan siang lezat selama program berlangsung
+              untuk menjaga energi Anda tetap prima.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-cup-hot"></i>
+            </div>
+            <h3>Snack</h3>
+            <p>
+              Camilan istimewa disediakan untuk menemani waktu istirahat
+              Anda selama sesi pelatihan.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-camera"></i>
+            </div>
+            <h3>Dokumentasi Peserta</h3>
+            <p>
+              Foto dan video dokumentasi kegiatan Anda selama pelatihan,
+              sebagai kenangan sekaligus materi promosi personal.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-cup-straw"></i>
+            </div>
+            <h3>Bar Experience</h3>
+            <p>
+              Praktik langsung di area bar berstandar industri, dengan alat
+              dan bahan baku yang telah disediakan secara gratis.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 aos-init aos-animate" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-person-lines-fill"></i>
+            </div>
+            <h3>Free Konsultasi</h3>
+            <p>
+              Praktik langsung di area bar berstandar industri, dengan alat
+              dan bahan baku yang telah disediakan secara gratis.
+            </p>
           </div>
         </div>
       </div>
-      
     </div>
   </section>
 
