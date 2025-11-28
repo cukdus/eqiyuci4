@@ -11,5 +11,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 10 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-tagihan-h3 >> /var/www/html/writable/logs/cron.log 2>&1
 
 # Send lulus_peserta messages at 21:00
-0 20 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-lulus >> /var/www/html/writable/logs/cron.log 2>&1
-
+0 21 * * * www-data /usr/local/bin/php /var/www/html/spark reminder:send-lulus >> /var/www/html/writable/logs/cron.log 2>&1

@@ -56,6 +56,7 @@ class ReminderSendLulus extends BaseCommand
 
             $endDate = date('Y-m-d', strtotime($tglMulai . ' +' . ($durasi - 1) . ' days'));
             if ($endDate !== $forDate) { $countSkip++; continue; }
+            if ($this->alreadySent($logModel, $rid, $forDate)) { $countSkip++; if ($verbose) CLI::write('[SKIP ] R#'.$rid.' already sent'); continue; }
 
             $certRow = $db->table('sertifikat')->select('no_sertifikat')->where('registrasi_id', $rid)->orderBy('created_at', 'DESC')->get()->getRowArray();
             $noSertifikat = (string)($certRow['no_sertifikat'] ?? '');
@@ -88,6 +89,19 @@ class ReminderSendLulus extends BaseCommand
             if ($tpl !== '') { return $tpl; }
         }
         return $default;
+    }
+
+    private function alreadySent(WahaLog $logModel, int $rid, string $forDate): bool
+    {
+        $start = $forDate . ' 00:00:00';
+        $end = $forDate . ' 23:59:59';
+        return $logModel
+            ->where('registrasi_id', $rid)
+            ->where('scenario', 'lulus_peserta')
+            ->where('status', 'sent')
+            ->where('created_at >=', $start)
+            ->where('created_at <=', $end)
+            ->first() !== null;
     }
 
     private function log(WahaLog $logModel, int $rid, string $scenario, string $recipient, string $phone, string $message, bool $success, ?string $error): void

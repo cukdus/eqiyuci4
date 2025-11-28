@@ -27,7 +27,7 @@ COPY docker/php.ini /usr/local/etc/php/php.ini
 
 # Supervisor & cron
 COPY docker/cron /etc/cron.d/app-cron
-RUN chmod 0644 /etc/cron.d/app-cron && crontab /etc/cron.d/app-cron
+RUN chmod 0644 /etc/cron.d/app-cron
 
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -51,12 +51,14 @@ RUN if [ -f /var/www/html/composer.json ]; then \
 
 RUN mkdir -p /var/www/html/writable /var/www/html/writable/logs /var/www/html/writable/cache /var/www/html/writable/session /var/www/html/writable/cookies && \
     chown -R www-data:www-data /var/www/html/writable && \
-    chmod -R 775 /var/www/html/writable
+    chmod -R 777 /var/www/html/writable
+    chown -R 1000:1000 writable
 
 # Upload directory fix
 RUN mkdir -p /var/www/html/public/uploads/avatars && \
     chown -R www-data:www-data /var/www/html/public/uploads && \
-    chmod -R 775 /var/www/html/public/uploads
+    chmod -R 777 /var/www/html/public/uploads
+    chown -R 1000:1000 writable
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
