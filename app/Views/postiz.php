@@ -11,45 +11,48 @@ $this->setVar('activePage', 'index');
 <main class="main">
 
   <section class="hero section light-background">
-    <div class="container d-lg-flex justify-content-between align-items-center">
-      <div>
-        <h1 class="mb-3">Kelola Sosial Media Anda dengan Postiz</h1>
-        <p class="mb-4">Tools untuk menjadwalkan, mempublikasikan, dan mengelola konten lintas platform secara mudah.</p>
-        <a href="https://posting.eqiyu.id/" class="btn btn-primary">Mulai Sekarang</a>
-        <div class="mt-4">
-        <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
-        <a href="<?= base_url('privacy') ?>">Privacy</a>
-      </div>
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+          <h1 class="mb-3">Kelola Sosial Media Anda dengan Postiz</h1>
+          <p class="mb-4">Tools untuk menjadwalkan, mempublikasikan, dan mengelola konten lintas platform secara mudah.</p>
+          <div class="hero-buttons">
+            <a href="https://posting.eqiyu.id/" class="btn btn-primary">Mulai Sekarang</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <section id="features" class="section">
-    <div class="container">
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="feature-box p-4 border rounded h-100">
-            <div class="icon mb-2"><i class="bi bi-calendar-check"></i></div>
-            <h3 class="h5">Jadwal otomatis</h3>
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+      <div class="row gy-4">
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="mission-card h-100">
+            <div class="icon-box"><i class="bi bi-calendar-check"></i></div>
+            <h3>Jadwal otomatis</h3>
             <p>Atur kalender konten dan publikasi otomatis sesuai jadwal yang Anda tentukan.</p>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="feature-box p-4 border rounded h-100">
-            <div class="icon mb-2"><i class="bi bi-share"></i></div>
-            <h3 class="h5">Integrasi TikTok, Instagram, Facebook</h3>
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="mission-card h-100">
+            <div class="icon-box"><i class="bi bi-share"></i></div>
+            <h3>Integrasi TikTok, Instagram, Facebook</h3>
             <p>Kelola dan distribusikan konten ke beberapa platform sekaligus dari satu tempat.</p>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="feature-box p-4 border rounded h-100">
-            <div class="icon mb-2"><i class="bi bi-shield-check"></i></div>
-            <h3 class="h5">Workflow aman & efisien</h3>
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="400">
+          <div class="mission-card h-100">
+            <div class="icon-box"><i class="bi bi-shield-check"></i></div>
+            <h3>Workflow aman & efisien</h3>
             <p>Proses terstruktur dengan kontrol akses untuk menjaga keamanan dan produktivitas tim.</p>
           </div>
         </div>
       </div>
-      
+      <div class="mt-4">
+        <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
+        <a href="<?= base_url('privacy') ?>">Privacy</a>
+      </div>
     </div>
   </section>
 
