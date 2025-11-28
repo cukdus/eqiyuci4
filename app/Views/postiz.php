@@ -10,7 +10,7 @@ $this->setVar('activePage', 'index');
 <?= $this->section('content') ?>
 <main class="main">
 
-  <section class="hero section light-background">
+  <section class="courses-hero section light-background">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
@@ -19,12 +19,16 @@ $this->setVar('activePage', 'index');
           <div class="hero-buttons">
             <a href="https://posting.eqiyu.id/" class="btn btn-primary">Mulai Sekarang</a>
           </div>
+            <div class="mt-4">
+                <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
+                <a href="<?= base_url('privacy') ?>">Privacy</a>
+            </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="features" class="section">
+  <section id="about" class="section">
     <div class="container" data-aos="fade-up" data-aos-delay="100">
       <div class="row gy-4">
         <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
@@ -49,10 +53,7 @@ $this->setVar('activePage', 'index');
           </div>
         </div>
       </div>
-      <div class="mt-4">
-        <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
-        <a href="<?= base_url('privacy') ?>">Privacy</a>
-      </div>
+      
     </div>
   </section>
 
