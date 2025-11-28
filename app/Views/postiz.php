@@ -27,7 +27,7 @@ $this->setVar('activePage', 'index');
         <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
           <div class="hero-image">
               <div class="main-image">
-                <img src="assets/img/education/courses-13.webp" alt="Online Learning" class="img-fluid" loading="lazy">
+                <img src="assets/img/education/sosmed.webp" alt="Online Learning" class="img-fluid" loading="lazy">
               </div>
             </div>
         </div>
