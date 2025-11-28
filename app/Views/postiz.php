@@ -13,7 +13,7 @@ $this->setVar('activePage', 'index');
   <section class="courses-hero section light-background">
     <div class="container">
       <div class="row align-items-center">
-        <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
           <h1 class="mb-3">Kelola Sosial Media Anda dengan Postiz</h1>
           <p class="mb-4">Tools untuk menjadwalkan, mempublikasikan, dan mengelola konten lintas platform secara mudah.</p>
           <div class="hero-buttons">
@@ -22,6 +22,13 @@ $this->setVar('activePage', 'index');
             <div class="mt-4">
                 <a href="<?= base_url('terms') ?>" class="me-3">Terms</a>
                 <a href="<?= base_url('privacy') ?>">Privacy</a>
+            </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="hero-image">
+              <div class="main-image">
+                <img src="assets/img/education/courses-13.webp" alt="Online Learning" class="img-fluid" loading="lazy">
+              </div>
             </div>
         </div>
       </div>
