@@ -32,10 +32,14 @@ $this->setVar('activePage', 'index');
     <div class="container" data-aos="fade-up" data-aos-delay="100">
       <div class="row gy-4">
         <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-          <div class="mission-card h-100">
-            <div class="icon-box"><i class="bi bi-calendar-check"></i></div>
+            <div class="mission-card">
+            <div class="icon-box">
+              <i class="bi bi-award"></i>
+            </div>
             <h3>Jadwal otomatis</h3>
-            <p>Atur kalender konten dan publikasi otomatis sesuai jadwal yang Anda tentukan.</p>
+            <p>
+              Atur kalender konten dan publikasi otomatis sesuai jadwal yang Anda tentukan.
+            </p>
           </div>
         </div>
         <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
