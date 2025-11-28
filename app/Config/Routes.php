@@ -33,6 +33,10 @@ $routes->get('privacy.php', static function () {
 $routes->get('privacy-policy', static function () {
     return view('privacy');
 });
+$routes->get('postiz', static function () {
+    return view('postiz');
+});
+$routes->get('auth', 'AuthController::login');
 $routes->match(['GET', 'POST'], 'sertifikat', 'Home::sertifikat');
 // Endpoint JSON untuk cek sertifikat
 $routes->get('api/sertifikat', 'Home::sertifikatJson');
